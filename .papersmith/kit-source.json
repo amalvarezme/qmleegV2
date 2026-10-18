@@ -1,0 +1,9 @@
+{
+  "allowedDirty": true,
+  "commit": "a4ab4c82769905ae655372d42e1683be76b27f1e",
+  "dirty": true,
+  "recordedAt": "2026-10-18T20:34:43Z",
+  "schema": 1,
+  "source": "checkout",
+  "version": "0.15.0"
+}

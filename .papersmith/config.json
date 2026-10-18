@@ -1,0 +1,26 @@
+{
+  "project_name": "QMLEEG",
+  "active_tools": [
+    "claude",
+    "opencode",
+    "pi",
+    "antigravity"
+  ],
+  "agent_models": {
+    "paper-ingestion": "sonnet",
+    "proposal-deliberator": "opus",
+    "math-auditor": "opus",
+    "code-materializer": "sonnet",
+    "remote-orchestrator": "haiku"
+  },
+  "execution_engine": {
+    "active_compute_target": "kaggle-gpu-pool",
+    "active_profile": "sweep_training",
+    "accounts_store_path": "skills/kaggle-accounts/store/accounts.json",
+    "ledger_path": ".papersmith/runs_ledger.jsonl",
+    "auto_retry_failed_shards": true,
+    "max_retries": 2
+  },
+  "created_at": "2026-10-18T20:32:59Z",
+  "updated_at": "2026-10-18T20:32:59Z"
+}
