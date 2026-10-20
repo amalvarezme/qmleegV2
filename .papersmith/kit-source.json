@@ -1,8 +1,8 @@
 {
-  "commit": "b0f6fa3b6002f2ff12bf5e040b082c604e5a64a0",
+  "commit": "d830fc506a94b0452f7089e841690db7dbf32475",
   "dirty": false,
-  "recordedAt": "2026-10-20T15:32:43Z",
+  "recordedAt": "2026-10-20T23:28:45Z",
   "schema": 1,
   "source": "checkout",
-  "version": "0.17.1"
+  "version": "0.18.0"
 }
