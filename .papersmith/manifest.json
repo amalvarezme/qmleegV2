@@ -160,15 +160,15 @@
     "skills/_core/command_center/state_extractor.py": "74514424c450443bd40b5d5ee523b5f465150c21c92b88e1648c0bfcf2c80258",
     "skills/_core/command_center/static/assets/index-BzVdGTFj.js": "155d83f55c266c5830c7e5d65191815e7338c7426b25329caefc1783de7464ef",
     "skills/_core/command_center/static/assets/index-DkKE3CBS.css": "5aac044dd6eca37418f2f538f74fe7829eebe29f06a96bdb42b406aaae125e32",
-    "skills/_core/command_center/static/cli-console.js": "d86944147151984b766d1e2d5e5ac2adec03c4937498566e1b7dd5aa3878a4aa",
+    "skills/_core/command_center/static/cli-console.js": "646941ff8e6efee54c7c76629aac9b50398aedd7f1ae6bfa7ba6c111016572f8",
     "skills/_core/command_center/static/favicon.ico": "5adf8c39991e7d0e22706f0400258c5294ef7cc43acfb28fe9e40316a195fb1e",
     "skills/_core/command_center/static/favicon.png": "fc3264e77917a579607419267f8e86255c53e9a425d1416bfbeee69893a37f02",
-    "skills/_core/command_center/static/index.html": "66089f605b521710aefcaf95694ba13b52f9130d455c6b896a54adb93d221f97",
+    "skills/_core/command_center/static/index.html": "1c63584cf2d75c2d0d3290b94e341a05fd28b7afc865df51e7a3731c5d8d022e",
     "skills/_core/command_center/static/logo_labIA.png": "6f1a12789fc5c8377716a7b9c7c0ece596ccec4b68678452380035aa0b808723",
     "skills/_core/command_center/static/math-panel.js": "84bc66ecc84fa27934b774cb9eca3435143a9f363302d75f9810239805c4ed3d",
     "skills/_core/command_center/static/model-panel.js": "aeb6f321011124eccad37e2a95c887c443b532a92b4198f32d578643071c3024",
     "skills/_core/command_center/static/papersmith-flow.html": "753325c653bee3f0a70d864aef9a8b5b25a8c38e7e075e879fca45a3cc685625",
-    "skills/_core/command_center/static/phase-console.js": "ad826e51c651d16702b2b2c55cf4745641b20009c67fabc3ee7be59a9101dd6a",
+    "skills/_core/command_center/static/phase-console.js": "56c82248e717bb56410fa905a61feb6b7b10ce8319e74104944fdf92cc513600",
     "skills/_core/command_center/static/phase-run.js": "e2055e998875c4289960e5efcd4f8976e8972ee202ae3e5271985418f1891da5",
     "skills/_core/command_center/static/smith-face.png": "21bb3466063caf3e3a02b20ff5fbe865dea68950b117327994dd9de1b3bb1c66",
     "skills/_core/command_center/static/smith-logo.png": "d27991a65f73116b186764a24e73d0c80d55c4a15a2e8b2dc61eeefe233efd6f",
@@ -588,5 +588,5 @@
     "skills/skill-audit/scripts/audit_cli.py": "c0fe93e884ea27ff3c44c1da63811d29e9d8bf613164f99a4820b91b7b86cbf7",
     "skills/upgrade-project/SKILL.md": "7c32c9cd38fad0002617b510c28798bbcea33b4fea224b9193cbeb17b6f5105b"
   },
-  "updated_at": "2026-10-21T01:43:59Z"
+  "updated_at": "2026-10-21T11:50:19Z"
 }
