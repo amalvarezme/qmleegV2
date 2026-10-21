@@ -156,20 +156,20 @@
     "skills/_core/command_center/novelty_graph.py": "649ca83a36d369420c4e10d2c66da50593a47e3796a8513418d29f17b54d48ca",
     "skills/_core/command_center/paper_preview.py": "af6bf1280a80286ddd66472763f50526a49d71f11fe08c935fdd96faf2eb2d68",
     "skills/_core/command_center/phase_actions.py": "1e2e0145bd60743bb91a4d94ff913b24bd43b867899920c3229ed5a9155ba7e2",
-    "skills/_core/command_center/server.py": "7c7551c0bb2df86c41d2cbad87fec12f14a45bbadf0863c0c1a3159bebf9fefc",
+    "skills/_core/command_center/server.py": "3c77e898b88a6f38a2913f1634b2d7e5a503fe7cef210039c590fdf964f96ba8",
     "skills/_core/command_center/state_extractor.py": "74514424c450443bd40b5d5ee523b5f465150c21c92b88e1648c0bfcf2c80258",
     "skills/_core/command_center/static/assets/index-BzVdGTFj.js": "155d83f55c266c5830c7e5d65191815e7338c7426b25329caefc1783de7464ef",
     "skills/_core/command_center/static/assets/index-DkKE3CBS.css": "5aac044dd6eca37418f2f538f74fe7829eebe29f06a96bdb42b406aaae125e32",
-    "skills/_core/command_center/static/cli-console.js": "9e982e4404b8837e246389bf5d3b8cc65f551d24ed8ec740fafbcf1b93a1a120",
+    "skills/_core/command_center/static/cli-console.js": "ae795228c0bc895253b02b578b22ccae047bc0de8f6c60fbb23aa033ebb36a84",
     "skills/_core/command_center/static/favicon.ico": "5adf8c39991e7d0e22706f0400258c5294ef7cc43acfb28fe9e40316a195fb1e",
     "skills/_core/command_center/static/favicon.png": "fc3264e77917a579607419267f8e86255c53e9a425d1416bfbeee69893a37f02",
-    "skills/_core/command_center/static/index.html": "661a76ed62a4cc0a868f7514da6d020d75a1dfd028647adc2e50b7b86ea7690f",
+    "skills/_core/command_center/static/index.html": "52b9bbd88483a16a60600c0c1bd8ef6a8cbf5d7b156e54a64bf6d01b9e7b27e3",
     "skills/_core/command_center/static/logo_labIA.png": "6f1a12789fc5c8377716a7b9c7c0ece596ccec4b68678452380035aa0b808723",
     "skills/_core/command_center/static/math-panel.js": "84bc66ecc84fa27934b774cb9eca3435143a9f363302d75f9810239805c4ed3d",
     "skills/_core/command_center/static/model-panel.js": "aeb6f321011124eccad37e2a95c887c443b532a92b4198f32d578643071c3024",
     "skills/_core/command_center/static/papersmith-flow.html": "753325c653bee3f0a70d864aef9a8b5b25a8c38e7e075e879fca45a3cc685625",
     "skills/_core/command_center/static/phase-console.js": "897999b8c269ac21b9623f7307f2f656207bebfaa1acb041896157a186b598ca",
-    "skills/_core/command_center/static/phase-run.js": "e2055e998875c4289960e5efcd4f8976e8972ee202ae3e5271985418f1891da5",
+    "skills/_core/command_center/static/phase-run.js": "e02cff5cf9aa5015ae70215cabf9bad64f6ae2553b157d6bd36e5c82f6bbcf7f",
     "skills/_core/command_center/static/smith-face.png": "21bb3466063caf3e3a02b20ff5fbe865dea68950b117327994dd9de1b3bb1c66",
     "skills/_core/command_center/static/smith-logo.png": "d27991a65f73116b186764a24e73d0c80d55c4a15a2e8b2dc61eeefe233efd6f",
     "skills/_core/command_center/static/vendor/README.md": "921aa6b75d951bfba8acbeb8d9c23f103f555c67151a7fc395b150fcf413cf85",
@@ -588,5 +588,5 @@
     "skills/skill-audit/scripts/audit_cli.py": "c0fe93e884ea27ff3c44c1da63811d29e9d8bf613164f99a4820b91b7b86cbf7",
     "skills/upgrade-project/SKILL.md": "7c32c9cd38fad0002617b510c28798bbcea33b4fea224b9193cbeb17b6f5105b"
   },
-  "updated_at": "2026-10-21T12:02:43Z"
+  "updated_at": "2026-10-21T13:10:02Z"
 }
