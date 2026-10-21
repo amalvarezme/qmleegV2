@@ -163,13 +163,13 @@
     "skills/_core/command_center/static/cli-console.js": "d86944147151984b766d1e2d5e5ac2adec03c4937498566e1b7dd5aa3878a4aa",
     "skills/_core/command_center/static/favicon.ico": "5adf8c39991e7d0e22706f0400258c5294ef7cc43acfb28fe9e40316a195fb1e",
     "skills/_core/command_center/static/favicon.png": "fc3264e77917a579607419267f8e86255c53e9a425d1416bfbeee69893a37f02",
-    "skills/_core/command_center/static/index.html": "7229a5bb43dd5eb99df50b6865b5a02bc167dfd518c15287da30f1668173211d",
+    "skills/_core/command_center/static/index.html": "66089f605b521710aefcaf95694ba13b52f9130d455c6b896a54adb93d221f97",
     "skills/_core/command_center/static/logo_labIA.png": "6f1a12789fc5c8377716a7b9c7c0ece596ccec4b68678452380035aa0b808723",
     "skills/_core/command_center/static/math-panel.js": "84bc66ecc84fa27934b774cb9eca3435143a9f363302d75f9810239805c4ed3d",
     "skills/_core/command_center/static/model-panel.js": "aeb6f321011124eccad37e2a95c887c443b532a92b4198f32d578643071c3024",
     "skills/_core/command_center/static/papersmith-flow.html": "753325c653bee3f0a70d864aef9a8b5b25a8c38e7e075e879fca45a3cc685625",
     "skills/_core/command_center/static/phase-console.js": "ad826e51c651d16702b2b2c55cf4745641b20009c67fabc3ee7be59a9101dd6a",
-    "skills/_core/command_center/static/phase-run.js": "e4919f35a2278c2f7fa8764fd5550eac4665fb18e9f75e7381bdb65dc8567e84",
+    "skills/_core/command_center/static/phase-run.js": "e2055e998875c4289960e5efcd4f8976e8972ee202ae3e5271985418f1891da5",
     "skills/_core/command_center/static/smith-face.png": "21bb3466063caf3e3a02b20ff5fbe865dea68950b117327994dd9de1b3bb1c66",
     "skills/_core/command_center/static/smith-logo.png": "d27991a65f73116b186764a24e73d0c80d55c4a15a2e8b2dc61eeefe233efd6f",
     "skills/_core/command_center/static/vendor/README.md": "921aa6b75d951bfba8acbeb8d9c23f103f555c67151a7fc395b150fcf413cf85",
@@ -588,5 +588,5 @@
     "skills/skill-audit/scripts/audit_cli.py": "c0fe93e884ea27ff3c44c1da63811d29e9d8bf613164f99a4820b91b7b86cbf7",
     "skills/upgrade-project/SKILL.md": "7c32c9cd38fad0002617b510c28798bbcea33b4fea224b9193cbeb17b6f5105b"
   },
-  "updated_at": "2026-10-21T01:28:22Z"
+  "updated_at": "2026-10-21T01:43:59Z"
 }
