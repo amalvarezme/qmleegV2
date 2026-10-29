@@ -365,6 +365,40 @@
     refreshExperimentsPanel();
   }
 
+  function reviewerAudit(p) {
+    if (!p || !p.reviewer) return '';
+    const r = p.reviewer;
+    const s = r.summary || {};
+    const findings = r.findings || [];
+    const isClean = s.blockers_resolved === s.blockers && (s.blockers ?? 0) > 0;
+    const badgeColor = isClean ? 'badge--ok' : 'badge--warn';
+    return `<div class="exp-reviewer-card" style="margin: 1rem 0; padding: 0.85rem; background: var(--surface-2, rgba(255,255,255,0.03)); border: 1px solid var(--border); border-radius: var(--radius);">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+        <div>
+          <strong style="color: var(--accent);">Auditoría de Implementación (${esc(r.agent || 'experiments-reviewer')})</strong>
+          <span class="badge ${badgeColor}" style="margin-left: 0.5rem;">${esc(r.status === 'resolved' ? 'Resuelto' : r.status)}</span>
+        </div>
+        <small class="exp-muted">${esc(r.generated_at ? r.generated_at.split('T')[0] : '')}</small>
+      </div>
+      <div style="font-size: 0.85rem; margin-bottom: 0.5rem;">
+        Bloqueantes: <strong>${esc(s.blockers_resolved ?? 0)}/${esc(s.blockers ?? 0)} resueltos</strong> · 
+        Mayores: <strong>${esc(s.majors ?? 0)}</strong> · 
+        Menores: <strong>${esc(s.minors ?? 0)}</strong> · 
+        Tests: <strong>${esc(s.tests_passed ?? 0)}/${esc(s.tests_total ?? 0)} pasados</strong>
+      </div>
+      <details style="font-size: 0.85rem;">
+        <summary style="cursor: pointer; color: var(--accent);">Ver ${esc(findings.length)} hallazgos y resoluciones</summary>
+        <ul style="margin: 0.5rem 0 0.5rem 1.25rem; padding: 0;">
+          ${findings.map((f) => `<li style="margin-bottom: 0.35rem;">
+            <span class="badge ${f.severity === 'blocker' ? 'badge--bad' : f.severity === 'major' ? 'badge--warn' : 'badge--info'}">${esc(f.severity)}</span>
+            <strong>${esc(f.path)}:${esc(f.line)}</strong>: ${esc(f.description)}
+            ${f.resolution ? `<br><small style="color: var(--accent-success, #4ade80);">↳ Solución: ${esc(f.resolution)} (${esc(f.resolved_in || '')})</small>` : ''}
+          </li>`).join('')}
+        </ul>
+      </details>
+    </div>`;
+  }
+
   function product(p) {
     const pinned = p.pinned || [];
     const figures = (p.figures || []).filter((f) => !pinned.includes(f));
@@ -376,6 +410,7 @@
       </header>
       ${remoteWorkers(p)}
       ${diagrams(p)}
+      ${reviewerAudit(p)}
       ${pinned.length ? `<h4 class="exp-h4">Artefactos aprobados en deliberación</h4><div class="exp-gallery">${pinned.map(artifact).join('')}</div>` : ''}
       <h4 class="exp-h4">Convergencia</h4>${convergence(p)}
       ${figures.length ? `<h4 class="exp-h4">Figuras</h4><div class="exp-gallery">${figures.map(artifact).join('')}</div>` : ''}

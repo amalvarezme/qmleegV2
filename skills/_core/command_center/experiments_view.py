@@ -964,6 +964,15 @@ def _product(root: Path, repo: str, folder: Path, ledger: Path | None,
             reader.warn(f"{reader.label(timing_path)}: not a schema 1 or 2 timing record")
     placement_plan = _placement_plan(root, folder, reader)
     hpo = _hpo_studies(root, results, reader)
+    reviewer = None
+    for rev_candidate in ("reviewer_report.json", "reviewer-report.json"):
+        rev_path = results / rev_candidate
+        if rev_path.is_file() or rev_path.is_symlink():
+            rev_data = reader.json(rev_path)
+            if isinstance(rev_data, dict):
+                reviewer = rev_data
+                reviewer["file"] = _rel(root, rev_path)
+                break
     for message in warnings:
         if len(global_warnings) < MAX_WARNINGS:
             global_warnings.append(message)
@@ -982,6 +991,7 @@ def _product(root: Path, repo: str, folder: Path, ledger: Path | None,
         "timing": timing,
         "placement_plan": placement_plan,
         "hpo": hpo,
+        "reviewer": reviewer,
         "diagrams": _diagrams(root, repo, folder, reader),
         "warnings": warnings,
     }
