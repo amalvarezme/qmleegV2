@@ -1,4 +1,4 @@
-# >>> papersmith managed block: `papersmith upgrade` rewrites every line up to the closing marker
+# >>> papersmith managed block: `smith upgrade` rewrites every line up to the closing marker
 # papersmith workspace — generated files and local state
 .micromamba/
 .venv/
@@ -8,6 +8,9 @@ __pycache__/
 .scratch/
 .env*
 .papersmith/runs_ledger.jsonl
+.papersmith/cache/
+# The team registry names people and their accounts (no secrets, still personal data).
+.papersmith/team.json
 skills/paper-ingestion/.venv/
 kaggle-inbox/*
 !kaggle-inbox/.gitkeep
@@ -19,6 +22,7 @@ kaggle-inbox/*
 .opencode/skills
 .pi/skills
 .agents/skills
+.pi/npm/
 
 # Research content: the folder travels, its contents stay home. Every entry
 # here mirrors this framework's own root .gitignore — a workspace is meant to
@@ -52,3 +56,7 @@ sota-pool/*
 backup/proposals/
 backup/experiments/
 # <<< papersmith managed block ends: lines below this marker are this workspace's own, and upgrade keeps them
+
+# Dataset payloads stay local (re-derived and sha256-checked from datasets/registry.json); only their metadata is versioned.
+datasets/**/*.csv
+datasets/**/*.npy

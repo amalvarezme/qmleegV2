@@ -1,0 +1,80 @@
+{
+  "slug": "qmleeg-toy-eeg",
+  "version": 1,
+  "file": "datasets/qmleeg-toy-eeg/qmleeg-toy-eeg.csv",
+  "sha256": "cec99326fbf85e5b10703208df24f0e13f7f641c0be3bda342611c49d47025fb",
+  "label": "label",
+  "group": "subject",
+  "folds": 5,
+  "seed": 42,
+  "method": "stratified group k-fold (greedy, seeded): a row's fold is its group's fold",
+  "assignment": {
+    "sub00": 3,
+    "sub01": 2,
+    "sub02": 4,
+    "sub03": 4,
+    "sub04": 3,
+    "sub05": 1,
+    "sub06": 1,
+    "sub07": 1,
+    "sub08": 2,
+    "sub09": 4,
+    "sub10": 1,
+    "sub11": 3,
+    "sub12": 4,
+    "sub13": 2,
+    "sub14": 2,
+    "sub15": 3,
+    "sub16": 0,
+    "sub17": 0,
+    "sub18": 0,
+    "sub19": 0
+  },
+  "folds_summary": [
+    {
+      "fold": 0,
+      "n_rows": 96,
+      "n_groups": 4,
+      "class_counts": {
+        "0": 48,
+        "1": 48
+      }
+    },
+    {
+      "fold": 1,
+      "n_rows": 96,
+      "n_groups": 4,
+      "class_counts": {
+        "0": 48,
+        "1": 48
+      }
+    },
+    {
+      "fold": 2,
+      "n_rows": 96,
+      "n_groups": 4,
+      "class_counts": {
+        "0": 48,
+        "1": 48
+      }
+    },
+    {
+      "fold": 3,
+      "n_rows": 96,
+      "n_groups": 4,
+      "class_counts": {
+        "0": 48,
+        "1": 48
+      }
+    },
+    {
+      "fold": 4,
+      "n_rows": 96,
+      "n_groups": 4,
+      "class_counts": {
+        "0": 48,
+        "1": 48
+      }
+    }
+  ]
+}

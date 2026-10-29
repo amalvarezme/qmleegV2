@@ -1,0 +1,257 @@
+{
+  "rows": 2152244,
+  "columns": 21,
+  "missing": {},
+  "constant_columns": [],
+  "duplicates": 45,
+  "ranges": {
+    "Fp1": {
+      "min": -3786.0,
+      "max": 13813.0
+    },
+    "Fp2": {
+      "min": -13224.0,
+      "max": 4802.0
+    },
+    "F3": {
+      "min": -3921.0,
+      "max": 5020.0
+    },
+    "F4": {
+      "min": -13237.0,
+      "max": 4802.0
+    },
+    "C3": {
+      "min": -3921.0,
+      "max": 5430.0
+    },
+    "C4": {
+      "min": -3921.0,
+      "max": 5020.0
+    },
+    "P3": {
+      "min": -3921.0,
+      "max": 5020.0
+    },
+    "P4": {
+      "min": -3958.0,
+      "max": 5020.0
+    },
+    "O1": {
+      "min": -3995.0,
+      "max": 5020.0
+    },
+    "O2": {
+      "min": -3921.0,
+      "max": 5020.0
+    },
+    "F7": {
+      "min": -3995.0,
+      "max": 5020.0
+    },
+    "F8": {
+      "min": -3958.0,
+      "max": 5020.0
+    },
+    "T7": {
+      "min": -3958.0,
+      "max": 5020.0
+    },
+    "T8": {
+      "min": -3995.0,
+      "max": 5064.0
+    },
+    "P7": {
+      "min": -3921.0,
+      "max": 5016.0
+    },
+    "P8": {
+      "min": -3958.0,
+      "max": 5020.0
+    },
+    "Fz": {
+      "min": -3786.0,
+      "max": 4802.0
+    },
+    "Cz": {
+      "min": -3751.0,
+      "max": 4802.0
+    },
+    "Pz": {
+      "min": -3751.0,
+      "max": 4802.0
+    }
+  },
+  "class_balance": {
+    "ADHD": 1207069,
+    "Control": 945175
+  },
+  "groups": {
+    "count": 120,
+    "min_size": 7983,
+    "max_size": 43252,
+    "single_class_groups": 120
+  },
+  "status": "warn",
+  "reasons": [
+    "45 duplicate rows",
+    "the label is constant within every group: a subject-wise split confounds subject and class"
+  ],
+  "file": "datasets/ieee-adhd-eeg-kaggle/derived/adhdata-no-v56p.csv",
+  "sha256": "99d713cdadc09d289a816a2a1196f9129b73f0eba06689cf4317d06219f057c7",
+  "checked": "2026-10-27",
+  "domain_checks": [
+    {
+      "check": "saturation: per channel, samples equal to the channel's global max or min (rail); subjects with >1% of their row x channel samples at a rail",
+      "tool": "stdlib csv (Python 3.15.0)",
+      "file_sha256": "99d713cdadc09d289a816a2a1196f9129b73f0eba06689cf4317d06219f057c7",
+      "date": "2026-10-27",
+      "verdict": "pass",
+      "reason": "127 of 40892636 channel samples (fraction 3e-06) sit at a channel rail; 41 subjects touch a rail at least once; 0 subjects exceed 1%",
+      "result": {
+        "rows": 2152244,
+        "channels": 19,
+        "per_channel": {
+          "Fp1": {
+            "min": -3786.0,
+            "max": 13813.0,
+            "n_at_max": 2,
+            "n_at_min": 4,
+            "fraction_at_rail": 3e-06
+          },
+          "Fp2": {
+            "min": -13224.0,
+            "max": 4802.0,
+            "n_at_max": 6,
+            "n_at_min": 2,
+            "fraction_at_rail": 4e-06
+          },
+          "F3": {
+            "min": -3921.0,
+            "max": 5020.0,
+            "n_at_max": 1,
+            "n_at_min": 2,
+            "fraction_at_rail": 1e-06
+          },
+          "F4": {
+            "min": -13237.0,
+            "max": 4802.0,
+            "n_at_max": 7,
+            "n_at_min": 2,
+            "fraction_at_rail": 4e-06
+          },
+          "C3": {
+            "min": -3921.0,
+            "max": 5430.0,
+            "n_at_max": 2,
+            "n_at_min": 4,
+            "fraction_at_rail": 3e-06
+          },
+          "C4": {
+            "min": -3921.0,
+            "max": 5020.0,
+            "n_at_max": 6,
+            "n_at_min": 2,
+            "fraction_at_rail": 4e-06
+          },
+          "P3": {
+            "min": -3921.0,
+            "max": 5020.0,
+            "n_at_max": 5,
+            "n_at_min": 3,
+            "fraction_at_rail": 4e-06
+          },
+          "P4": {
+            "min": -3958.0,
+            "max": 5020.0,
+            "n_at_max": 7,
+            "n_at_min": 1,
+            "fraction_at_rail": 4e-06
+          },
+          "O1": {
+            "min": -3995.0,
+            "max": 5020.0,
+            "n_at_max": 7,
+            "n_at_min": 1,
+            "fraction_at_rail": 4e-06
+          },
+          "O2": {
+            "min": -3921.0,
+            "max": 5020.0,
+            "n_at_max": 5,
+            "n_at_min": 6,
+            "fraction_at_rail": 5e-06
+          },
+          "F7": {
+            "min": -3995.0,
+            "max": 5020.0,
+            "n_at_max": 4,
+            "n_at_min": 1,
+            "fraction_at_rail": 2e-06
+          },
+          "F8": {
+            "min": -3958.0,
+            "max": 5020.0,
+            "n_at_max": 5,
+            "n_at_min": 1,
+            "fraction_at_rail": 3e-06
+          },
+          "T7": {
+            "min": -3958.0,
+            "max": 5020.0,
+            "n_at_max": 3,
+            "n_at_min": 1,
+            "fraction_at_rail": 2e-06
+          },
+          "T8": {
+            "min": -3995.0,
+            "max": 5064.0,
+            "n_at_max": 1,
+            "n_at_min": 2,
+            "fraction_at_rail": 1e-06
+          },
+          "P7": {
+            "min": -3921.0,
+            "max": 5016.0,
+            "n_at_max": 2,
+            "n_at_min": 2,
+            "fraction_at_rail": 2e-06
+          },
+          "P8": {
+            "min": -3958.0,
+            "max": 5020.0,
+            "n_at_max": 1,
+            "n_at_min": 3,
+            "fraction_at_rail": 2e-06
+          },
+          "Fz": {
+            "min": -3786.0,
+            "max": 4802.0,
+            "n_at_max": 4,
+            "n_at_min": 3,
+            "fraction_at_rail": 3e-06
+          },
+          "Cz": {
+            "min": -3751.0,
+            "max": 4802.0,
+            "n_at_max": 10,
+            "n_at_min": 1,
+            "fraction_at_rail": 5e-06
+          },
+          "Pz": {
+            "min": -3751.0,
+            "max": 4802.0,
+            "n_at_max": 4,
+            "n_at_min": 4,
+            "fraction_at_rail": 4e-06
+          }
+        },
+        "total_rail_samples": 127,
+        "total_fraction_at_rail": 3e-06,
+        "subjects_with_any_rail": 41,
+        "subjects_over_1pct_at_rail": 0,
+        "subjects_over_1pct": {}
+      }
+    }
+  ]
+}

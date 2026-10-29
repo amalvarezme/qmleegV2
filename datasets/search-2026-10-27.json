@@ -1,0 +1,367 @@
+{
+  "query": "EEG ADHD control children",
+  "retrieved": "2026-10-27",
+  "hosts": {
+    "huggingface": {
+      "status": "ok",
+      "count": 0
+    },
+    "kaggle": {
+      "status": "ok",
+      "count": 2
+    },
+    "openneuro": {
+      "status": "ok",
+      "count": 20
+    },
+    "zenodo": {
+      "status": "ok",
+      "count": 20
+    }
+  },
+  "hits": [
+    {
+      "host": "kaggle",
+      "ref": "danizo/eeg-dataset-for-adhd",
+      "title": "EEG Dataset for ADHD",
+      "url": "https://www.kaggle.com/datasets/danizo/eeg-dataset-for-adhd",
+      "license": "",
+      "retrieved": "2026-10-27"
+    },
+    {
+      "host": "kaggle",
+      "ref": "abinayajone/adhd-eeg-dataset",
+      "title": "ADHD_EEG_Dataset",
+      "url": "https://www.kaggle.com/datasets/abinayajone/adhd-eeg-dataset",
+      "license": "",
+      "retrieved": "2026-10-27"
+    },
+    {
+      "host": "openneuro",
+      "ref": "ds005899",
+      "title": "ADHD Dualcontrol Dataset",
+      "url": "https://openneuro.org/datasets/ds005899",
+      "license": "CC0",
+      "retrieved": "2026-10-27"
+    },
+    {
+      "host": "openneuro",
+      "ref": "ds003500",
+      "title": "Response inhibition and selective attention in adults and children with and without ADHD",
+      "url": "https://openneuro.org/datasets/ds003500",
+      "license": "CC0",
+      "retrieved": "2026-10-27"
+    },
+    {
+      "host": "openneuro",
+      "ref": "ds002424",
+      "title": "Working Memory and Reward in Children with and without Attention Deficit Hyperactivity Disorder (ADHD)",
+      "url": "https://openneuro.org/datasets/ds002424",
+      "license": "CC0",
+      "retrieved": "2026-10-27"
+    },
+    {
+      "host": "openneuro",
+      "ref": "ds008858",
+      "title": "EEG Based MI-BCI Mouse Cursor Control Dataset",
+      "url": "https://openneuro.org/datasets/ds008858",
+      "license": "CC0",
+      "retrieved": "2026-10-27"
+    },
+    {
+      "host": "openneuro",
+      "ref": "ds002726",
+      "title": "Structural brain network of gifted children",
+      "url": "https://openneuro.org/datasets/ds002726",
+      "license": "CC0",
+      "retrieved": "2026-10-27"
+    },
+    {
+      "host": "openneuro",
+      "ref": "ds003944",
+      "title": "EEG: First Episode Psychosis vs. Control Resting Task 1",
+      "url": "https://openneuro.org/datasets/ds003944",
+      "license": "CC0",
+      "retrieved": "2026-10-27"
+    },
+    {
+      "host": "openneuro",
+      "ref": "ds003947",
+      "title": "EEG: First Episode Psychosis vs. Control Resting Task 2",
+      "url": "https://openneuro.org/datasets/ds003947",
+      "license": "CC0",
+      "retrieved": "2026-10-27"
+    },
+    {
+      "host": "openneuro",
+      "ref": "ds004122",
+      "title": "BCIT Speed Control",
+      "url": "https://openneuro.org/datasets/ds004122",
+      "license": "CC0",
+      "retrieved": "2026-10-27"
+    },
+    {
+      "host": "openneuro",
+      "ref": "ds004770",
+      "title": "iEEG on children during gameplay",
+      "url": "https://openneuro.org/datasets/ds004770",
+      "license": "CC0",
+      "retrieved": "2026-10-27"
+    },
+    {
+      "host": "openneuro",
+      "ref": "ds007185",
+      "title": "Neural Responses to Curiosity in Young Children",
+      "url": "https://openneuro.org/datasets/ds007185",
+      "license": "CC0",
+      "retrieved": "2026-10-27"
+    },
+    {
+      "host": "openneuro",
+      "ref": "ds005504",
+      "title": "Psychosocial adversity and inhibitory control: an fMRI study of children growing up in extreme poverty",
+      "url": "https://openneuro.org/datasets/ds005504",
+      "license": "CC0",
+      "retrieved": "2026-10-27"
+    },
+    {
+      "host": "openneuro",
+      "ref": "ds005234",
+      "title": "Perception of vowel sounds in children with autism spectrum disorders and typically developing children (MEG/ERF study)",
+      "url": "https://openneuro.org/datasets/ds005234",
+      "license": "CC0",
+      "retrieved": "2026-10-27"
+    },
+    {
+      "host": "openneuro",
+      "ref": "ds005455",
+      "title": "An fMRI dataset for investigating language control and cognitive control in bilinguals",
+      "url": "https://openneuro.org/datasets/ds005455",
+      "license": "CC0",
+      "retrieved": "2026-10-27"
+    },
+    {
+      "host": "openneuro",
+      "ref": "ds005754",
+      "title": "Multivariate Assessment of Inhibitory Control in Youth: Links with Psychopathology and Brain Function Dataset",
+      "url": "https://openneuro.org/datasets/ds005754",
+      "license": "CC0",
+      "retrieved": "2026-10-27"
+    },
+    {
+      "host": "openneuro",
+      "ref": "ds001784",
+      "title": "Effects of ON/OFF deep brain stimulation on cognitive control in treatment-resistant depression (EEG)",
+      "url": "https://openneuro.org/datasets/ds001784",
+      "license": "CC0",
+      "retrieved": "2026-10-27"
+    },
+    {
+      "host": "openneuro",
+      "ref": "ds000009",
+      "title": "The generality of self-control",
+      "url": "https://openneuro.org/datasets/ds000009",
+      "license": "PDDL",
+      "retrieved": "2026-10-27"
+    },
+    {
+      "host": "openneuro",
+      "ref": "ds000256",
+      "title": "Behavioral interventions for reducing head motion during MRI scans in children",
+      "url": "https://openneuro.org/datasets/ds000256",
+      "license": "PDDL (http://opendatacommons.org/licenses/pddl/)",
+      "retrieved": "2026-10-27"
+    },
+    {
+      "host": "openneuro",
+      "ref": "ds006628",
+      "title": "Cross-Modal Hierarchical Control",
+      "url": "https://openneuro.org/datasets/ds006628",
+      "license": "CC0",
+      "retrieved": "2026-10-27"
+    },
+    {
+      "host": "openneuro",
+      "ref": "ds005258",
+      "title": "Keep Control Validation Dataset",
+      "url": "https://openneuro.org/datasets/ds005258",
+      "license": "CC0",
+      "retrieved": "2026-10-27"
+    },
+    {
+      "host": "openneuro",
+      "ref": "ds004859",
+      "title": "iEEG on children during Stroop task",
+      "url": "https://openneuro.org/datasets/ds004859",
+      "license": "CC0",
+      "retrieved": "2026-10-27"
+    },
+    {
+      "host": "zenodo",
+      "ref": "21485857",
+      "title": "Portable Single-Channel EEG and Self-Report Dataset from Children with ADHD During Educational Gameplay",
+      "url": "https://zenodo.org/records/21485857",
+      "license": "cc-by-4.0",
+      "retrieved": "2026-10-27"
+    },
+    {
+      "host": "zenodo",
+      "ref": "7152316",
+      "title": "Investigation of Brain Functional Networks in Children Suffering from Attention Deficit Hyperactivity Disorder",
+      "url": "https://zenodo.org/records/7152316",
+      "license": "cc-by-4.0",
+      "retrieved": "2026-10-27"
+    },
+    {
+      "host": "zenodo",
+      "ref": "4991172",
+      "title": "Data from: Analysis of personal and family factors in the persistence of attention deficit hyperactivity disorder: results of a prospective follow-up study in childhood",
+      "url": "https://zenodo.org/records/4991172",
+      "license": "cc-zero",
+      "retrieved": "2026-10-27"
+    },
+    {
+      "host": "zenodo",
+      "ref": "15310301",
+      "title": "A study for the validation of a digital environment designed to support a neuro- and psychomotor therapeutic program in school-age children with attention-deficit hyperactivity disorder - VADDAI",
+      "url": "https://zenodo.org/records/15310301",
+      "license": "cc-by-4.0",
+      "retrieved": "2026-10-27"
+    },
+    {
+      "host": "zenodo",
+      "ref": "23592484",
+      "title": "ATTLAPSE: Behavioral and EEG data of ADHD patients and neurotypical controls during a Go/No-Go task with embedded thought-probes",
+      "url": "https://zenodo.org/records/23592484",
+      "license": "cc-by-4.0",
+      "retrieved": "2026-10-27"
+    },
+    {
+      "host": "zenodo",
+      "ref": "18746668",
+      "title": "Aberrant Neural Entrainment to Word-Level Speech Patterns in Fragile X Syndrome: Evidence for a Statistical Learning Deficit",
+      "url": "https://zenodo.org/records/18746668",
+      "license": "cc-by-4.0",
+      "retrieved": "2026-10-27"
+    },
+    {
+      "host": "zenodo",
+      "ref": "5541816",
+      "title": "Crippa et al. 2015 Additional results",
+      "url": "https://zenodo.org/records/5541816",
+      "license": "cc-by-4.0",
+      "retrieved": "2026-10-27"
+    },
+    {
+      "host": "zenodo",
+      "ref": "5516462",
+      "title": "Anti-seizure medication use during pregnancy and risk of ASD and ADHD in children",
+      "url": "https://zenodo.org/records/5516462",
+      "license": "cc-zero",
+      "retrieved": "2026-10-27"
+    },
+    {
+      "host": "zenodo",
+      "ref": "23163648",
+      "title": "THE CURRENT STATE AND ADVANCED EXPERIENCES IN PEDAGOGICAL SUPPORT FOR HYPERACTIVE CHILDREN",
+      "url": "https://zenodo.org/records/23163648",
+      "license": "cc-by-4.0",
+      "retrieved": "2026-10-27"
+    },
+    {
+      "host": "zenodo",
+      "ref": "7709306",
+      "title": "Wavelet variance coefficients of children and adolescents with and without ADHD",
+      "url": "https://zenodo.org/records/7709306",
+      "license": "cc-zero",
+      "retrieved": "2026-10-27"
+    },
+    {
+      "host": "zenodo",
+      "ref": "4942531",
+      "title": "Data from: Hybrid EEG/EOG-based brain/neural hand exoskeleton restores fully independent daily living activities after quadriplegia",
+      "url": "https://zenodo.org/records/4942531",
+      "license": "cc-zero",
+      "retrieved": "2026-10-27"
+    },
+    {
+      "host": "zenodo",
+      "ref": "3236138",
+      "title": "SET-NAV: WP5: Invert modelling output for the building sector final energy demand and cost data",
+      "url": "https://zenodo.org/records/3236138",
+      "license": "cc-by-4.0",
+      "retrieved": "2026-10-27"
+    },
+    {
+      "host": "zenodo",
+      "ref": "16113319",
+      "title": "Is wearable data reliable for monitoring behavior? Design of a wearable-based IoMT puzzle game for remote behavior monitoring",
+      "url": "https://zenodo.org/records/16113319",
+      "license": "cc-by-4.0",
+      "retrieved": "2026-10-27"
+    },
+    {
+      "host": "zenodo",
+      "ref": "6302735",
+      "title": "data set related to article The Virtual City ParadigmTM for Testing Visuo-Spatial Memory, Executive Functions and Cognitive Strategies in Children With ADHD: A Feasibility Study",
+      "url": "https://zenodo.org/records/6302735",
+      "license": "",
+      "retrieved": "2026-10-27"
+    },
+    {
+      "host": "zenodo",
+      "ref": "23193846",
+      "title": "THE CURRENT STATE AND ADVANCED EXPERIENCES IN PEDAGOGICAL SUPPORT FOR HYPERACTIVE CHILDREN",
+      "url": "https://zenodo.org/records/23193846",
+      "license": "cc-by-4.0",
+      "retrieved": "2026-10-27"
+    },
+    {
+      "host": "zenodo",
+      "ref": "15549793",
+      "title": "Data and analysis for the manuscript \"A comparison of contour detection and gaze allocation in children and adolescents with ASD, ADHD and SLD\"",
+      "url": "https://zenodo.org/records/15549793",
+      "license": "cc-by-4.0",
+      "retrieved": "2026-10-27"
+    },
+    {
+      "host": "zenodo",
+      "ref": "16867613",
+      "title": "The Anti-Congruent Conjecture: Efficiency\u2013Instability Inversion in Dissipative Symbolic Systems",
+      "url": "https://zenodo.org/records/16867613",
+      "license": "cc-by-4.0",
+      "retrieved": "2026-10-27"
+    },
+    {
+      "host": "zenodo",
+      "ref": "13798949",
+      "title": "Attention Deficit Hyperactivity Disorder Symptoms Among Students Attending Higher Educational Institution: A Cross-Sectional Study",
+      "url": "https://zenodo.org/records/13798949",
+      "license": "cc-by-4.0",
+      "retrieved": "2026-10-27"
+    },
+    {
+      "host": "zenodo",
+      "ref": "15830022",
+      "title": "Test-Retest Reliability Analysis of Resting-state EEG Measures and Their Association with Long-Term Memory in Children and Adults",
+      "url": "https://zenodo.org/records/15830022",
+      "license": "cc-by-4.0",
+      "retrieved": "2026-10-27"
+    },
+    {
+      "host": "zenodo",
+      "ref": "18630057",
+      "title": "Yoga-Based Motor Assessment Tool (YOGA-MAT)",
+      "url": "https://zenodo.org/records/18630057",
+      "license": "cc-by-sa-4.0",
+      "retrieved": "2026-10-27"
+    }
+  ],
+  "manual": [
+    {
+      "name": "Google Dataset Search",
+      "note": "no public API: open it by hand",
+      "url": "https://datasetsearch.research.google.com/search?query=EEG%20ADHD%20control%20children"
+    }
+  ]
+}

@@ -1,0 +1,106 @@
+{
+  "title": "Hybrid Quantum-Classical Neural Network with Data Re-uploading for EEG-based ADHD Classification",
+  "target_journal": "IEEE Transactions on Neural Systems and Rehabilitation Engineering / MDPI Technologies",
+  "authors": "Equipo de Investigación QMLEEG",
+  "trl": "Fase 4 Completada (Propuesta Formalizada r02)",
+  "executive_summary": "Arquitectura híbrida clásica-cuántica para la clasificación diagnóstica de TDAH a partir de registros EEG de 19 canales. Un extractor espacio-temporal clásico condensa la señal a 4 dimensiones clínicas, seguido de un circuito variacional con Data Re-uploading (DRU) y entrelazamiento circular en 4 qubits, preservando interpretabilidad clínica mediante gradientes analíticos por parameter-shift.",
+  "novelty": {
+    "problem_statement": "La alta variabilidad inter-sujeto del EEG y la escasa expresividad de las codificaciones cuánticas de una sola capa limitan el rendimiento diagnóstico del QML en cohortes pediátricas sin provocar mesetas estériles o requerir profundidades prohibitivas.",
+    "pillars": [
+      {
+        "id": "pillar-1",
+        "name": "Compresión Espacio-Temporal Cuántico-Alineada",
+        "badge": "DIMENSIONALIDAD",
+        "color": "#38bdf8",
+        "summary": "Mapeo f_phi: R^{19 x T} -> R^4 preservando bandas Theta, Beta, TBR y coherencia frontal.",
+        "details": "Evita mesetas estériles al emparejar exactamente el número de dimensiones latentes con los 4 qubits del registro."
+      },
+      {
+        "id": "pillar-2",
+        "name": "Circuito Cuántico DRU con Entrelazamiento Circular",
+        "badge": "EXPRESIVIDAD",
+        "color": "#10b981",
+        "summary": "Unitario U(x, theta) = prod_{l=1}^L W_l(theta_l) S_l(x) con topología circular CNOT.",
+        "details": "Alcanza un espectro de Fourier de grado L garantizando aproximación universal en espacios compactos."
+      },
+      {
+        "id": "pillar-3",
+        "name": "Interpretabilidad Clínica y Saliencia Parameter-Shift",
+        "badge": "TRANSPARENCIA",
+        "color": "#f59e0b",
+        "summary": "Derivación analítica del gradiente de decisión con respecto a canales y frecuencias EEG.",
+        "details": "Permite auditar que la clasificación responde a biomarcadores fronto-centrales (F3, F4, Fz, Cz) y no a ruido de volumen."
+      }
+    ],
+    "hypotheses": [
+      {
+        "id": "H1",
+        "title": "Ventaja en Capacidad Expresiva DRU vs Codificación Simple",
+        "statement": "El circuito DRU de L capas sobre 4 qubits alcanzará mayor precisión y convergencia en la frontera TDAH/Control que un circuito variacional estándar de una sola codificación angular.",
+        "status": "Formulada (r02)",
+        "evidence": "Teorema de aproximación universal (Pérez-Salinas et al.) y grado de Fourier L (Schuld et al.)."
+      },
+      {
+        "id": "H2",
+        "title": "Robustez y Mitigación de Ruido vía Cuello de Botella Clásico",
+        "statement": "El cuello de botella clásico de 4 dimensiones aísla al circuito cuántico del ruido de alta frecuencia del EEG, mitigando mesetas estériles durante la optimización.",
+        "status": "Formulada (r02)",
+        "evidence": "Simulaciones NISQ y benchmark SOTA en EEG-TACT."
+      }
+    ]
+  },
+  "conceptual_map": {
+    "layers": [
+      {
+        "name": "Capa 1: Insumos & Señales EEG",
+        "color": "#6366f1",
+        "desc": "Registros multicanal (19 canales estándar 10-20, 128 Hz) del IEEE Dataport ADHD Dataset (121 sujetos).",
+        "nodes": [
+          {"name": "Señal Cruda X", "desc": "Épocas de EEG multicanal en R^{19 x T}"},
+          {"name": "Montaje 10-20", "desc": "Electrodos Fp1, Fp2, F3, F4, Fz, C3, C4, Cz, Pz"},
+          {"name": "Bandas Ritmo", "desc": "Theta (4-8 Hz), Alpha (8-12 Hz), Beta (12-30 Hz)"}
+        ]
+      },
+      {
+        "name": "Capa 2: Extractor Espacio-Temporal Clásico",
+        "color": "#38bdf8",
+        "desc": "Reducción dimensional parametrizada f_phi que extrae 4 biomarcadores latentes.",
+        "nodes": [
+          {"name": "Filtros Temporales", "desc": "Convoluciones 1D sobre el eje de tiempo"},
+          {"name": "Filtros Espaciales", "desc": "Combinaciones lineales de canales (tipo CSP/EEGNet)"},
+          {"name": "Vector Latente x", "desc": "x en [-pi, pi]^4 con Theta, Beta, TBR y coherencia"}
+        ]
+      },
+      {
+        "name": "Capa 3: Circuito Cuántico DRU",
+        "color": "#10b981",
+        "desc": "Unitario U(x, theta) en 4 qubits con reinyectado iterativo de datos a lo largo de L capas.",
+        "nodes": [
+          {"name": "Bloques de Carga S_l(x)", "desc": "Rotaciones R_y(alpha * x + beta)"},
+          {"name": "Capas Variacionales W_l", "desc": "Rotaciones R_z(theta_2) R_y(theta_1)"},
+          {"name": "Entrelazamiento Circular", "desc": "Anillo de CNOTs (1->2, 2->3, 3->4, 4->1)"}
+        ]
+      },
+      {
+        "name": "Capa 4: Medición & Clasificación",
+        "color": "#f59e0b",
+        "desc": "Cálculo de observables de Pauli Z y proyección logística a probabilidad diagnóstica.",
+        "nodes": [
+          {"name": "Observables <Z_j>", "desc": "Valores esperados en [-1, 1] para j=1..4"},
+          {"name": "Capa Densa & Sigmoide", "desc": "Combinación lineal w^T <Z> + b -> y_hat en (0, 1)"},
+          {"name": "Función de Costo", "desc": "Binary Cross-Entropy con regularización L2"}
+        ]
+      },
+      {
+        "name": "Capa 5: Interpretabilidad Clínica",
+        "color": "#ec4899",
+        "desc": "Mapeo de gradientes analíticos por parameter-shift rule a nivel de electrodo y tiempo.",
+        "nodes": [
+          {"name": "Jacobiano Cuántico", "desc": "d<Z_j>/dx_k vía parameter-shift rule"},
+          {"name": "Mapa de Saliencia I(c,t)", "desc": "Gradiente encadenado |dy_hat / dX_{c,t}|"},
+          {"name": "Validación Fisiológica", "desc": "Confirmación de foco fronto-central (TBR)"}
+        ]
+      }
+    ]
+  }
+}

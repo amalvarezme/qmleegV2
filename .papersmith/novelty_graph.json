@@ -1,0 +1,185 @@
+{
+  "title": "Grafo 3D de Novedad e Ideas — QMLEEG",
+  "target_journal": "IEEE TNSRE / MDPI Technologies",
+  "authors": "Equipo de Investigación QMLEEG",
+  "project": "QMLEEG",
+  "summary": "Estructura conceptual y metodológica formalizada en revisión r02. Acopla el extractor espacio-temporal clásico EEG con circuitos variacionales Data Re-uploading en 4 qubits para clasificación de TDAH con interpretabilidad analítica.",
+  "nodes": [
+    {
+      "id": "core-qmleeg",
+      "label": "QMLEEG: Red Híbrida DRU",
+      "group": "core",
+      "color": "#38bdf8",
+      "size": 10.0,
+      "category": "Contribución Global",
+      "badge": "ARQUITECTURA PRINCIPAL",
+      "desc": "Clasificador híbrido cuántico-clásico con reinyectado iterativo de datos (DRU) y entrelazamiento circular para diagnóstico de TDAH.",
+      "rhetorical_question": "¿Cómo clasificar TDAH desde EEG superando la limitación de expresividad de circuitos NISQ?",
+      "paragraph_text": "QMLEEG integra un backbone convolucional espacio-temporal f_phi con un circuito variacional de L capas DRU sobre 4 qubits.",
+      "metrics": "Revisión r02 publicada. 9 ecuaciones display formalizadas. Benchmark IEEE Dataport (121 sujetos).",
+      "novelty_claim": "Universalidad de Fourier hasta grado L con 4 qubits y gradientes de saliencia clínica parameter-shift.",
+      "thesis_ref": "proposals/research-concept-hybrid-quantum-classical-neural-network-with-data-re-uploadi-r02.md",
+      "pdf_page": 1,
+      "section_ref": "Sección 1 y 3",
+      "paper_blocks": ["title-and-keywords.title", "abstract.slot-1", "materials-and-methods.formulation"]
+    },
+    {
+      "id": "hub-problem",
+      "label": "Brecha: Variabilidad EEG & Mesetas Estériles",
+      "group": "problem",
+      "color": "#ef4444",
+      "size": 8.0,
+      "category": "Desafíos",
+      "badge": "BRECHA CIENTÍFICA",
+      "desc": "La variabilidad inter-sujeto del EEG y la escasa expresividad de codificaciones cuánticas de una sola capa degradan la generalización.",
+      "rhetorical_question": "¿Por qué las codificaciones cuánticas tradicionales fallan en señales biomédicas complejas?",
+      "paragraph_text": "Las codificaciones de ángulo simples restringen la hipótesis a grado 1 de Fourier, mientras que codificaciones de amplitud sufren de mesetas estériles.",
+      "metrics": "Limitación documentada en Schuld et al. (2021) y EEG-TACT (2026).",
+      "novelty_claim": "Aislamiento dimensional vía cuello de botella latente clásico d=4.",
+      "thesis_ref": "Sección 1 (r02)",
+      "pdf_page": 1,
+      "section_ref": "Sección 1",
+      "paper_blocks": ["abstract.slot-2", "introduction.block-2"]
+    },
+    {
+      "id": "hub-encoder",
+      "label": "Extractor Espacio-Temporal f_phi",
+      "group": "novelty",
+      "color": "#10b981",
+      "size": 8.0,
+      "category": "Backbone Clásico",
+      "badge": "PILAR 1",
+      "desc": "Compresión espacio-temporal de 19 canales EEG a 4 biomarcadores clínicos (Theta, Beta, TBR, coherencia).",
+      "rhetorical_question": "¿Cómo acoplar señales multicanal de 128 Hz a registros de pocos qubits?",
+      "paragraph_text": "Mapeo parametrizado f_phi: R^{19 x T} -> [-pi, pi]^4 preservando la dinámica fronto-central.",
+      "metrics": "Ecuación (1) en r02.",
+      "novelty_claim": "Reducción libre de pérdida de bandas diagnósticas.",
+      "thesis_ref": "Sección 2 (r02)",
+      "pdf_page": 2,
+      "section_ref": "Sección 2",
+      "paper_blocks": ["materials-and-methods.encoder"]
+    },
+    {
+      "id": "hub-dru",
+      "label": "Circuito Cuántico DRU & CNOT Ring",
+      "group": "novelty",
+      "color": "#f59e0b",
+      "size": 9.0,
+      "category": "Núcleo Cuántico",
+      "badge": "PILAR 2",
+      "desc": "Operador unitario U(x, theta) = prod_{l=1}^L W_l(theta_l) S_l(x) con entrelazamiento circular.",
+      "rhetorical_question": "¿Cómo expandir la capacidad de representación sin aumentar los qubits?",
+      "paragraph_text": "La reinyectación iterativa de datos x genera armónicos de Fourier hasta frecuencia L en el espacio de Hilbert.",
+      "metrics": "Ecuaciones (2)-(5) en r02.",
+      "novelty_claim": "Aproximación universal con 4 qubits.",
+      "thesis_ref": "Sección 3 (r02)",
+      "pdf_page": 3,
+      "section_ref": "Sección 3",
+      "paper_blocks": ["materials-and-methods.quantum-circuit"]
+    },
+    {
+      "id": "hub-saliency",
+      "label": "Interpretabilidad Parameter-Shift",
+      "group": "novelty",
+      "color": "#ec4899",
+      "size": 8.0,
+      "category": "Metrología & Transparencia",
+      "badge": "PILAR 3",
+      "desc": "Gradientes analíticos I(c, t) = |sum_k (dy_hat/dx_k)(df_phi/dX_{c,t})| mapeados a electrodos.",
+      "rhetorical_question": "¿Cómo garantizar explicabilidad clínica en un clasificador cuántico?",
+      "paragraph_text": "La diferenciación analítica exacta conecta la predicción con los canales frontales Fp1, Fp2, F3, F4, Fz, Cz.",
+      "metrics": "Ecuación (9) en r02.",
+      "novelty_claim": "Auditoría clínica fisiológica directa.",
+      "thesis_ref": "Sección 5 (r02)",
+      "pdf_page": 4,
+      "section_ref": "Sección 5",
+      "paper_blocks": ["results-and-discussion.saliency"]
+    },
+    {
+      "id": "sota-eegtact",
+      "label": "Baseline: EEG-TACT (2026)",
+      "group": "sota",
+      "color": "#8b5cf6",
+      "size": 7.0,
+      "category": "Estado del Arte",
+      "badge": "MDPI TECHNOLOGIES",
+      "desc": "Modelo deep learning con atención temporal y convolución tokenizada para TDAH en niños.",
+      "rhetorical_question": "¿Cuál es el baseline de referencia en el dataset de 121 sujetos?",
+      "paragraph_text": "EEG-TACT reporta 87.5% de exactitud a nivel de sujeto en el IEEE Dataport ADHD dataset.",
+      "metrics": "Acc: 87.5%, Recall: 96.0%. DOI: 10.3390/technologies14070392.",
+      "novelty_claim": "Referencia de benchmark directo.",
+      "thesis_ref": "guidance/reference-papers/eeg-tact-adhd/",
+      "pdf_page": 2,
+      "section_ref": "Related Work",
+      "paper_blocks": ["related-work.rw-baselines"]
+    },
+    {
+      "id": "sota-dru",
+      "label": "Teoría: Data Re-uploading (2020)",
+      "group": "sota",
+      "color": "#8b5cf6",
+      "size": 7.0,
+      "category": "Fundamento Teórico",
+      "badge": "QUANTUM",
+      "desc": "Pérez-Salinas et al. demostraron universalidad mediante reinyectado secuencial de datos.",
+      "rhetorical_question": "¿Cuál es la base teórica de la universalidad en pocos qubits?",
+      "paragraph_text": "Demostración de que una sola o pocas líneas de qubits aproximan cualquier función continua multivariable.",
+      "metrics": "Quantum 4, 226 (2020). arXiv:1904.04767.",
+      "novelty_claim": "Extensión al dominio espacio-temporal del EEG.",
+      "thesis_ref": "guidance/reference-papers/data-reuploading-universal-quantum-classifier/",
+      "pdf_page": 3,
+      "section_ref": "Related Work",
+      "paper_blocks": ["related-work.rw-quantum"]
+    }
+  ],
+  "links": [
+    {
+      "source": "core-qmleeg",
+      "target": "hub-problem",
+      "relation": "Aborda directamente",
+      "color": "#ef4444"
+    },
+    {
+      "source": "core-qmleeg",
+      "target": "hub-encoder",
+      "relation": "Pilar 1: Compresión",
+      "color": "#10b981"
+    },
+    {
+      "source": "core-qmleeg",
+      "target": "hub-dru",
+      "relation": "Pilar 2: Expresividad",
+      "color": "#f59e0b"
+    },
+    {
+      "source": "core-qmleeg",
+      "target": "hub-saliency",
+      "relation": "Pilar 3: Interpretabilidad",
+      "color": "#ec4899"
+    },
+    {
+      "source": "hub-problem",
+      "target": "sota-eegtact",
+      "relation": "Benchmark clínico",
+      "color": "#8b5cf6"
+    },
+    {
+      "source": "hub-dru",
+      "target": "sota-dru",
+      "relation": "Extiende teoría",
+      "color": "#8b5cf6"
+    },
+    {
+      "source": "hub-encoder",
+      "target": "hub-dru",
+      "relation": "Acoplamiento latente x in R^4",
+      "color": "#38bdf8"
+    },
+    {
+      "source": "hub-dru",
+      "target": "hub-saliency",
+      "relation": "Gradientes parameter-shift",
+      "color": "#ec4899"
+    }
+  ]
+}
