@@ -1,7 +1,7 @@
 # QMLEEG — OpenCode Entrypoint
 
 Generated from the canonical `.claude/` agent definitions by `papersmith`
-0.37.0. Read the workspace configuration and the relevant skill before
+0.38.0. Read the workspace configuration and the relevant skill before
 changing research artifacts.
 
 ## Canonical context
@@ -23,6 +23,7 @@ changing research artifacts.
 - `experimental-validation` — One stretch of experimental-deliberation, the `validated` stage: search for the area's standard evaluation protocol, its accepted metrics, its current baselines, the dataset the plan runs on, and the seeds, repetitions and significance test the area expects, then verify each baseline's own repository and venue year and tag every external URL with the date a search actually reached it. Ends when nothing in your findings depends on memory rather than a search performed in the current run — never a guess dressed as a citation.
 - `experiments-build` — One stretch of experimental-implementation, between two of the operator's gates: from an approved map of the protocol's declared steps to runnable commands, up through every measurement the protocol declares having a place to land. Materialize what the protocol needs, wire each declared step to a runnable command, and instrument every measurement so it can actually be run and read back. Decides nothing and asks nothing — it ends by reporting what it found and what establishing it cost.
 - `experiments-reviewer` — One stretch of experimental-implementation, between two of the operator's gates: from an instrumented implementation — every measurement the protocol declares already has a place to land — to a findings report the operator reads before any rehearsal or launch. Review the code against the bound experiments protocol on four dimensions: code quality, optimisation of the simulation and data path, remote GPU use, and the statistical tests the protocol declares. Reads and runs the target's own tests and linters only; never repairs, never launches — it ends by reporting what it measured.
+- `experiments-tutor` — One turn of the experiments tutor: begins with the operator's message, a mode and a decision area from the dashboard's experiments panel, ends at one structured turn — one hint grounded in the protocol, approvals, code and results it read, one question, an assessment of the design with quoted evidence, the risks it sees, and any change of decision drafted for /experimental-deliberation. Reads; never writes the workspace.
 - `experiments-walk` — One stretch of experimental-implementation, between two of the operator's gates: from per-step placement decisions already taken to the launch they must authorize. Walk the declared flow act by act in its own order — run the local steps, commit each step's product, refresh the position, generate the job folders a remote step needs and stop at the rehearsal, which no act here performs and the doctrine leaves to a person. Stops at the launch and has no path to submitting a campaign.
 - `figure-auditor` — Audits one standalone TikZ diagram against the prose that describes it: runs `figure audit` for the semantic verdict, runs `figure-review probe` to measure whether the visual half is answerable and bounds it to that skill's checklist only when the probe resolves a link, checks typographic parity, and reports measured findings. Never repairs the figure, never re-derives a verdict by eye, and never invents a visual one.
 - `implementation-build` — One stretch of proposal-implementation, between two of the operator's gates: from an approved object-to-module map to the findings report they decide on. Materialize the object scaffolding, write one module per mathematical object with its provenance and invariant tests, sweep the declared configurations, rule on each remedy's admissibility BEFORE measuring it, and validate what was admitted. Decides nothing and asks nothing — it ends by reporting what it found and what establishing it cost.
@@ -120,6 +121,12 @@ skill refuses when its input is missing.
      `diagram_cli.py validate` (the operator's words verbatim and the hash
      of the PNG shown); `submit` refuses `DIAGRAM_NOT_VALIDATED` until then,
      and drawing it again asks again.
+   - **Experiments tutor**: in the Experimentos tab, `/experiments-tutor`
+     explains, questions and evaluates each design decision (architecture,
+     hyperparameters, ablations, significance tests, the toy set, training,
+     upper bounds, baselines and their implementation) from the protocol,
+     the approvals, the code and the results; it never invents a number, and
+     a change of decision goes back to `/experimental-deliberation`.
    - **Remote runs**: one account per person and service
      (`smith team add … --attest`), `/kaggle-accounts validate`, then
      `/remote-execution`: generate-job → submit --smoke → fetch --smoke /
