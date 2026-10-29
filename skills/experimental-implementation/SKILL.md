@@ -154,6 +154,31 @@ A document declaring no dataset (`dataset_marker: None`, as `documents[1]`
 stays undemanded for that document, exactly as before this capability
 existed.
 
+## The Results layout the dashboard reads
+
+Every measurement this skill instruments lands inside its own product folder,
+under `Results/`, in the shape the command center's experiments panel reads.
+A measurement written anywhere else runs and is never shown. Paths are
+relative to the product folder `<Name>/`. One folder per experiment (`Results/e1/`, `Results/e2/`, ...) is read the same way; at most 200 shown files are read per product, and files the panel never shows, such as per-run records under `Results/<experiment>/runs/`, do not count toward that limit:
+
+| Path | What it holds | Shape |
+| --- | --- | --- |
+| `Results/history*.{json,jsonl,csv}` | Convergence, per epoch or step | One record per epoch or step, carrying an `epoch` or `step` key and numeric series such as `loss`, `val_loss` or a metric; optional `seed`, `fold` and `model` columns let the panel draw mean ± sd across seeds and separate the curves. |
+| `Results/figures/**`, or `Results/<experiment>/figures/**` | The experiment's figures | `png`, `svg`, `jpg` or `pdf` files, in a `figures` folder at any depth. |
+| `Results/tables/**`, or `Results/<experiment>/tables/**` | The experiment's tables | `csv`, `md` or `json` files, in a `tables` folder at any depth. |
+| `Results/summary.json`, or `Results/<experiment>/summary.json` | The run's headline numbers | One JSON object; a `summary.json` deeper than one experiment folder is not read. |
+| `Results/significance*.json` | The significance table | A JSON list of objects with the keys `comparison`, `test`, `statistic`, `p_value`, `p_adjusted`, `correction`, `effect_size`, `effect_size_name`, `ci_low`, `ci_high`, `n` and `alpha`. |
+
+The test, correction and effect size written there are the ones the bound
+experiments revision declares (see `experimental-deliberation`'s **Choosing
+the significance test by experiment type**); the instrumentation stage is not
+closed for an experiment whose declared significance table has nowhere to
+land.
+
+The panel classifies a product folder by its checklist holder: one holding
+`Experimental_AGREED.md` is a full experiment (this skill), and one holding
+only `AGREED.md` is a proof of concept (`proposal-implementation`).
+
 ## The objective flow
 
 **Why this skill was invoked, and where it has to arrive.** Declared here and in
@@ -182,19 +207,43 @@ written at all; approving the map from the protocol's declared steps to
 runnable commands; publishing the commit a worker would clone; authorizing a
 launch, which is hours of somebody's quota.
 
+Before generating a job and again before `gate`, run this skill's own
+`launch-plan --target <repo> --name <Name> --revision <revision> --job <job>
+[--worker <account>]`. It is the shared engine's command, so it reads this
+skill's own holder (`Experimental_AGREED.md`) and writes nothing: it lists
+`propose`, `offer`, `gate` and `submit` in order, each with what it would
+refuse now and the exact next command, and `verify` reports the same ladder
+gaps under `launchLadder`. Pass `--service <service>` when folders of
+the same job name sit under more than one service (a job is `(service, job)`;
+`JOB_SERVICE_AMBIGUOUS` otherwise). When several remote steps read only what is
+already produced -- typically arms placed on different services -- the plan and
+`walk` both list them under `concurrentLaunches.launchable`, each to be
+launched through its own `propose`/`offer`/`gate`, and name every step still
+`waiting` with what it `waitsOn`. A campaign `gate --unit` refuses `NOT_READY`
+until every worker its `propose` record names has its own passing rehearsal
+at the job's pin, and names the ones that do not. Before any rehearsal of a
+job, its first and the first after a re-pin, run `remote_cli preflight` on it
+and fix every `fail` row before the operator is asked to authorize one: it
+runs the smoke locally under runner conditions and checks every other lesson
+the remote rehearsals taught (`remote-execution`, **Before the first
+rehearsal**). `proposal-implementation`'s `references/usage.md`
+(*`launch-plan` — what is still missing before a job launches*) documents its
+output.
+
 This north declares no stage nothing measures, and no `entrances` at all --
 declaring an entrance nothing produces would be a claim with no producer, the
 same reasoning `experimental-deliberation`'s own profile records for itself.
 
 ## What this skill delegates, and to whom
 
-Two stretches of this flow are mechanical from end to end, each carried out by
-its own agent. What moves is EXECUTION, never doctrine: every rule stays here,
+Three stretches of this flow are carried out by their own agents: two are
+mechanical from end to end, and one is a read-only review between them. What moves is EXECUTION, never doctrine: every rule stays here,
 and each agent's first instruction is to load this file.
 
 | Stretch | Delegated to | Begins after | Ends at | Measure this before delegating |
 | --- | --- | --- | --- | --- |
 | Build | this skill delegates to the `experiments-build` agent | the object-to-map is approved | every declared measurement has a place to land (`instrumentation`) | `verify` -- the protocol's declared steps must already be traced to runnable commands |
+| Review | this skill delegates to the `experiments-reviewer` agent | every declared measurement has a place to land (`instrumentation`) | a findings report on code quality, optimisation, remote GPU use and statistical tests, read by the operator before the rehearsal and the launch | `verify` -- every declared measurement resolves, so the code under review is the code that will run |
 | Walk | this skill delegates to the `experiments-walk` agent | each step's placement is decided | the launch the operator must authorize | `verify` -- `undeclaredPlacement` is empty, so every step says where it runs |
 
 Each agent also refuses from inside when it finds itself before its own start --
@@ -203,7 +252,8 @@ the backstop, not the rule.
 ## When a delegated agent cannot be spawned
 
 Each stretch this skill delegates is defined in full by its own agent file:
-`.claude/agents/experiments-build.md`, `.claude/agents/experiments-walk.md`.
+`.claude/agents/experiments-build.md`, `.claude/agents/experiments-reviewer.md`,
+`.claude/agents/experiments-walk.md`.
 When an agent cannot be spawned — the harness has no sub-agent mechanism, the
 agent is not registered in this session, or the spawn itself fails — perform
 the stretch inline: read that agent's definition file and follow it as
@@ -211,6 +261,87 @@ written, from the beginning it states to the end it states, holding any gate thi
 `tools:` line still bounds the stretch: an act that would need a tool outside
 that list is a stop, not a workaround. Say in the reply that the stretch ran
 inline and why the agent could not be spawned.
+
+## Estimating the processing time before the pilot and before the full run
+
+Report the processing-time estimate to the operator before asking for a
+pilot, and again before asking for a launch of the full run. It comes from
+`remote-parallelism`'s `estimate` verb
+(`skills/remote-parallelism/SKILL.md`, **Estimate before you scale**), read
+over the timing probe's record.
+
+- **The timing record.** A short timing probe — one epoch of one fold per
+  arm, on the target's own interpreter, with the device recorded — writes
+  `Results/timing.json` in the product folder `<Name>/`. `Results/` is
+  declared among the step's `produces` roots, so the record is committed with
+  the step's product like any other output. `scales` is copied from the
+  approved experiments protocol (the bound experiments revision) and the
+  declared pilot; nothing guesses it.
+- **The estimate.** `estimate --timing <Name>/Results/timing.json --record
+  <Name>` gives each stage (`poc`, `full`) a range per host, from the one
+  formula that verb defines. A remote GPU host reads `unmeasured` until a
+  measured rehearsal on that host adds its own timing; local timings never
+  stand in for it.
+- **Where it runs, and how long a proof of concept may take.** The same
+  output carries `placement` per stage, read on each range's upper bound. A
+  stage whose local estimate exceeds 20 minutes runs on a cloud host — the
+  fastest one measured, or one timed first — never locally. A proof of
+  concept is sized to run in at most 5 hours on the host it is placed on;
+  when `placement.pocBudget` reads `exceeds`, the design is reduced (subjects,
+  epochs, folds, seeds or arms) and estimated again before the pilot is asked
+  for.
+- **What it is.** A measurement-derived range (±20%, single-probe
+  extrapolation), never a promise, and never authorization: the pilot and the
+  launch stay the operator's to approve after reading it.
+
+## Every remote unit fits one session, or resumes
+
+A service stops a session after its continuous run limit, and whatever was not
+written out by then is lost with the hours it cost. So every remote unit fits
+one session within the 80% margin (`schedule` and `assess` refuse
+`unit-over-session-margin` otherwise), or its step is declared resumable from a
+checkpoint. The target reads `FORGE_SESSION_DEADLINE` (epoch seconds), writes
+its checkpoint and starts no new unit or trial past it, then exits cleanly.
+A unit that does not fit is split along the declared axis — fold, seed,
+subject block, never by arm — or resumed over chained sessions on the same
+account. After a cut session, run `fetch` (it keeps the partial result), then
+`remaining`, and send again only the units it lists. A checkpoint reaches the
+next session as follows: on a kernel service, the previous kernel's output
+attached to the next kernel through `kernel_sources` and read under its input
+root at `notebooks/<owner>/<slug>/` (checked on a live account on 2026-10-27).
+papersmith attaches it automatically for the paths the job declares with
+`generate-job --carry-path`: `submit` places the continuation on the account
+that produced the checkpoint (`--no-carry` starts it fresh instead), and the
+runner restores those paths before the entrypoint and exports
+`FORGE_CARRY_IN`, so the target code is unchanged. On Colab nothing is carried
+automatically (`carry: unsupported`); upload the checkpoint into the new
+session. The details live in
+`skills/remote-execution/SKILL.md`, **Sessions, checkpoints and
+resume**, and `skills/remote-parallelism/SKILL.md`.
+
+A job that reads a public dataset declares it with `generate-job
+--input-dataset <owner>/<slug>` (repeatable). A pushed kernel is a
+non-interactive session and cannot attach a dataset at run time, so on a
+kernel service `submit` names the declared datasets in the push and reports
+`inputs: attached`; a service that attaches none reports `inputs:
+unsupported`. Either way the runner exports `FORGE_INPUT_DATASETS` before the
+entrypoint, a JSON object mapping each ref to its mounted directory or to
+null: the target reads the mounted directory when there is one and downloads
+the dataset only when the value is null. The details live in
+`skills/remote-execution/SKILL.md`, **Job inputs**.
+
+## The hyperparameter search step
+
+Only when the bound experiments revision declares a Hyperparameter Search
+subsection. The step sits after the proof of concept and the timing estimate,
+and before the full runs: the timing probe sizes it (`plan --timing`), and it
+is placed like the full runs — a step routed to a remote GPU notebook is
+generated, rehearsed and launched through `remote-execution`, behind the
+operator's consent. It runs through `/hyperparameter-search`
+(`skills/hyperparameter-search/SKILL.md`), which validates the plan, names one
+study per arm and outer fold and reports their importance and contour figures
+under `Results/hpo/`. Its results are frozen per outer fold: every seed of
+the full run reuses that fold's tuned values and never searches again.
 
 ## Where to start: the repository is the memory
 
@@ -365,7 +496,7 @@ launcher) must be an absolute path: a relative one refuses
 `IMPLEMENTATION_DOMAIN_PROFILE_NOT_ABSOLUTE` before any command runs. The
 commands that write the ledger take `--session <id>`, an id you choose per
 working session; `proposal-implementation`'s `references/usage.md`, "Session
-ids", defines it. The workspace bridge `papersmith implement` drives the
+ids", defines it. The workspace bridge `smith implement` drives the
 sibling's launcher, never this one: run this skill's commands through its own
 `scripts/implementation_cli.py`.
 
@@ -385,7 +516,16 @@ CLI, one directory over). Consequence, stated rather than discovered:
   `verify` here does not list it under `missingProvenance` while its bytes are
   exactly the ones the scaffold receipt's `materialized` entry recorded; a
   modified copy, an adopted one, or one with no receipt entry is reported
-  like any other module.
+  like any other module. The same holds for the sibling's remote stamp,
+  `src/<Package>/remote_stamp.py`, scaffolded beside it with
+  `tests/test_remote_readiness.py`. A full run's remote smoke callable calls
+  `write_shard(summary)` from it: under the runner (`FORGE_RUN_MODE`) it
+  writes the `shard.json` `smoke record` reads, carrying `evidence.commit`,
+  `evidence.sourcesDigest` and `environment.device`, and anywhere else it
+  writes nothing. Pair it with `generate-job --smoke-required-evidence
+  evidence.commit --smoke-required-evidence environment.device.kind`. The
+  readiness test's `FORWARD` placeholder is where the target wires its own
+  forward for the `meta` device-mix guard (see the sibling's step 5).
 
 Every other published command runs exactly as `proposal-implementation`'s own
 doctrine describes it, against this domain's own profile leaves instead of the
@@ -407,6 +547,13 @@ An agreement no test could ever witness is closed by the operator's recorded
 decision, `settle --done --unwitnessed --reason "<their reason>"`, never by a
 hand tick; `close` owes a position only once the target declares a flow. Both
 are described in `references/usage.md`.
+
+**Once the full experiments' approval in `<Name>/Experimental_AGREED.md` is
+settled, run `/experiment-diagrams experiments`** so the operator verifies the
+experiments diagram beside the product in the dashboard's Experimentos panel and
+validates it there, or approves it explicitly in the conversation (then run
+`experiment-diagrams validate` with the operator's words); nothing of the
+product is launched remotely (`DIAGRAM_NOT_VALIDATED`) until then.
 
 ## What this skill has not written down
 

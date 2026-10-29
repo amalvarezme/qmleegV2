@@ -1,6 +1,6 @@
 ---
 name: remote-execution
-description: "Trigger: durable record of what a repository has submitted to a remote worker, what came back, and how much to submit at once: the append-only ledger and the fold that derives per-entrypoint state, the capacity clamp and worker auto-selection, the `remote_cli` front door (`submit` with its path guard, `status`, `poll`, `fetch`, `reconcile`, `distribute`, `generate-job`, `smoke`, `record`, `readiness`), the backend-agnostic adapter seam (ABC, frozen shapes, registry), and one shipped backend -- `adapters/kaggle.py`, the only file here allowed to name a service, shelling out to `adapters/kaggle_driver.py`, the only one allowed to import the pinned `kagglesdk` client. Credentials travel as a `CredentialHandle(worker_id, token_path)`, read at one expression in that one file; readiness is derived from `smoke.jsonl` evidence, never a human assertion and never a clock. Stdlib-only except that one named driver script."
+description: "Trigger: durable record of what a repository has submitted to a remote worker, what came back, and how much to submit at once: the append-only ledger and the fold that derives per-entrypoint state, the capacity clamp and worker auto-selection, the `remote_cli` front door (`submit` with its path guard, `status`, `poll`, `fetch`, `reconcile`, `distribute`, `remaining`, `generate-job`, `smoke`, `record`, `readiness`, `preflight`, `generate-jobs`), the backend-agnostic adapter seam (ABC, frozen shapes, registry), and one shipped backend -- `adapters/kaggle.py`, the only file here allowed to name a service, shelling out to `adapters/kaggle_driver.py`, the only one allowed to import the pinned `kagglesdk` client. Credentials travel as a `CredentialHandle(worker_id, token_path)`, read at one expression in that one file; readiness is derived from `smoke.jsonl` evidence, never a human assertion and never a clock. Stdlib-only except that one named driver script."
 ---
 
 # Remote Execution
@@ -158,7 +158,12 @@ Three modules exist so far, each service-blind and stdlib-only:
   the currency rule that tells a fresh result from a stale one.
   `submitted_event(...)`, `returned_event(...)`, `errored_event(...)` build
   the three event kinds this ledger records, with the field names and
-  truncation rules this schema fixes (see below).
+  truncation rules this schema fixes (see below). The fold keys each
+  submission by `lane_key()`: `(entrypoint, worker)`, or `(entrypoint,
+  "<worker>#slot<n>")` for a campaign's slot `n >= 2` on that worker, so
+  two concurrent slots of one campaign are two independent "latest" facts
+  that neither supersede nor quarantine each other. `pending_for(worker)`
+  counts every lane whose event names that worker.
 - `scripts/adapter.py` — the `Adapter` ABC every backend-specific module
   must satisfy in full (exactly six operations), the frozen data shapes
   that cross the seam (`Worker`, `Job`, `Submission`, `Status`, `Fetched`),
@@ -276,20 +281,41 @@ Three modules exist so far, each service-blind and stdlib-only:
     entirely — the guarantee is EVERY healthy account, never the first
     one. `cmd_distribute`'s own read-only report used to be the only
     consumer of that spread; `submit --unit` is the write path that
-    actually issues it. One `adapter.submit()` and one ledger event per
-    `packer.Distribution` assignment — never one per unit, since a
-    worker's whole assigned unit list travels inside that ONE job's opaque
-    `run_config["units"]`. An assignment a healthy account was granted but
+    actually issues it. **One `adapter.submit()` and one ledger event per
+    granted slot** (S1, parallel campaigns): `packer.slot_shares()` splits
+    each assignment's units round-robin into `min(granted, len(units))`
+    shares, and each share is its own job (`run_config["units"]` = that
+    share), its own submission id and its own `submitted` event — a worker
+    granted two slots (Kaggle's cap) runs two jobs side by side instead of
+    one job running its units in sequence. Slot 1 is shaped exactly as a
+    one-slot worker's single job always was; slots `n >= 2` add
+    `run_config["slot"] = n` (the adapter gives each its own remote
+    identity — Kaggle suffixes the kernel title/slug `-slot-<n>`) and a
+    `slot` field on the event (its own ledger lane). `poll`, `fetch`,
+    `status` and `reconcile` work per submission id unchanged. A backend
+    that answers two slots with the same id is refused
+    `DUPLICATE_SUBMISSION_ID` before the repeat is recorded. A worker
+    granted one slot behaves exactly as before. An assignment a healthy account was granted but
     had no units left to receive (`packer.Assignment`'s own documented
     "had room, didn't need it" case) submits nothing and reports
     `submissionId: null` — capacity with nothing to spend is never turned
     into a fabricated job. The result mirrors `packer.Distribution` field
-    for field: `assignments[]` (worker, its whole `Plan`, its units, its
-    submission id), `unplaced[]` (units that did not fit, by identity),
+    for field: `assignments[]` (worker, its whole `Plan`, its units,
+    `submissionId` — slot 1's — and `submissions[]`, one `{slot, units,
+    submissionId}` per slot), `unplaced[]` (units that did not fit, by identity),
     and `skipped[]` (`worker -> Skip.reason`, unprefixed) — an excluded
     account is always named with its reason, never silently dropped.
     Single-unit `submit` (no `--unit` at all) is untouched: today's
     `select()`/`plan()` path, byte-identical.
+  - **Diagram validation, every launch**: when the resolved product holds
+    `AGREED.md` (proof of concept) or `Experimental_AGREED.md` (full
+    experiments), `submit` — `--smoke` included — refuses
+    `DIAGRAM_NOT_VALIDATED` until the operator has validated that kind's
+    experiment diagram -- in the dashboard's Experimentos tab ("Validar
+    diagrama") or by approving it explicitly in the agent chat, which runs
+    `experiment-diagrams validate` with the operator's words -- naming each open kind and its state (`absent`, `pending`,
+    `stale`). It runs before the consent gate, so a refusal costs nothing. A
+    product with neither marker is not gated. See `skills/experiment-diagrams`.
   - **Consent gate, every launch** (Finding 3; Decisions 4, 5 — corrected
     in a later pass): `submit` refuses without an explicit `--consent
     <token>` — the "nothing is launched without explicit permission"
@@ -420,6 +446,20 @@ Three modules exist so far, each service-blind and stdlib-only:
     own `--worker`/`--unit` mutual exclusivity, mirrored by `cmd_gate`'s
     own refusal on the same conflict).
 
+    **Readiness per assigned worker, campaign only** (S2, parallel
+    campaigns): because a campaign `gate` record binds no worker, a
+    non-rehearsal campaign `submit` checks, once `packer.distribute()` has
+    named the accounts and before the first `adapter.submit()`, that every
+    worker assigned units reads ready on `readiness` (its own passing
+    rehearsal at the job's current pin). Otherwise it refuses
+    `CAMPAIGN_WORKERS_NOT_READY`, naming every worker that still needs a
+    rehearsal; nothing is submitted. A worker granted capacity but no
+    units needs none. The consent token is unchanged (pin, entrypoint,
+    ordered units — never workers): readiness is a recorded fact checked
+    here, not something the token could bind. A single send keeps its
+    current check (its `gate` record names its worker); `--smoke` and the
+    legacy no-job-folder shape are exempt, as they are from the gate.
+
     Fail-closed for everything else, on purpose: a job-folder product with
     no `.implementation/position.jsonl` at all refuses exactly like one
     with events but no match — the one-time adoption cost this accepts
@@ -522,6 +562,27 @@ Three modules exist so far, each service-blind and stdlib-only:
   exit or an expired timeout is a refusal (`KaggleAdapterError`), never a
   fabricated `Status`, `Submission` or `Fetched`.
 
+  **Team accounts: only owner-mapped Kaggle accounts are workers.** When
+  `<workspace>/.papersmith/team.json` maps at least one owner to a Kaggle
+  username (`accounts.kaggle.username`), `workers()` returns only the
+  accounts kaggle-accounts lists whose username an owner maps — one per
+  owner. Every other listed account stays in kaggle-accounts but is never
+  a worker, and `submit` to it refuses before any credential is asked for:
+  it is "not mapped to a team owner: one account per person — Kaggle
+  staff: 'the one account per person applies to all Kaggle site use'"
+  (https://www.kaggle.com/discussions/general/192527, verified
+  2026-10-25). Registering a second account under a different email does
+  not make it a different person's account. An owner whose mapped
+  username kaggle-accounts does not list is reported as not validated and
+  yields no worker until that account is taken in and validated.
+  `KaggleAdapter.team_report()` returns all three lists (`workers`,
+  `excluded` with each reason, `not_validated`), and the declared capacity
+  counts mapped workers only. The adapter reads two fields per member
+  (`owner`, `accounts.kaggle.username`) and nothing else; it refuses a
+  registry that is not schema 1, an owner listed twice, and the same
+  username under two owners. With no registry, or one mapping no Kaggle
+  account, every listed account is a worker exactly as before.
+
   **`fetch()` owns its own time budget, `KAGGLE_FETCH_TIMEOUT_SECONDS`
   (1800s) — a SEPARATE constant from `SUBPROCESS_TIMEOUT_SECONDS` (120s),
   never the same one reused.** This is the same finding as
@@ -578,18 +639,23 @@ Three modules exist so far, each service-blind and stdlib-only:
 | 8 | `reached` | Every interception point this driver topology adds — the OUTER double (`kaggle_driver.py` faked on `PATH`) and the INNER double (a recording `requests` transport mounted on the driver's own client session) — asserts a non-zero recorded-call count before any assertion about content; a bypassed double fails rather than passing silently | `_run()`'s subprocess boundary (outer); the driver's own mounted transport in its test fixtures (inner) | `test_outer_interception_reached_count` |
 | 9 | `no-sdk-above-the-driver` | `adapters/kaggle.py` names `kagglesdk` nowhere at all — text AND AST, so a live `import` and a docstring mention are both caught, not a reader's promise | `adapters/kaggle.py`'s own source (the absence of the name) | `test_driver_names_kagglesdk_nowhere_in_adapter` |
 | 10 | `wire-bearer` | The prepared outbound request carries `Authorization: Bearer <the token's stripped value>`, observed below `BearerAuth.__call__` and above the socket — never a Basic header, anywhere on this path | `kaggle_driver.py`'s `_build_client()` plus the recording `requests` transport mounted on it in its own tests | `test_wire_bearer_header_carries_token_value` |
+| 11 | `fetch-origin` | A per-file download sends the stored credential only to a Kaggle origin (`api.kaggle.com`, `www.kaggle.com`, `kaggle.com`, over https); any other host, a signed storage URL included, gets a bare GET, and a redirect that leaves Kaggle drops the credential for every later hop | `kaggle_driver.py`'s `_fetch_file()` | `test_fetch_sends_the_bearer_credential_only_to_kaggle_origins` |
 
   Rows 8-10 are new to the child-driver topology; rows 1-7 hold verbatim
   under it — the sink is still `_env_for()`, only what reads the value on
   the other end changed (the `kaggle` CLI's `authenticate()` before this
-  change, `kagglesdk`'s own `_try_fill_auth()` now). `fetch`'s per-file
-  download URLs (`list_kernel_session_output`) are a known open question,
-  not a row: whether they need this session's own Bearer credential or
-  answer to an anonymous GET is settled only by a live rehearsal, not run
-  by this change. `cmd_fetch` attaches the defensive choice (the same
-  already-authenticated session `poll`/`submit` use) rather than guessing,
-  and that choice stays **`unverified-by-rehearsal`** until a rehearsal,
-  run only on the user's explicit permission, settles it either way.
+  change, `kagglesdk`'s own `_try_fill_auth()` now). Row 11 retires the
+  defensive choice `fetch` used to make for the per-file download URLs
+  `list_kernel_session_output` returns: it sent this session's Bearer
+  credential to whatever host a URL named, and a URL in a response is no
+  authority to send a credential there. Those downloads also follow
+  redirects by hand (https only, at most five), give every hop a 10 s
+  connect and 60 s read timeout, and stream to disk under one 20 GiB
+  budget per fetch. The output listing is paged: `fetch` follows
+  `next_page_token` to the last page, and refuses a repeated token or more
+  than 1000 pages. Whether Kaggle's own file URLs need the credential at
+  all is still unrehearsed against a live account; a rehearsal runs only
+  on the user's explicit permission.
 
   `REQUEST_GPU = True` and `KAGGLE_MACHINE_SHAPE = "NvidiaTeslaT4"` are
   declared here, and here alone in this whole skill — a request, not a
@@ -723,6 +789,21 @@ executable — no test in this suite reaches the network or a real account).
   it is not a module and maps to no package directory, and whether it is
   DELIVERED is the `declared-notebook-reachable` condition's question,
   asked of the pin.
+
+  **The run notebook is cloned on its own.** `generate-job` appends every
+  `--run-notebook`/`--smoke-notebook` that no declared `--clone-path`
+  covers to `clonePaths` as the notebook FILE itself
+  (`jobfolder.with_entry_notebooks()`), so the notebook needs no
+  `--clone-path` and only it enters the pin's staleness check. Declaring
+  the whole folder instead (`--clone-path <Name>/Notebooks`) still works
+  and is kept exactly as declared, but it makes EVERY notebook in that
+  folder part of the pin: re-running and committing an unrelated notebook
+  there (a report, say) stales the job (`pin-is-head`) and sends it back
+  through smoke, proposal, offer and gate. A declared path is never
+  dropped or narrowed. `git sparse-checkout set` delivers a file path in
+  both modes (cone mode, the default since git 2.37, also brings the
+  notebook's sibling files at the same pinned commit; they never enter
+  staleness).
   `runnerTemplate` records each runner asset's path and sha256 as inert
   provenance — deliberately not a drift check; adding one would be a second
   staleness condition, out of bounds for this skill (see design #744
@@ -744,8 +825,8 @@ executable — no test in this suite reaches the network or a real account).
 | 1 | `clean-worktree` | The working tree is clean over the declared clone paths — `git status --porcelain`, so an untracked file counts and an ignored one does not. Not a repository, or no commits, refuses too. | `generate-job`, `submit` | Every offending path, and `git add`/`git commit`/`git restore` as the remedy |
 | 2 | `pin-is-head` | The pin is HEAD, or nothing changed between the pin and HEAD under the declared clone paths. `unknown` refuses as firmly as `drift`. | `generate-job`, `submit` | The changed clone paths, the pin and HEAD, and git's own message |
 | 3 | `declared-paths-exist` | Every declared clone path exists at the pin — `git cat-file -e <pin>:<path>`, asked of the pin and never of the working tree. `sparse-checkout` accepts a path the tree does not contain and fetches nothing for it, silently. | `generate-job`, `submit` | Every absent path, and that the remedy is committing them and pinning the commit that carries them |
-| 4 | `declared-notebook-reachable` | Every notebook the run block declares (`run.notebook`, `run.smoke.notebook`) is covered by a declared clone path AND exists at the pin — `git cat-file -e <pin>:<notebook>`. Nothing imports a notebook, so the import cross-check has no representative for it and `sparse-checkout` reports nothing for a path its patterns do not cover. A job declaring no notebook passes through untouched. | `generate-job`, `submit` | Every notebook no clone path covers, every notebook absent at the pin, and the remedy for each |
-| 5 | `pin-published` | The declared remote can serve the pin — `git fetch --dry-run --depth 1` from a scratch repository. Credentialless that probe is anonymous; with `--repo-credential` it authenticates through the staged askpass material (see the Colab environment block) and an SSH-shaped `--repo-url` refuses by name. | `generate-job`, `submit` | The commit, the remote URL, the missing push addressed to `--repo-ref`, and git's own message |
+| 4 | `declared-notebook-reachable` | Every notebook the run block declares (`run.notebook`, `run.smoke.notebook`) is covered by a declared clone path (generation adds an uncovered notebook as its own clone path) AND exists at the pin — `git cat-file -e <pin>:<notebook>`. Nothing imports a notebook, so the import cross-check has no representative for it and `sparse-checkout` reports nothing for a path its patterns do not cover. A job declaring no notebook passes through untouched. | `generate-job`, `submit` | Every notebook no clone path covers, every notebook absent at the pin, and the remedy for each |
+| 5 | `pin-published` | The declared remote can serve the pin — `git fetch --dry-run --depth 1` from a scratch repository. Credentialless that probe is anonymous; with `--repo-credential` it authenticates through the staged askpass material (see the Colab environment block) and an SSH-shaped `--repo-url` refuses by name. `generate-job` refuses any SSH `--repo-url` before this probe, credential or not. Skipped, and only this condition, for a job that carries a code bundle (`--code-bundle`): its runner never clones. | `generate-job`, `submit` | The commit, the remote URL, the missing push addressed to `--repo-ref`, and git's own message |
 
   **Why the `clean-worktree` condition exists, and why it is `status` and not `diff`.**
   `resolve_clone_paths()` walks the WORKING TREE. Without this condition
@@ -831,9 +912,13 @@ executable — no test in this suite reaches the network or a real account).
      `runner_bootstrap.py` clones with no credential step either, so a
      probe that authenticated would pass jobs whose runner can never
      clone the repository — the same defect one layer up. An SSH
-     `--repo-url` is not refused on sight; it is probed like any other
-     and, if it fails, the refusal says the probe was unauthenticated so
-     the failure is not misread as a local accident. With
+     `--repo-url` (scp-shaped `git@host:o/r.git`, `ssh://`, `git+ssh://`,
+     `ssh+git://`) is refused by `generate-job` before any git call, naming
+     the rule and the `https://` alternative: the runner's clone has no SSH
+     agent and no key, so no job generated from it could clone. `submit`
+     still probes an older job folder's SSH remote like any other and, if
+     it fails, the refusal says the probe was unauthenticated so the
+     failure is not misread as a local accident. With
      `--repo-credential`, the amendment S3 adds: the credential is
      staged for the RUNNER too (uploaded beside the executor, used by
      `clone_repo()`'s clone) and both transports are pinned to
@@ -970,6 +1055,11 @@ executable — no test in this suite reaches the network or a real account).
     `FORGE_CLONE_COMMIT` (the pinned commit). The names are forge-owned
     and deliberately generic — this is the contract between a runner and
     the notebook it starts, never a name borrowed from one repository.
+    A CALLABLE job is handed the same two names (remote-preflight F1),
+    applied to the runner's own environment around the call and restored
+    after it, whenever its run-config carries the pin, so a callable smoke
+    on a code-bundle worker reads its commit from `FORGE_CLONE_COMMIT`
+    exactly as a notebook does.
     `assets/notebook_repo_root.py` is the reading side: the FIRST code
     cell of every notebook a job may run, owned here and copied byte for
     byte into `proposal-implementation`'s kit, where a forge test binds
@@ -1114,6 +1204,21 @@ executable — no test in this suite reaches the network or a real account).
   `unresolvedImports` instead of guessing, converting a silence into a
   recorded, reportable decision. `--accept-unresolved` never bypasses a
   `computedNotDeclared` refusal — only `unresolved`.
+
+  **The kit's notebook bootstrap cell is recognised, nothing looser.** A
+  notebook code cell byte-identical to `assets/notebook_repo_root.py`
+  (exact text match against the shipped asset, never a heuristic) is
+  blanked to the same number of empty lines before the notebook is
+  parsed, so its `.git`/`HEAD`/loose and packed ref reads — the kit's own
+  proof of the pinned commit — never become `unresolvedReads`, and every
+  other cell keeps its line numbers. After that cell, the one
+  `sys.path.insert(0, str(ROOT / "src"))` is not an uncertain import:
+  `src/` is the clone's own source root. It stays uncertain when it sits
+  before the cell, when anything in the notebook rebinds `ROOT`, or when
+  the cell was edited by a single byte. Any other `sys.path` mutation and
+  any other uncertain read is flagged exactly as before, so a kit notebook
+  generates without `--accept-unresolved`/`--accept-unresolved-reads`
+  while every other notebook still needs them.
 
   **Undeclared-read detection (Unit 1, same-file).** The field incident this
   exists to catch: a job declared its imports correctly and still failed,
@@ -1398,7 +1503,7 @@ executable — no test in this suite reaches the network or a real account).
 
 ## The commands
 
-`remote_cli.py` accepts exactly nine top-level subcommands; this table is the
+`remote_cli.py` accepts exactly twelve top-level subcommands; this table is the
 closed roster `skill-audit`'s `roster` move derives against, driving the CLI
 with a nonce it cannot accept and reading the accepted set out of its own
 refusal.
@@ -1407,13 +1512,150 @@ refusal.
 | --- | --- |
 | `submit` | submit one notebook to a registered backend's worker |
 | `status` | report the fold for one product's ledger; resolves nothing |
-| `distribute` | report how opaque work units would spread across every healthy worker account right now; issues no work and records nothing |
+| `distribute` | report how opaque work units would spread across every healthy worker account right now, with each worker's per-slot `shares`; issues no work and records nothing |
+| `remaining` | report which declared units have no complete result yet (`complete`, `inFlight`, `remaining`, in the declared order), the list the next campaign sends; asks no backend and records nothing |
 | `poll` | ask the adapter for one submission's status |
-| `fetch` | materialize one submission's result, quarantining it when it is not current |
+| `fetch` | materialize one submission's result, quarantining it when it is not current; an incomplete result is kept under `partial/` and, when the run is over (`failed`/`unknown`), recorded `errored` naming it |
 | `reconcile` | compare the ledger against the adapter's `list_active()` in both directions |
 | `generate-job` | generate a forge-owned job folder at `<target>/tools/<service>/<job-name>/` |
+| `generate-jobs` | generate every remote step's job folder in one call from the product's declared `__steps__` (and a `schedule` output), deriving service, run, clone paths, code bundle, requirements, carry paths and `--dataset` inputs; prints one row per job and the single `preflight` command to run next |
 | `smoke` | smoke-run bookkeeping: recording a rehearsal's evidence-derived verdict |
-| `readiness` | state whether a job is ready for a full submission on a worker; reports only, issues no submission |
+| `readiness` | state whether a job is ready for a full submission on a worker, from that worker's own latest rehearsal; reports only, issues no submission |
+| `preflight` | check a generated job locally before its first remote rehearsal, one `pass`/`warn`/`fail` row per check with its evidence and fix, including a local rehearsal of its smoke; exits non-zero on any `fail`, never submits |
+
+## Refusal codes
+
+Refusals that carry a stable code print it first in the message, so a caller
+can branch on it without parsing prose.
+
+| Code | Raised by | Meaning |
+| --- | --- | --- |
+| `DIAGRAM_NOT_VALIDATED` | `submit` (every mode) | the product holds an approval whose experiment diagram the operator has not validated |
+| `CAMPAIGN_WORKERS_NOT_READY` | campaign `submit` (`--unit`, not `--smoke`) | a worker the distribution assigns units to has no passing rehearsal of its own at the current pin; the message names every such worker |
+| `DUPLICATE_SUBMISSION_ID` | campaign `submit` | the backend answered two slots of one campaign with the same submission id; the repeat is not recorded |
+| `LEDGER_EVENT_TOO_LARGE` | campaign `submit` | a slot's share of units would make its `submitted` event exceed the ledger's 4096-byte line; checked for every slot before the first submission, so nothing is sent |
+| `CODE_BUNDLE_NOT_CARRIED` | `generate-job --code-bundle` | the service's adapter does not declare `CODE_BUNDLE_MAX_BYTES`, so it cannot ship a code bundle; refused before any git call |
+| `CODE_BUNDLE_TOO_LARGE` | `generate-job --code-bundle` | the compressed bundle exceeds the service's `CODE_BUNDLE_MAX_BYTES`; the message names both sizes and nothing is written |
+| `CODE_BUNDLE_UNSAFE_ENTRY` | `generate-job --code-bundle`, the runner | an archive entry is absolute, carries `..`, is a link or special file, or lies outside the declared clone paths |
+| `CODE_BUNDLE_MISMATCH` | `submit`, the backend's push, the runner | the job folder's `code-bundle.tar.gz` is absent, does not hash to `codeBundle.sha256`, or (at `submit`) holds files that differ from the pin's; nothing is pushed or unpacked |
+| `CODE_BUNDLE_WITH_REPO_CREDENTIAL` | `generate-job` | `--code-bundle` and `--repo-credential` were both given; a bundled job never clones, so the credential would be ignored. Refused before anything is read or written |
+| `WORKSPACE_WITHOUT_DATASET` | `generate-job --workspace` | `--workspace` was given without `--dataset`; it only chooses which registry `--dataset` reads, so alone it would change nothing |
+| `DATASET_UNKNOWN` | `generate-job --dataset`, `generate-jobs --dataset` | the slug is not in the workspace's `datasets/registry.json` |
+| `DATASET_LICENSE_NOT_ALLOWED` | `generate-job --dataset`, `generate-jobs --dataset` | the dataset's license decision is missing or refused; run `/datasets license` first |
+| `DATASET_NOT_PREPARED` | `generate-job --dataset`, `generate-jobs --dataset` | the dataset has no official preparation (`/datasets prepare`), so there is no sha256 to record |
+| `DATASET_NOT_PUBLIC` | `generate-job --dataset`, `generate-jobs --dataset` | the dataset is published privately and its source names no public dataset page; the fix names `/datasets publish ... --public` with the operator's consent. Nothing is uploaded |
+| `DATASET_NOT_PUBLISHED` | `generate-job --dataset`, `generate-jobs --dataset` | the dataset is not published and its source names no public dataset page a worker can attach; the fix names `/datasets publish` with the operator's consent. Nothing is uploaded |
+| `DATASET_HOST_NOT_ATTACHABLE` | `generate-job --dataset`, `generate-jobs --dataset` | the dataset resolves to a host other than the one the service's adapter attaches from (`INPUT_DATASETS_HOST`) |
+| `DATASETS_SKILL_MISSING` | `generate-job --dataset`, `generate-jobs --dataset` | the workspace has no `skills/datasets/scripts/datasets_cli.py` beside this skill, so the registry cannot be resolved; the fix names `smith upgrade` |
+| `STEPS_UNREADABLE` | `generate-jobs` | the product's `src/<Package>/__init__.py` or `config.py` does not parse, or the `__steps__` it assigns is not a literal the reader can evaluate without running the target's code |
+| `SCHEDULE_UNREADABLE` | `generate-jobs --from-schedule` | the file is not readable JSON, holds no `steps` list, or a step has no `id` or names no `services` |
+| `SCHEDULE_IS_A_PLAN` | `generate-jobs --from-schedule` | the file is the schedule's input plan (it carries `schema` and no `makespanMinutes`), whose `services` are only the allowed ones; the fix names `parallelism_cli.py schedule --plan <file>` and passing its output instead |
+| `CARRY_WORKER_MISMATCH` | campaign `submit` (a job declaring `--carry-path`) | a continuation unit's earlier output was produced on another worker than the one it is placed on; an earlier output carries only within its own account. The message names that worker and `--no-carry`; checked for every slot before the first submission, so nothing is sent |
+
+## Before the first rehearsal
+
+Run `preflight` on every generated job before the operator is asked to
+authorize its first rehearsal, and again after any re-pin. It never submits;
+it reaches a service only through the existing read-only probes (the
+anonymous reachability probe `generate-job` already runs, the adapter's own
+interpreter and account probes). A `--repo-credential` token is read only
+through the generator's single read site, inside that probe, exactly as
+`generate-job` reads it; preflight itself opens no credential file.
+
+```
+python3 scripts/remote_cli.py preflight --target <repo> \
+    --entrypoint <repo>/tools/<service>/<job-name>/runner.ipynb \
+    [--worker <id>]... [--expect-accelerator <name|sm_*>] \
+    [--timing <Results/timing.json>] [--stage poc|full] [--units N] \
+    [--local-smoke-kwargs '<json>'] [--local-timeout SECONDS] \
+    [--skip-rehearsal] [--keep-rehearsal <new dir>] [--interpreter <python>] \
+    [--repo-credential <token file>] [--workspace <workspace>]
+```
+
+`--entrypoint` is repeatable: given more than one (the command
+`generate-jobs` prints), it prints `{jobs: [one report per job], summary}`
+with the summed counts and one `ok`; given one, the report below, unchanged.
+`--workspace` names the workspace whose env interpreter, dataset registry,
+team registry and account credentials are checked (default: the workspace
+this skill is installed in), so a CLI run from another checkout checks the
+accounts that workspace actually holds.
+
+It prints one JSON object: `checks`, one row per check as
+`{check, status, evidence, fix}` (`status` is `pass`, `warn` or `fail`; an
+`account` row also carries `worker`, the rehearsal row `details` with its
+duration), and `summary` with the counts and `ok`. It exits 0 only when no
+row fails. Run it under the workspace env interpreter, the one `submit` uses.
+
+| Check | Fails (or warns) when | Fix it names |
+| --- | --- | --- |
+| `pin` | the job's clone paths moved since its pin (`staleness` not `fresh`) | commit, then `generate-job --regenerate` |
+| `diagrams` | an approval (`AGREED.md`, `Experimental_AGREED.md`) owes an experiment diagram that is not `validated`; `submit` would refuse `DIAGRAM_NOT_VALIDATED` | the dashboard's "Validar diagrama", or `diagram_cli.py validate` on the operator's explicit approval in the chat |
+| `interpreter` | the service's driver is not usable under the interpreter running this command | the workspace env interpreter, `<workspace>/.micromamba/envs/papersmith/bin/python`, when it exists |
+| `code-reachability` | the job carries no code bundle and the runner could not clone the pin anonymously (nor with `--repo-credential` on a service that carries one) | `--repo-credential` on a carrier; `generate-job --code-bundle --regenerate` on a service that ships bundles |
+| `inputs` | warns: a service that attaches inputs, a job declaring no `--input-dataset`, and a workspace `datasets/registry.json` naming a remote source | `generate-job --dataset <slug> --regenerate`, or `--input-dataset <owner>/<slug>` |
+| `local-rehearsal` | the job's smoke, run locally under runner conditions, raises, overruns `--local-timeout`, leaves no `shard.json`, or leaves one missing a `requiredEvidence` path | the target's smoke stamps (`remote_stamp.write_shard`, `@remote_stamp.stamped`); `--local-smoke-kwargs` for a cheaper local scale |
+| `account` | fails when the worker's account does not authenticate or is not signed in; warns when it has no passing rehearsal of its own at this pin | validate or sign in the account; `submit --smoke --worker <id>` once authorized |
+| `accelerator` | fails when the machine the job will request is not the one `--expect-accelerator` names, or lacks the job's declared architecture; warns when it is the service default and no expectation was given | regenerate with `--accelerator-kind`/`--accelerator-architecture`, or confirm with `--expect-accelerator` |
+| `session-fit` | fails when one unit's upper-bound estimate (the timing record's measurements on this service) exceeds the usable session (`remote-parallelism`'s 80% margin) and the job declares no carry paths; warns when unmeasured | more units, or `generate-job --carry-path` |
+
+The local rehearsal materializes the job's code with the runner's own
+functions in a fresh scratch directory outside the target: unpacked from
+`code-bundle.tar.gz` when the job carries one (so only `.git/HEAD`, never git
+history), sparse-cloned at the pin from the target otherwise. It runs the
+smoke block through the runner's own `invoke()` with `mode` `smoke`, under the
+target's `.venv` interpreter (`--interpreter` overrides it). The child
+inherits only `PATH`, `HOME`, `LANG`, `LC_ALL`, `TMPDIR` and `SYSTEMROOT`
+(those set here), and gets the clone's `src` on `PYTHONPATH`,
+`FORGE_CLONE_ROOT`, `FORGE_CLONE_COMMIT` and what `invoke()` exports itself
+(`FORGE_RUN_MODE`, `FORGE_INPUT_DATASETS` with every declared input
+unattached, `FORGE_SESSION_DEADLINE`). The `shard.json` it leaves is judged by
+the same `shard_io.completeness()` `smoke record` uses. The scratch directory
+is removed afterwards, passing or failing, and an unexpected error during the
+rehearsal is a `fail` row carrying the error, never a traceback.
+`--keep-rehearsal <new dir>` keeps the scratch directory there to read; the
+path must not exist yet and must lie outside the target, and either refusal
+happens before anything is written.
+
+The rehearsal is not a sandbox. It runs the target's smoke on this machine
+with the real `HOME`, so a smoke that downloads reaches the network and
+writes its caches (under `HOME`) exactly as it would anywhere else; what it
+withholds is the workspace, not the network.
+
+Every rule below was learned from a remote round that a local check would
+have saved:
+
+1. Validate every approved experiment diagram before generating the jobs:
+   `submit --smoke` refuses `DIAGRAM_NOT_VALIDATED` only at launch.
+2. Run `remote_cli` under the workspace env interpreter. A system interpreter
+   without the pinned service driver refuses at `submit`, and the driver's
+   refusal names that interpreter (never a `pip install --user` into
+   whichever one ran it).
+3. A private repository needs a way in: a repository credential on a service
+   that carries one, the code bundle on a service that ships bundles. A
+   bundled worker has only `.git/HEAD`.
+4. A job on a service whose non-interactive sessions cannot download a dataset
+   declares every public dataset it reads with `--input-dataset`; the target
+   still downloads when `FORGE_INPUT_DATASETS` maps it to null.
+5. The smoke writes `shard.json` into its working directory carrying every
+   `--smoke-required-evidence` path, including a smoke that only measures
+   timing.
+6. Read the commit with `git rev-parse HEAD`, falling back to
+   `FORGE_CLONE_COMMIT` when git cannot answer (a code-bundle worker); the
+   scaffold's `remote_stamp.py` does.
+7. Register each person's own account and take its credential in before any
+   rehearsal; every account needs its own rehearsal at the current pin.
+8. Name the accelerator the plan expects (`--expect-accelerator`) and generate
+   with `--accelerator-*` when it is not the service default.
+9. The workspace's `datasets/` folder is not in the target: a remote run
+   reaches its data through a declared input or a download the target checks
+   by sha256, never through a workspace path. `generate-job --dataset <slug>`
+   declares it from the registry and records the preparation's sha256 values
+   (`FORGE_DATASET_CHECKS`).
+10. Several remote steps: `generate-jobs` writes every job in one call (code
+    bundle, requirements, carry paths and inputs derived), then run the one
+    `preflight` it prints.
+11. Every fix after a rehearsal moves the pin, which means regenerated jobs and
+    re-minted consent tokens: fix what `preflight` reports first.
 
 ## Smoke — a readiness gate, evidence-derived
 
@@ -1459,14 +1701,34 @@ record` routes through `jobfolder.read()`, and — unlike
 `_job_folder_staleness()` — does NOT swallow a `JobFolderError`: this
 command has no legacy-shape fallback to fall through to.
 
+**The smoke writes the stamp; nothing else does.** The runner never
+writes `shard.json`: the target's smoke does, into its own working
+directory, which is the folder `fetch --smoke` returns. A callable smoke
+runs with `FORGE_RUN_MODE` set (the runner exports it around the call),
+so writing the stamp only when that variable is present keeps local runs
+clean. Put in it what proves the rehearsal ran the code you think on the
+hardware you think — typically the commit (`git rev-parse HEAD` of the
+clone), a digest of the sources, and the device kind and name — and
+declare those paths with `--smoke-required-evidence`. `generate-job`
+reports a `warnings` entry when a smoke block declares none, because
+`completeness(stamp, [])` passes on any JSON at all. `smoke record
+--from-artifact` takes either the `shard.json` itself or the fetched
+rehearsal folder, and a folder with no stamp is refused with what the
+smoke must write.
+
 **Readiness, and no clock.** `remote_cli.py readiness --job-dir <dir>
 --worker <worker>` reports whether a job is ready for its full submission
 on that worker — issues no submission, offers no menu, the same
 "reports and resolves nothing" discipline `status` already holds
 structurally (no `adapter` parameter in either signature). It binds three
-facts on the LATEST `smokeResult` record for this job (append order, last
-line wins): `result == "pass"`, `commit` equal to the job's CURRENT
-pinned commit, `worker` equal to the worker asked about. Nothing here
+facts on the LATEST `smokeResult` record for this job ON THIS WORKER
+(append order, last line wins): `result == "pass"`, `commit` equal to the
+job's CURRENT pinned commit, `worker` equal to the worker asked about.
+Readiness is per worker: a later rehearsal on another account never
+revokes this one's, so several accounts can be ready for one campaign at
+once — which campaign `submit` requires (`CAMPAIGN_WORKERS_NOT_READY`).
+`latest_smoke_event(path, job)` without a worker still returns the job's
+latest record on any worker. Nothing here
 reads a timestamp — a record's usefulness expires the moment the job
 re-pins to a different commit or the worker changes, never after elapsed
 time.
@@ -1532,9 +1794,9 @@ convention:
 
 | event | fields |
 |---|---|
-| `submitted` | `ts`, `entrypoint`, `sourceDigest`, `submissionId`, `worker`, `requestedCapacity`, `grantedCapacity` |
+| `submitted` | `ts`, `entrypoint`, `sourceDigest`, `submissionId`, `worker`, `requestedCapacity`, `grantedCapacity`, `slot` only for a campaign's slot 2 and up on one worker, `units` (that submission's share) only for a campaign submission, and `carriedFrom` (`[{"submissionId", "ref"}]`, the earlier submissions whose output it was handed) only for a continuation that carried one |
 | `returned` | `ts`, `submissionId`, `artifactPath`, `observedConcurrency` |
-| `errored` | `ts`, `submissionId`, `reason` (truncated to 512 chars) |
+| `errored` | `ts`, `submissionId`, `reason` (truncated to 512 chars), and, when `fetch` recorded a run that ended without a complete result, `artifactPath` (where its bytes are kept, never a results tree) and `runState` (`failed` or `unknown`) |
 
 `entrypoint` is the field name for the thing executed remotely — not
 `notebook`. This schema and the adapter seam (`scripts/adapter.py`) both use
@@ -1600,7 +1862,7 @@ rather than surfacing a raw traceback and leaving a reader to guess.
 headless CLI, pinned exactly:
 
 ```
-uv tool install --force --python 3.14 google-colab-cli --with "jupyter-kernel-client<1"
+uv tool install --force --python 3.14 "google-colab-cli==0.6.0" --with "jupyter-kernel-client<1"
 ```
 
 The pin is not decorative: `google-colab-cli` 0.6.0 with
@@ -1611,11 +1873,89 @@ resolution does not pick. The adapter shells out to `colab` on `PATH` by
 default; a non-default location can be supplied as `colab_executable` when
 constructing `ColabAdapter` directly.
 
-Authentication is the CLI's own oauth2 consent ritual — run any `colab`
-command once in a terminal and approve it — and the adapter never reads
-`~/.config/colab-cli/token.json`: the CLI's own child process resolves it
-from the `HOME` the adapter forwards, and no module above the seam learns a
-path to it.
+`google-colab-cli` 0.7.5 is **untested live** and the pin stays at 0.6.0.
+Read from 0.7.5's own `--help` and installed source (never authenticated):
+it depends on `jupyter-kernel-client==0.9.0` and resolves either kernel
+client class name, so #94 looks fixed there; the `sessions` line gained a
+`Shape:` field, which the adapter's line parser still reads; `new`,
+`exec`, `upload`, `download`, `install`, `status` and `stop` keep the flags
+the adapter passes. But 0.7.5 no longer ships the hidden `keep-alive`
+command the adapter spawns (0.6.0 does), so on 0.7.5 that best-effort
+keep-alive would silently do nothing and a long run could be idle-reclaimed.
+Moving the pin waits for a live rehearsal that settles that.
+
+Authentication is the CLI's own oauth2 copy-paste ritual, and the adapter
+never reads the token file the CLI writes: the CLI's own child process
+resolves it from the `HOME` the adapter forwards, and no module above the
+seam learns a path to it. Measured in the CLI's source (0.6.0 and 0.7.5
+alike): the token lives at `~/.config/colab-cli/token.json`, resolved from
+`HOME` when the CLI starts, and the global `--config PATH` flag names the
+session state FILE (`sessions.json`) only — it never moves the token. No
+OAuth client file is needed: the CLI ships Google's public installed-app
+client (`colab_cli/oauth_config.json`) and uses it whenever
+`~/.colab-cli-oauth-config.json` does not exist; its copy-paste redirect
+is registered to that client, so substituting your own client would break
+the flow (`redirect_uri_mismatch`, per the CLI's own `auth.py`).
+
+**Team accounts: one worker per owner.** When
+`<workspace>/.papersmith/team.json` declares Colab accounts, the adapter
+exposes one worker per owner, `colab:<owner>`, and runs every child for
+that worker with `HOME=<configDir>` (the owner's own state directory)
+plus `--config <configDir>/.config/colab-cli/sessions.json` — still only
+`PATH` and `HOME` are forwarded. It reads three fields per member
+(`owner`, `accounts.colab.tier`, `accounts.colab.configDir`), checks that
+the directory exists with mode 0700, and never opens anything inside it.
+It refuses a registry that is not schema 1, an owner listed twice, an
+unknown tier, a relative `configDir`, and the same `configDir` under two
+owners. With no registry (or one declaring no Colab account) the single
+`colab` worker on the operator's own `HOME` is unchanged. Each owner signs
+in once, on their own Google account, in a terminal:
+
+```
+mkdir -p -m 700 ~/.config/papersmith/colab/<owner>
+HOME=~/.config/papersmith/colab/<owner> colab \
+  --config ~/.config/papersmith/colab/<owner>/.config/colab-cli/sessions.json sessions
+```
+
+The CLI prints an authorization URL; the owner opens it, approves, and
+pastes back the code Google shows. `--auth adc` (Application Default
+Credentials) also resolves from `HOME`, so it isolates per owner the same
+way.
+
+The team rule, enforced at the adapter: one account per person, and a
+`free` account is never a worker of a split campaign. The Colab FAQ
+(https://research.google.com/colaboratory/faq.html, verified 2026-10-25)
+disallows "using multiple accounts to work around access or resource usage
+restrictions" on every managed runtime and, on free runtimes without a
+positive compute-unit balance, "running distributed computing workers". So
+a submission carrying campaign `units` on a free worker refuses by name,
+citing that rule, before any CLI call; a single send (interactive work or
+a proof-of-concept pilot) on a free worker is allowed; a campaign whose
+units land on `pro`, `payg` or `enterprise` workers is allowed.
+`workers()` lists free accounts first, so a campaign that would place a
+unit on one refuses at its first assignment, before any paid account has
+launched. `ColabAdapter.campaign_refusal(worker)` returns that reason (or
+`None`) without a subprocess, for a planner that wants to exclude rather
+than refuse. The declared capacity counts distinct owners on paid tiers.
+
+GPU variants by tier: `colab new --gpu` accepts `T4`, `L4`, `G4`, `A100`
+and `H100` (0.7.5 help). Expect `T4` on a free account and `L4`, `A100`
+or `H100` on paid compute; the FAQ itself names no models — free access to
+GPUs "is heavily restricted", premium GPUs come with a paid plan "subject
+to availability", and the types "vary over time". The adapter maps only
+`sm_75 → T4`, `sm_80 → A100`, `sm_90 → H100` (`COLAB_ACCELERATOR_VARIANTS`).
+
+**A Colab job asks for a GPU by default.** The adapter registers its own
+default accelerator, `cuda` with `sm_75` (`COLAB_ACCELERATOR_KIND`,
+`COLAB_ACCELERATOR_ARCHITECTURES`), the same way the Kaggle adapter does, so
+`generate-job` with no `--accelerator-*` flags writes that block and `submit`
+passes `--gpu T4`. Before this, a from-zero Colab job carried no block, got no
+`--gpu`, and ran on a CPU runtime without a word. Because the block is
+declared, the VM-side `check_accelerator()` refuses a runtime that arrives
+without CUDA (its arch list is empty), so the smoke fails and `readiness` stays
+`false` instead of counting a CPU rehearsal as ready. Pass
+`--accelerator-kind cuda --accelerator-architecture sm_80` (or `sm_90`) to ask
+a paid account for an A100 (or H100).
 
 Sessions are expensive and idle-reclaimed, so release is part of the flow,
 not housekeeping: `fetch` stops a session only AFTER the manifest has
@@ -1624,6 +1964,22 @@ landed AND the run is terminal; the adapter spawns the CLI's own keep-alive
 session is simply gone, and the operator's own `colab stop -s <name>` is
 the manual exit. When you are done with a session, stop it — an abandoned
 one burns the account's capacity until the service reclaims it.
+
+**Fetch as soon as the run is terminal.** The keep-alive holds a session
+through the run, not after it: once the executor exits, the session idles
+and the service reclaims it, taking every result with it (`poll` then
+answers `unknown`, `session not found`). Whoever waits on a Colab run fetches
+in the same loop that sees `complete`, never later.
+
+**The manifest is kept current during the run.** The executor rewrites
+`files.json` every `MANIFEST_REFRESH_SECONDS` (60 s) while the notebook
+executes, atomically (`files.json.tmp`, then a rename), so a fetch of a
+session still running, or one whose process died before `status.json`,
+downloads every file already written and reports it `complete=False`.
+Fetching periodically during a long run is what saves a reclaimed one:
+each such fetch keeps a snapshot under `partial/`, and a later fetch that
+finds the session gone records the last snapshot (see "Sessions,
+checkpoints and resume").
 
 **Never read, copy or print `~/.config/colab-cli/sessions.json`.** It
 carries a live per-session access token beside each session record
@@ -1640,10 +1996,327 @@ through the same staged material the runner's clone uses, so a pass means
 the RUNNER can clone. The bytes are read at exactly one expression per
 site, never appear on argv, in `run-config.json`, in the job folder or in
 the ledger, and the staged material is deleted on the VM after the run.
+Credential or not, `generate-job` refuses an SSH `--repo-url` (the
+runner cannot clone over SSH): declare `https://`, or a local path for a
+local rehearsal. A credential is never embedded in `--repo-url` itself: a URL carrying a
+user, password or token before `@` (a bare SSH login such as
+`git@host:o/r.git` excepted) is refused before any git call or write, and
+a job folder whose `run-config.json` carries one is refused on every read,
+without the refusal echoing the URL.
+
+**Private repositories without a credential: `generate-job --code-bundle`.**
+A service whose runner cannot be handed a repository credential at all ships
+the code instead: its adapter class declares the optional capability
+`CODE_BUNDLE_MAX_BYTES` (the Kaggle adapter does, 786,432 bytes — a
+conservative bound, since the service documents no size limit for a pushed
+notebook's source; 768 KiB of gzip is about 1 MiB of base64 in the cell).
+With `--code-bundle`, generation takes the declared clone paths (plus the
+run/smoke notebook) from the pinned COMMIT with `git archive` — never the
+working tree, so an untracked or ignored file such as a token never enters
+it — gzips them with a fixed mtime (the same pin always yields the same
+bytes), writes `code-bundle.tar.gz` beside `run-config.json` and records
+`codeBundle: {file, format, sha256, bytes}` there. The remote is never asked:
+no published-tip default and no `pin-published` probe, while every local
+condition (clean worktree, pin is HEAD, declared paths exist) still refuses
+as always; no credential is read, and `--repo-credential` together with
+`--code-bundle` refuses `CODE_BUNDLE_WITH_REPO_CREDENTIAL` before anything is
+read or written. `submit` checks the file against the recorded sha256 and
+rebuilds the bundle from the pin, comparing their files, before anything is
+uploaded; the backend writes its bytes into the pushed notebook, and the
+runner verifies the sha256 again and unpacks into the same clone directory
+instead of cloning, refusing an entry that is absolute, carries `..`, lies
+inside a `.git` directory, is a link or special file, or lies outside the
+declared clone paths. It then writes `<clone>/.git/HEAD` holding the pinned
+commit, the shape a detached clone leaves, so a notebook's repository-root
+cell proves the root at `FORGE_CLONE_COMMIT` exactly as for a clone (and
+still refuses any other commit). `bootstrap.json` and the run record the same
+pinned `commit` as a cloned job, so smoke and readiness verdicts read identically,
+and the job goes stale exactly when a cloned one would (a clone path changed
+after the pin). Without `--code-bundle` nothing changes. A bundle honors the
+commit's own `.gitattributes` `export-ignore`/`export-subst` under a clone
+path. Refusals: `CODE_BUNDLE_NOT_CARRIED`, `CODE_BUNDLE_TOO_LARGE`,
+`CODE_BUNDLE_UNSAFE_ENTRY`, `CODE_BUNDLE_MISMATCH`,
+`CODE_BUNDLE_WITH_REPO_CREDENTIAL` (see "Refusal codes").
 
 A second backend brings its own answer to this section: nothing above the
 adapter seam knows a service exists, so nothing above it knows what a service
 needs.
+
+## Sessions, checkpoints and resume
+
+Every service stops a session after a continuous run time it publishes, and
+Colab also reclaims one it judges idle. Whatever the session had not written
+out by then is lost, together with the hours it cost. The rule for every
+agent that plans, builds or launches a remote run:
+
+1. **Every unit fits one session with margin, or checkpoints and resumes.**
+   A unit (a fold, a seed, a trial batch) whose upper-bound duration plus
+   setup does not fit comfortably inside the session limit is split (for
+   example one fold per unit) or written to checkpoint and resume from its
+   last checkpoint in a new session. Never plan a unit that only finishes
+   if the session is never interrupted.
+2. **Read `FORGE_SESSION_DEADLINE`.** Check it before starting each unit or
+   trial; when the next one may not finish before it, write the checkpoint
+   and the results so far, write `partial.json` in the working directory
+   naming the units it did not finish (`{"remaining": ["u3", ...]}`), and
+   exit 0. A `partial.json` without that list means none of the share's
+   units is finished.
+3. **Fetch promptly.** Fetch as soon as a run is terminal, and periodically
+   during a long one, so a reclaimed session still leaves its last snapshot
+   on this side.
+4. **Resubmit only the remaining units.** `remaining` names them; pass its
+   list unchanged to `distribute` and then `submit`.
+
+**Declared limits.** Each adapter declares its service's limit through
+`Adapter.session_limit_seconds(machine_shape=None)` -- a classmethod, not a
+seventh abstract operation, whose default is `None` (unknown). Kaggle:
+`KAGGLE_SESSION_LIMIT_SECONDS`, 12 h for a GPU session. Colab:
+`COLAB_PRO_SESSION_LIMIT_SECONDS`, 24 h for a Pro session, with idle reclaim
+possibly much earlier. Both are the services' published limits at the time
+of writing and must be re-checked against their documentation before a plan
+leans on them.
+
+**The deadline.** For a job folder, `submit` copies the declared limit into
+the job's `run_config["sessionLimitSeconds"]` (nothing at all when the
+adapter declares none, so such a job is unchanged), and the runner
+(`assets/runner_invoke.py`) exports, to a callable and to a notebook kernel
+alike,
+
+    FORGE_SESSION_DEADLINE = session start + limit - max(10% of limit, 30 min)
+
+in epoch seconds (`SESSION_MARGIN_FRACTION`, `SESSION_MARGIN_MIN_SECONDS`).
+The margin covers the setup before the runner's cell, the checkpoint write
+and the upload of the outputs. A target uses it like this:
+
+```python
+import json, os, time
+from pathlib import Path
+
+deadline = float(os.environ.get("FORGE_SESSION_DEADLINE", "inf"))
+for index, unit in enumerate(units_to_run):    # skip the ones already done
+    if time.time() + estimated_seconds(unit) > deadline:
+        save_checkpoint()                      # what a new session resumes from
+        unfinished = units_to_run[index:]      # this unit and every one after it
+        Path("partial.json").write_text(json.dumps({"remaining": unfinished}))
+        break                                  # exit 0: the outputs still come back
+    run_and_record(unit)                       # one runs.jsonl record per unit
+```
+
+**Honest states.** A fetch that comes back without a complete result never
+records `returned`. Its bytes are moved out of `.partial/` into
+`<target>/<Name>/.remote-execution/partial/<submissionId>/<UTC stamp>/` --
+kept, never overwritten, never deleted, and never offered a results path.
+The run's own state (`poll`) decides the rest: `failed` (a Kaggle `ERROR`,
+which includes a session that hit its limit) or `unknown` (a session the
+service no longer reports, as after a reclaim) appends an `errored` event
+naming the kept path (`artifactPath`, `runState`); a run still going appends
+nothing, and the ledger stays `pending`. When the backend cannot reach the
+run at all and an earlier fetch kept a snapshot, the snapshot is what gets
+recorded. Kaggle's `fetch` reads the session status before the output
+listing and reports `complete=False` for anything but `COMPLETE`. The
+ordinary incomplete path therefore never leaves a `.partial/` behind; one
+left by a killed fetch still refuses, naming the command that clears it.
+
+**Remaining units.** Every campaign `submitted` event records its share
+(`units`). `remaining --target <t> --entrypoint <e> --unit <u> ...` pairs
+each submission with the terminal event that settled it, in append order
+(so an id the service reused for a later resubmission never erases what an
+earlier one returned), and counts a unit complete when a submission at the
+current source digest carrying it was `returned` -- with two exceptions. A
+result `fetch` sent to `.remote-execution/quarantine/` (a
+`fromStaleSubmission` verdict) completes nothing. A returned result holding
+a `partial.json` (the run stopped early and exited 0) completes only the
+units of its share that the marker's `remaining` list does not name; a
+marker without that list, or one that does not parse, completes none. With
+`--unit-field <dotted.path>` -- the field of the target's `runs.jsonl`
+records that names a unit -- the per-unit records inside a kept partial
+result, or inside a returned one with a `partial.json`, count too: a unit
+with its own record is complete even when a marker lists it. Units of a submission still unsettled are reported as
+`inFlight` and are not resent. `remaining` keeps the declared order, which is
+the order the consent token binds, so its list goes to `distribute` and
+`submit` unchanged (`unitArgs` spells it as `--unit` flags).
+
+**Carry-over, automatic for declared paths.** A job declares what a
+continuation needs with `generate-job --carry-path <path>` (repeatable;
+relative to the product folder, e.g. `Results/e1/runs`,
+`Results/checkpoints`, `hpo/studies`), recorded as `carryPaths` in
+`run-config.json`. A job that declares none behaves exactly as before. For
+one that does, a campaign `submit` finds, for each unit it sends, the
+earlier submission of the same entrypoint that left it to be continued --
+the evidence `remaining` reads: a settled submission at the current source
+digest whose returned result holds a `partial.json` listing it (or listing
+nothing), or whose `errored` event names bytes kept under
+`.remote-execution/partial/`. Then:
+
+1. **Same account only.** `distribute` (and `submit`, which distributes the
+   same way) places such a unit on the worker that produced its earlier
+   output when that worker is in the pool; when that worker has no place
+   left the unit stays `unplaced` for a later campaign. A unit whose worker
+   is not in the pool refuses `CARRY_WORKER_MISMATCH`, naming that worker;
+   `submit --no-carry` starts it fresh instead (`carry: fresh`). Carrying a
+   private kernel's output across two accounts was never verified.
+2. **Automatic attach.** The share's job gets `run_config["carry"]`, one
+   `{"submissionId", "ref", "mount"}` row per earlier submission, from the
+   adapter's optional `carry_source(submission_id)` (not a seventh abstract
+   operation). Kaggle answers the submission id itself as the kernel ref
+   and adds it to the pushed `kernel-metadata.json`'s `kernel_sources`, so
+   the earlier kernel's output is mounted at
+   `/kaggle/input/notebooks/<owner>/<slug>/` (verified on a live account on
+   2026-10-27). The `submitted` event records `carriedFrom`, and the
+   submission's row in `submit`'s output reports `carry: attached` with the
+   same `carriedFrom`.
+3. **Restore before the entrypoint.** The runner (`restore_carry()` in
+   `assets/runner_invoke.py`) copies each declared carry path from each
+   mount into its working directory -- the folder whose files come back --
+   before the callable or notebook starts, so the target resumes from the
+   checkpoints already on disk with no code of its own, and exports the
+   present mounts as `FORGE_CARRY_IN` (joined with `os.pathsep`). A missing
+   mount or path is one `[carry]` line in the run log, and the unit starts
+   fresh; it is never fatal.
+4. **Services without kernel inputs say so.** A backend whose `carry_source`
+   is the seam's default (Colab) carries nothing automatically, and the
+   row reports `carry: unsupported`; upload the checkpoint into the new
+   session yourself.
+
+A single send (no `--unit`) and the legacy shape carry nothing.
+
+**No push replaces an output a continuation reads.** `submit` hands every
+job of a job declaring carry paths -- every share of a campaign, a single
+send, a rehearsal -- `run_config["carryProtected"]`: the ref of every
+submission whose output a unit still waits to continue from, read from the
+main ledger whether or not this invocation sends that unit. Kaggle never
+pushes to a protected ref, nor to one the job itself carries from: the push
+goes to the first alternate kernel not protected, deterministically
+`<slug>-carry`, then `<slug>-carry-2`, ... (`CARRY_ALTERNATE_SUFFIX`,
+`kernel_ref()` in `adapters/kaggle.py`). So a fresh share never overwrites
+the kernel another share of its campaign mounts, two continuations never
+push each other's source, a later fresh-only campaign leaves a pending
+continuation's source intact, and a kernel never names itself in
+`kernel_sources` (never verified live). A carry path that names the product
+folder itself (`.`) is refused like one that escapes it.
+
+**No push replaces a kernel still running.** The protected set also holds
+the ref of every submission of the same entrypoint that is still in flight
+(submitted, never settled) in the main ledger -- and in `smoke.jsonl` for a
+rehearsal -- at any source digest, for every job folder, including one that
+declares no carry paths. A second campaign started while the first still
+runs therefore goes to `<slug>-carry` (or the next free alternate) instead
+of re-pushing the running kernel. When nothing is in flight and nothing is
+pending, no `carryProtected` key is written and the job is byte-identical
+to before; when something is, that key is the only addition. The legacy
+shape (no job folder) is unchanged.
+
+## Every job at once
+
+`generate-jobs` generates one job folder per remote step a product declares,
+in one call, deriving each from what the target and the workspace already say
+(remote-preflight S3). The single `generate-job` is unchanged.
+
+```
+python3 scripts/remote_cli.py generate-jobs --target <repo> --product <Name> \
+    [--from-schedule <schedule output.json>] [--dataset <slug>]... \
+    [--smoke-module M --smoke-function F] [--smoke-kwargs '<json>'] \
+    [--smoke-required-evidence <path>]... [--repo-url URL] [--repo-ref REF] \
+    [--repo-credential <token file>] [--regenerate] [--workspace <dir>] \
+    [--accept-unresolved] [--accept-unresolved-reads] [--accept-produced-reads]
+```
+
+The three `--accept-*` flags mean what they mean for `generate-job`, applied to
+every job, so a refusal relayed in a job's row names a flag this command takes.
+
+- **Steps**: every `__steps__` entry (`src/<Package>/__init__.py`, else
+  `config.py`, read with `ast`) with `placement: "remote"`; other steps are
+  listed under `skipped`.
+- **Service and job folder**: the step's `service` and `job`. With
+  `--from-schedule` (a remote-parallelism `schedule` OUTPUT), a step it names
+  runs on the service(s) it chose, one job per service; a schedule naming an
+  undeclared step refuses, and the schedule's input plan is refused naming
+  `schedule --plan`.
+- **Run and clone paths**: the step's notebook among its `produces`
+  (`Notebooks/...ipynb`) as `--run-notebook`, else its `module`/`function`;
+  clone paths are the ones the generator's own import/read walk computes for
+  those entries. The smoke options apply to every job.
+- **Code bundle**: when the pin is not anonymously reachable and the service's
+  adapter declares `CODE_BUNDLE_MAX_BYTES`. On a repository-credential
+  carrier, `--repo-credential` is passed instead.
+- **Environment requirements**: the target's `requirements.txt` (or
+  `pyproject.toml` `[project].dependencies`), minus the distributions the
+  adapter's optional `PROVIDED_REQUIREMENTS` says its image provides (none
+  declared: every pin is installed).
+- **Carry paths**: the step's `produces` roots that are not notebooks.
+- **Inputs**: `--dataset`, as for `generate-job` below.
+
+It prints `{jobs, skipped, summary, next}`: one row per job (`step`,
+`service`, `job`, `status` `generated` or `refused` with its `error`, and for a
+generated one `jobFolder`, `codeBundle`, `inputDatasets`, `carryPaths`,
+`environmentRequirements`), and `next`, the one `preflight` command over every
+generated job. One refused job never stops the others; the exit status is 0
+only when none was refused.
+
+## Job inputs
+
+### From the workspace registry
+
+`generate-job --dataset <slug>` (repeatable; also on `generate-jobs`) resolves
+the slug in the workspace's `datasets/registry.json` (`--workspace` overrides
+which workspace) through the datasets skill's own `job_input()`. Its ref is
+the published remote when that is public, else the public dataset page its
+source URL names on a dataset host that recognizes it. The ref is declared as
+an input dataset (after any explicit `--input-dataset`), and the official
+preparation's sha256 values -- the prepared data file's and `splits.json`'s --
+are recorded as `datasetChecks` in `run-config.json`. The runner exports them
+as `FORGE_DATASET_CHECKS` (a JSON object keyed by ref), so the target verifies
+the data it reads is the data the preparation was made from. Nothing is
+uploaded: an unpublished or private dataset refuses `DATASET_NOT_PUBLISHED` /
+`DATASET_NOT_PUBLIC` naming `/datasets publish` with the operator's consent,
+an unprepared one `DATASET_NOT_PREPARED`, and one served by a host the
+service does not attach from (`Adapter.INPUT_DATASETS_HOST`)
+`DATASET_HOST_NOT_ATTACHABLE`. Without `--dataset`, nothing changes.
+
+### Declared by ref
+
+A job that reads a public dataset declares it with `generate-job
+--input-dataset <owner>/<slug>` (repeatable), recorded as `inputDatasets` in
+`run-config.json`. Each ref is exactly `<owner>/<slug>`, each part letters,
+digits, `-` or `_`, and appears once; a malformed or repeated ref refuses at
+generation, before anything is written, and on every read of
+`run-config.json` (`validate_input_datasets()` in `scripts/jobfolder.py`), so
+a hand-edited one refuses at `submit` before anything is sent. A job that
+declares none is byte-identical to before: no `inputDatasets` key, nothing
+added at submit, nothing exported.
+
+A pushed kernel is a non-interactive session: it cannot attach a dataset at
+run time (Kaggle refused `kagglehub.dataset_download(...)` inside one with
+`New Datasets cannot be attached in non-interactive sessions`), so the
+dataset must be named in the push itself.
+
+1. **Optional capability, not a seventh operation.** A backend that attaches
+   declared inputs to the push sets `Adapter.INPUT_DATASETS_ROOT` to the
+   directory its jobs find them mounted under, read-only; the ABC keeps its
+   six abstract operations. `submit` (single send, campaign and rehearsal
+   alike) hands that root to the job as `run_config["inputRoot"]` and reports
+   `inputs: attached` (the single-send output's `inputs` key, the campaign
+   output's top-level `inputs`). A backend that leaves it `None` (Colab)
+   reports `inputs: unsupported` and adds nothing.
+2. **Kaggle names them in the push.** `adapters/kaggle.py` adds each
+   declared ref to the pushed `kernel-metadata.json`'s `dataset_sources`
+   (`INPUT_DATASETS_ROOT = "/kaggle/input"`), and `adapters/kaggle_driver.py`
+   maps that key through its closed metadata table onto the save-kernel
+   request's `dataset_data_sources` (kagglesdk 0.1.37), as it maps
+   `kernel_sources` onto `kernel_data_sources`.
+3. **The runner says where they are.** Before the callable or notebook
+   starts, `discover_input_datasets()` in `assets/runner_invoke.py` searches
+   `inputRoot` (at most four levels down, never inside a match) for a
+   directory named after each ref's slug, preferring one whose parent is
+   named after its owner -- the sub-path below the root is the service's and
+   is never hard-coded, since the carried kernel output appeared under a
+   `notebooks/<owner>/<slug>/` segment nobody predicted. It exports
+   `FORGE_INPUT_DATASETS`: a JSON object mapping every declared ref to the
+   directory found, or to `null` when the backend attached nothing or no
+   directory was found. Each ref is one `[inputs]` line in the run log; it
+   is never fatal. The target reads the mounted directory when there is
+   one and falls back to downloading the dataset only when the value is
+   `null`.
 
 ## Ledger data location
 
@@ -1657,6 +2330,13 @@ checkout, alongside the repository whose submissions it records.
 `ledger.jsonl` lives in, product-scoped exactly like it, but a distinct
 file (see "Smoke" above for why that separation is load-bearing, not
 stylistic).
+
+## Kept partial results location
+
+`<target>/<Name>/.remote-execution/partial/<submissionId>/<UTC stamp>/` --
+what `fetch` brought back from a run without a complete result, one
+directory per fetch. Outside `Results/shards/` for the same reason as
+quarantine below.
 
 ## Quarantine location
 

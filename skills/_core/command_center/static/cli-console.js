@@ -365,6 +365,8 @@
     win.classList.add('is-open');
     win.setAttribute('aria-hidden', 'false');
     $('smithAssistantFab')?.classList.add('is-active');
+    // A session detached while hidden is streamed again (and replayed once).
+    if (state.sessionId && !state.source && ensureTerm()) attach(state.sessionId, true);
     loadInfo().then((info) => {
       if (!ensureTerm()) return;
       setTimeout(() => {
@@ -375,6 +377,20 @@
     });
   }
 
+  function phaseRunLive() {
+    return Boolean(window.phaseRuns && typeof window.phaseRuns.anyRunning === 'function'
+      && window.phaseRuns.anyRunning());
+  }
+
+  // Stops streaming a hidden session nobody follows; the session keeps
+  // running on the server. While a phase runs the stream stays open, because
+  // the run tracker reads the agent's activity from it.
+  function detachIfIdle() {
+    if (!state.source || isOpen() || phaseRunLive()) return;
+    state.source.close();
+    state.source = null;
+  }
+
   // Hides the window only: the session keeps running behind the FAB.
   function closeCliConsole() {
     const win = $('smithTerminalWindow');
@@ -382,6 +398,7 @@
     win.classList.remove('is-open');
     win.setAttribute('aria-hidden', 'true');
     $('smithAssistantFab')?.classList.remove('is-active');
+    detachIfIdle();
   }
 
   function toggleSmithTerminal() {
@@ -406,13 +423,18 @@
     }
   }
 
-  // Agents that understand a harness slash command; herdr and the plain shell
-  // do not, so a slash command switches the console to the first of these.
-  const SLASH_AGENTS = ['claude', 'opencode', 'pi'];
+  // Agents a phase slash command can be typed into. herdr comes first: its
+  // workspace mirrors the agent pane, so a phase runs in the herdr session by
+  // default and only falls to a new claude/opencode/pi session without herdr.
+  // The plain shell is not one of them.
+  const SLASH_AGENTS = ['herdr', 'claude', 'opencode', 'pi'];
+  // Agents with a `!command` shell escape, so a shell phase can run inside
+  // their open session instead of closing it.
+  const SHELL_ESCAPE_AGENTS = ['claude', 'opencode', 'pi'];
 
   // Which agent runs a phase command, keeping the open session whenever it can:
   //  - slash: the agent the operator picked (options.agent), else the open
-  //    slash agent, else the first installed one;
+  //    slash agent, else the first installed one (herdr when installed);
   //  - shell: an open slash-agent session runs it as `!command` (every one of
   //    claude, opencode and pi has a shell escape), so one session follows the
   //    whole pipeline; otherwise the plain shell.
@@ -425,7 +447,7 @@
     const live = Boolean(state.sessionId);
     let wanted = state.agent;
     if (kind === 'shell') {
-      if (live && SLASH_AGENTS.includes(state.agent)) return { switched: false, prefix: '!' };
+      if (live && SHELL_ESCAPE_AGENTS.includes(state.agent)) return { switched: false, prefix: '!' };
       wanted = 'shell';
     }
     if (kind === 'slash') {
@@ -433,8 +455,10 @@
         throw new Error(`el agente ${agentLabel(opts.agent)} no está instalado`);
       }
       if (opts.agent) wanted = opts.agent;
-      else if (!SLASH_AGENTS.includes(state.agent)) wanted = SLASH_AGENTS.find((id) => available.includes(id)) || null;
-      if (!wanted) throw new Error('no hay un agente (claude, opencode, pi) instalado');
+      else if (!(SLASH_AGENTS.includes(state.agent) && available.includes(state.agent))) {
+        wanted = SLASH_AGENTS.find((id) => available.includes(id)) || null;
+      }
+      if (!wanted) throw new Error('no hay un agente (herdr, claude, opencode, pi) instalado');
     }
     const restart = wanted !== state.agent || (opts.fresh && live);
     if (!restart) return { switched: false, prefix: '' };
@@ -570,7 +594,9 @@
     });
     // Back on the tab or window: refit and ask the program to repaint.
     const wake = () => { if (isOpen() && state.sessionId) refit(true); };
-    document.addEventListener('visibilitychange', () => { if (!document.hidden) wake(); });
+    // Leaving the page also drops the stream of a closed console once no
+    // phase runs any more (a run that ended after the console was closed).
+    document.addEventListener('visibilitychange', () => { if (document.hidden) detachIfIdle(); else wake(); });
     window.addEventListener('focus', wake);
     window.addEventListener('resize', () => { if (isOpen()) refit(false); });
     // A reload keeps the session of a running phase (and reattaches to it);

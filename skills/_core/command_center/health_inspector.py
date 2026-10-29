@@ -26,9 +26,20 @@ import json
 import shutil
 import subprocess
 import sys
+from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
+
+try:
+    from . import toolchain
+except ImportError:
+    # Loaded as a standalone file (the harness-parity tests do), with no parent
+    # package: read the sibling module by path instead.
+    import importlib.util as _ilu
+    _spec = _ilu.spec_from_file_location("command_center_toolchain", Path(__file__).with_name("toolchain.py"))
+    toolchain = _ilu.module_from_spec(_spec)
+    _spec.loader.exec_module(toolchain)
 
 # --------------------------------------------------------------------------
 # Static wiring tables
@@ -203,6 +214,9 @@ KNOWN_HARNESS_TOOLS = frozenset({
 
 #: Python packages the command center itself depends on.
 REQUIRED_PACKAGES = ("fastapi", "uvicorn", "watchfiles", "pydantic")
+#: TeX engines, in preference order, and every TeX tool the environment row reports.
+LATEX_ENGINES = ("pdflatex", "xelatex", "lualatex")
+LATEX_TOOLS = LATEX_ENGINES + ("latexmk",)
 
 
 # --------------------------------------------------------------------------
@@ -387,24 +401,34 @@ def skill_manifests(root: Path) -> list[dict[str, Any]]:
     return rows
 
 
+#: Front doors probed at once; each probe is one short-lived interpreter.
+CLI_PROBE_WORKERS = 8
+
+
+def _probe_front_door(root: Path, name: str, relative: str) -> dict[str, Any]:
+    script = root / "skills" / name / relative
+    if not script.is_file():
+        return {"skill": name, "path": f"skills/{name}/{relative}",
+                "state": "MISSING", "exit_code": None, "detail": "script absent"}
+    code, output = _run([sys.executable, str(script), "--help"], root)
+    state = "WIRED" if code == 0 else "TOOL_MISSING"
+    return {
+        "skill": name,
+        "path": f"skills/{name}/{relative}",
+        "state": state,
+        "exit_code": code,
+        "detail": output.splitlines()[0] if code and output else "ok",
+    }
+
+
 def cli_entrypoints(root: Path) -> list[dict[str, Any]]:
-    rows: list[dict[str, Any]] = []
-    for name, relative in front_door_skills(root):
-        script = root / "skills" / name / relative
-        if not script.is_file():
-            rows.append({"skill": name, "path": f"skills/{name}/{relative}",
-                         "state": "MISSING", "exit_code": None, "detail": "script absent"})
-            continue
-        code, output = _run([sys.executable, str(script), "--help"], root)
-        state = "WIRED" if code == 0 else "TOOL_MISSING"
-        rows.append({
-            "skill": name,
-            "path": f"skills/{name}/{relative}",
-            "state": state,
-            "exit_code": code,
-            "detail": output.splitlines()[0] if code and output else "ok",
-        })
-    return rows
+    # Each `--help` mostly waits on interpreter start-up, so the probes run
+    # concurrently; map() keeps the roster order.
+    roster = front_door_skills(root)
+    if not roster:
+        return []
+    with ThreadPoolExecutor(max_workers=min(CLI_PROBE_WORKERS, len(roster))) as pool:
+        return list(pool.map(lambda entry: _probe_front_door(root, *entry), roster))
 
 
 # --------------------------------------------------------------------------
@@ -460,7 +484,9 @@ def _referenced_skills(text: str) -> list[str]:
 # 4. environment
 # --------------------------------------------------------------------------
 def environment_health(root: Path) -> dict[str, Any]:
-    latex = shutil.which("pdflatex") or shutil.which("xelatex")
+    # PATH first, then the fallback directories `smith doctor` also searches.
+    tex_tools = {name: toolchain.find_tool(name) for name in LATEX_TOOLS}
+    latex = next((tex_tools[name] for name in LATEX_ENGINES if tex_tools[name]), None)
     packages = []
     for name in REQUIRED_PACKAGES:
         try:
@@ -478,6 +504,7 @@ def environment_health(root: Path) -> dict[str, Any]:
         "latex": {
             "engine": latex,
             "state": "WIRED" if latex else "TOOL_MISSING",
+            "tools": tex_tools,
         },
         "node": {
             "executable": node,
@@ -577,7 +604,7 @@ def get_wiring_health(root: Path | str) -> dict[str, Any]:
     if missing_tools:
         warnings.append("missing Python package(s): " + ", ".join(missing_tools))
     if environment["latex"]["state"] != "WIRED":
-        warnings.append("no LaTeX engine found (pdflatex/xelatex): compilation will fail")
+        warnings.append("no LaTeX engine found (pdflatex/xelatex/lualatex): compilation will fail")
 
     return {
         "generated_at": _utc_now(),

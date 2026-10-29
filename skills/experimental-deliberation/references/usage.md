@@ -282,6 +282,8 @@ Three things to notice, each of which is a rule and not a style choice:
 - The settings table's first header cell is **`Parameter`**, which declares it a parameters table: values the plan fixes now, not results, so its numbers are allowed. `Parameters`, `Hyperparameter` and `Hyperparameters` declare the same (case-insensitively, the whole cell). Nothing else does: a first header cell like `Parameter count`, or a `Parameter` column further right, leaves the table an ordinary report table under the rule.
 - Both URLs are tagged, one per style. `[verified: 2026-09-08]` says a search on that date reached it; `[pending-verification]` says nobody has.
 
+The block is canonical in form, not a model of statistical design: an exact paired Wilcoxon over five seeds can never reach p < 0.05 (its smallest two-sided p is 0.0625), and the protocol names no correction, effect size or confidence interval. Choose the test from the experiment's type with [Choosing the significance test by experiment type](../SKILL.md#choosing-the-significance-test-by-experiment-type), and declare the convergence curves and the significance table among the expected outputs.
+
 ## Building `resolvedDecisions` and applying
 
 Every `CREATE_SUCCESSOR` preview needs `changeSummary`, or it is blocked with `CHANGE_SUMMARY_REQUIRED`.
@@ -481,6 +483,7 @@ That fires when a line asserts an achieved result. The right fix is almost alway
 - `WRONG_TARGET_ENTRY_ID` — re-resolve the locus and rebuild the decision; never reuse a stale or guessed ID.
 - `ALTERED_REPLACEMENT_TEXT` — for an exact byte-preserving edit, copy the original block unchanged.
 - `NO_MATCHING_DECISION` / `AMBIGUOUS_MATCHING_DECISIONS` — every resolved locus needs exactly one decision claiming it.
+- `DECISIONS_OUTSIDE_SELECTION` — a single `selectedEntryId` was sent with decisions for other sections too (listed in `outsideSelection`); those would have been dropped, so nothing is previewed. Send one query per section in `selectedEntryIds`.
 - `OVERLAPPING_PATCHES` — two edits over one span. On an all-`replace` batch the engine appends its own edit over the `## Changes` block, so do not also target that block yourself.
 - `SOURCE_EQUALS_DESTINATION` / `HIERARCHY_CYCLE_DESTINATION_DESCENDANT` / `NO_OP_PLAN` — the relocation or replacement described is structurally impossible. Go back to the user rather than forcing a shape that satisfies validation without satisfying the request.
 - `MULTIPLE_ACTIVE_REVISIONS` — a tied latest across lineages. Ask for the exact `sourceFilename`.

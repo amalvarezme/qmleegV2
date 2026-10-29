@@ -68,7 +68,9 @@ own `selftest`, not by a version stated here and enforced nowhere:
 """
 from __future__ import annotations
 
+import base64
 import csv
+import hashlib
 import importlib.util
 import io
 import json
@@ -80,7 +82,7 @@ import sys
 import tempfile
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Callable, Mapping
+from typing import Callable, Mapping, NamedTuple
 
 
 def _load_adapter_seam():
@@ -166,6 +168,144 @@ def _account_names_on_disk(
             f"{accounts_cli} list --json did not print JSON: {exc}"
         ) from exc
     return [account["username"] for account in payload.get("accounts", [])]
+
+
+# The TEAM registry: which person owns which Kaggle account. Git-ignored,
+# no secrets, written by the operator's own tooling (`smith team`); this
+# module only reads it, and only two fields per member — `owner` and
+# `accounts.kaggle.username`. Never a token path, never anything a token
+# file holds: the credential still travels only as a `CredentialHandle`.
+# The default location is the workspace root this file ships inside
+# (`<workspace>/skills/remote-execution/scripts/adapters/kaggle.py`), the
+# same resolution the Colab adapter uses, read at call time so a caller
+# (or a test) can point it elsewhere.
+TEAM_REGISTRY_RELATIVE = Path(".papersmith") / "team.json"
+DEFAULT_TEAM_REGISTRY = Path(__file__).resolve().parents[4] / TEAM_REGISTRY_RELATIVE
+TEAM_REGISTRY_SCHEMA = 1
+_OWNER_RE = re.compile(r"^[a-z0-9-]{1,40}$")
+
+# The rule the exclusion cites. Kaggle staff, verified 2026-10-25: the one
+# account per person rule is site-wide, so a second account under distinct
+# email addresses is still the same person's second account — it is never
+# a campaign worker, whatever address it was registered with.
+KAGGLE_ONE_ACCOUNT_RULE_URL = "https://www.kaggle.com/discussions/general/192527"
+KAGGLE_ONE_ACCOUNT_RULE = "the one account per person applies to all Kaggle site use"
+TEAM_UNMAPPED_REASON = (
+    "not mapped to a team owner: one account per person — Kaggle staff: "
+    f"'{KAGGLE_ONE_ACCOUNT_RULE}' ({KAGGLE_ONE_ACCOUNT_RULE_URL})"
+)
+
+
+def load_kaggle_team(path: str | Path) -> dict[str, str] | None:
+    """`{username: owner}` for every owner the registry at `path` maps to a
+    Kaggle username, or `None` when there is no registry or it maps none —
+    the plain-listing behaviour, unchanged.
+
+    Fail-closed on every shape it cannot honestly read: not JSON, not a
+    schema-1 object, no `members` list, an owner slug outside
+    `[a-z0-9-]{1,40}` or repeated, a username that is not a non-empty
+    string, or the SAME username under two owners (one account cannot
+    belong to two people).
+    """
+    registry = Path(path)
+    try:
+        text = registry.read_text(encoding="utf-8")
+    except FileNotFoundError:
+        return None
+    except OSError as exc:
+        raise KaggleAdapterError(f"cannot read the team registry {registry}: {exc}") from exc
+    try:
+        document = json.loads(text)
+    except json.JSONDecodeError as exc:
+        raise KaggleAdapterError(
+            f"the team registry {registry} is not JSON ({exc}); refusing to "
+            "guess which accounts it maps"
+        ) from exc
+    if not isinstance(document, dict) or document.get("schema") != TEAM_REGISTRY_SCHEMA:
+        raise KaggleAdapterError(
+            f"the team registry {registry} is not a schema-{TEAM_REGISTRY_SCHEMA} "
+            "object; refusing to guess which accounts it maps"
+        )
+    members = document.get("members")
+    if not isinstance(members, list):
+        raise KaggleAdapterError(f"the team registry {registry} carries no 'members' list")
+
+    owner_by_username: dict[str, str] = {}
+    owners_seen: set[str] = set()
+    for index, member in enumerate(members):
+        if not isinstance(member, dict):
+            raise KaggleAdapterError(f"{registry}: member #{index} is not an object")
+        owner = member.get("owner")
+        if not isinstance(owner, str) or _OWNER_RE.match(owner) is None:
+            raise KaggleAdapterError(
+                f"{registry}: member #{index} owner {owner!r} is not a slug "
+                "of 1-40 characters in [a-z0-9-]"
+            )
+        if owner in owners_seen:
+            raise KaggleAdapterError(
+                f"{registry}: owner {owner!r} appears more than once; an owner "
+                "is one person and is listed once"
+            )
+        owners_seen.add(owner)
+        services = member.get("accounts")
+        entry = services.get("kaggle") if isinstance(services, dict) else None
+        if entry is None:
+            continue
+        username = entry.get("username") if isinstance(entry, dict) else None
+        if not isinstance(username, str) or not username.strip():
+            raise KaggleAdapterError(
+                f"{registry}: owner {owner!r} accounts.kaggle.username is not "
+                "a non-empty string"
+            )
+        if username in owner_by_username:
+            raise KaggleAdapterError(
+                f"{registry}: Kaggle username {username!r} is mapped to both "
+                f"{owner_by_username[username]!r} and {owner!r}; one account "
+                "belongs to one person"
+            )
+        owner_by_username[username] = owner
+    return owner_by_username or None
+
+
+class KaggleTeamReport(NamedTuple):
+    """What the team registry did to the listed accounts.
+
+    `workers` — the listed usernames an owner maps, in listing order, one per
+    owner. `excluded` — `(username, reason)` for every listed account no
+    owner maps; it stays listed, it is never a worker. `not_validated` —
+    `(owner, username, reason)` for every mapping whose username the listing
+    does not hold; no worker exists for it until it is validated.
+    """
+
+    workers: tuple[str, ...]
+    excluded: tuple[tuple[str, str], ...]
+    not_validated: tuple[tuple[str, str, str], ...]
+
+
+def _team_report(names: list[str], team: Mapping[str, str]) -> KaggleTeamReport:
+    workers: list[str] = []
+    excluded: list[tuple[str, str]] = []
+    seen: set[str] = set()
+    for name in names:
+        if name in seen:
+            continue
+        seen.add(name)
+        if name in team:
+            workers.append(name)
+        else:
+            excluded.append((name, TEAM_UNMAPPED_REASON))
+    not_validated = tuple(
+        (
+            owner,
+            username,
+            f"owner {owner!r} maps Kaggle username {username!r}, which the "
+            "kaggle-accounts listing does not hold: not validated, so it is no "
+            "worker until that account is taken in and validated",
+        )
+        for username, owner in team.items()
+        if username not in seen
+    )
+    return KaggleTeamReport(tuple(workers), tuple(excluded), not_validated)
 
 # `adapters/kaggle_driver.py`, this module's own sibling — the one file in
 # this skill permitted to import the Kaggle SDK package. `submit()`/
@@ -303,6 +443,19 @@ KAGGLE_ACCELERATOR_ARCHITECTURES = ("sm_75",)
 KAGGLE_MACHINE_SHAPES = {"NvidiaTeslaT4": "sm_75", "NvidiaTeslaP100": "sm_60"}
 KAGGLE_MACHINE_SHAPE = "NvidiaTeslaT4"
 
+# The continuous run time one Kaggle session may last, per accelerator:
+# 12 hours for a GPU session. This is the service's PUBLISHED limit at the
+# time of writing (2026-10), not a measurement and not a law -- re-check it
+# against Kaggle's own documentation before planning around it, and revise
+# this table when it changes. A session that reaches it is stopped by the
+# service, and nothing it had not already written to its output survives.
+# `KaggleAdapter.session_limit_seconds()` reads this table and nothing else;
+# a shape not listed here answers `None` (unknown), never a guess.
+KAGGLE_SESSION_LIMIT_SECONDS = {
+    "NvidiaTeslaT4": 12 * 3600,
+    "NvidiaTeslaP100": 12 * 3600,
+}
+
 
 def _default_accelerator() -> tuple[str, tuple[str, ...]]:
     """`ADAPTER.register_default_accelerator("kaggle", ...)`'s own
@@ -344,6 +497,32 @@ REQUEST_GPU = True
 # push it; see `KaggleAdapter.submit()`'s refusal below.
 KERNEL_METADATA_FILENAME = "kernel-metadata.json"
 
+# Where a kernel that names another kernel in its metadata's
+# `kernel_sources` finds that kernel's output: `<root>/<owner>/<slug>/`.
+# LIVE-VERIFIED (2026-10-27, on one account): a kernel
+# pushed with `kernel_sources: ["<owner>/psmith-carry-test-a"]` read the
+# source kernel's `/kaggle/working/ckpt/state.json` at
+# `/kaggle/input/notebooks/<owner>/psmith-carry-test-a/ckpt/state.json` --
+# note the `notebooks/` segment. Verified within one account only; carrying
+# across two owners' private kernels was not (kernel-carry S4).
+KERNEL_INPUT_ROOT = "/kaggle/input/notebooks"
+
+# The root under which a kernel finds the public datasets its metadata names
+# in `dataset_sources` (kernel-input-datasets S2-S3), read-only. The exact
+# sub-path below it is NOT hard-coded: the runner searches this root for
+# each ref's slug, because the live-verified kernel output above appeared
+# under a `notebooks/<owner>/<slug>/` segment nobody predicted, and a
+# dataset's own segment is not verified live here. A pushed kernel is a
+# non-interactive session: it cannot attach a dataset at run time (the
+# service refused `New Datasets cannot be attached in non-interactive
+# sessions`), so the datasets must be named in the push itself.
+DATASET_INPUT_ROOT = "/kaggle/input"
+
+# The suffix of the alternate kernel a continuation is pushed to when the
+# kernel it carries from has the ref it would otherwise reuse (see
+# `KaggleAdapter.submit()`): `<slug>` and `<slug>-carry` take turns.
+CARRY_ALTERNATE_SUFFIX = "-carry"
+
 # `jobfolder.py`'s own `RUN_CONFIG_FILENAME` constant, duplicated here
 # rather than imported: this module never imports `jobfolder.py` (the
 # dependency runs the other way — `jobfolder.py` reaches this module only
@@ -358,6 +537,23 @@ KERNEL_METADATA_FILENAME = "kernel-metadata.json"
 # beside its `runner.ipynb`, but the worker never sees it unless something
 # puts it there; see `_run_config_cell()` below.
 RUN_CONFIG_FILENAME = "run-config.json"
+
+# The code bundle (`generate-job --code-bundle`), duplicated by name for the
+# same reason as `RUN_CONFIG_FILENAME`: this module does not import
+# `jobfolder.py`. A kernel has no way to be handed a repository credential,
+# so a private repository's pinned code travels INSIDE the pushed notebook:
+# `submit()` stages one more cell that writes the bundle's bytes (base64)
+# beside `run-config.json`, and `runner_bootstrap.py` unpacks it instead of
+# cloning.
+CODE_BUNDLE_FILENAME = "code-bundle.tar.gz"
+
+# The bound on a bundle's COMPRESSED bytes this adapter will carry. The
+# service documents no size limit for a pushed notebook's source (searched
+# 2026-10-28: neither the API's own documentation nor its release notes
+# state one), so this is a conservative choice, not a published number:
+# 768 KiB of gzip becomes ~1 MiB of base64 in the cell, a few times the
+# 236,855 bytes the target that motivated this measured at its pin.
+KAGGLE_CODE_BUNDLE_MAX_BYTES = 768 * 1024
 
 # The seam's own five-value vocabulary a raw Kaggle status is translated
 # into — never passed through. Anything Kaggle reports that is not a key
@@ -393,6 +589,90 @@ def _kernel_slug(entrypoint: Path) -> str:
     job — see `submit()`'s own docstring for why that distinction matters.
     """
     return _slugify(entrypoint.stem)
+
+
+def kernel_ref(
+    *,
+    worker: str,
+    title: str | None,
+    entrypoint: Path,
+    run_config: Mapping[str, object],
+) -> tuple[str, str | None, list[str]]:
+    """The `<worker>/<slug>` ref a push goes to, the title that yields it,
+    and the earlier kernel refs it carries from -- `(ref, title, carried)`.
+
+    A campaign sends one job per granted slot (S1, parallel campaigns):
+    slot 2 and up of the same job on the same account is its OWN kernel
+    (`-slot-<n>`), or the second push would overwrite the first under one
+    ref; slot 1 keeps the ref it always had. The title carries the suffix
+    too, since the service derives a new kernel's slug from its title.
+
+    kernel-carry: a push never goes to a PROTECTED ref -- one this job
+    carries from (`run_config["carry"]`), or one any other share of the
+    same campaign carries from, or one pending continuation evidence still
+    points to (`run_config["carryProtected"]`, computed by `submit` over
+    the whole ledger). A new version of such a kernel may replace the very
+    output a continuation is about to read, and a kernel naming itself as
+    its own source was never verified live. The push then goes to the
+    first alternate not protected, deterministically: `<slug>-carry`,
+    `<slug>-carry-2`, `<slug>-carry-3`, ... A job with neither key keeps
+    exactly the ref it had before this existed.
+    """
+    slot = run_config.get("slot")
+    if isinstance(slot, int) and not isinstance(slot, bool) and slot > 1:
+        if title:
+            title = f"{title}-slot-{slot}"
+            slug = _slugify(title)
+        else:
+            slug = f"{_kernel_slug(entrypoint)}-slot-{slot}"
+    else:
+        slug = _slugify(title) if title else _kernel_slug(entrypoint)
+    carried = [
+        str(row["ref"]) for row in run_config.get("carry") or ()
+        if isinstance(row, Mapping) and row.get("ref")
+    ]
+    protected = set(carried) | {
+        str(ref) for ref in run_config.get("carryProtected") or () if ref
+    }
+    if f"{worker}/{slug}" in protected:
+        base_title, base_slug = title, slug
+        attempt = 1
+        while True:
+            suffix = (
+                CARRY_ALTERNATE_SUFFIX if attempt == 1
+                else f"{CARRY_ALTERNATE_SUFFIX}-{attempt}"
+            )
+            if base_title:
+                title = f"{base_title}{suffix}"
+                slug = _slugify(title)
+            else:
+                slug = f"{base_slug}{suffix}"
+            if f"{worker}/{slug}" not in protected:
+                break
+            attempt += 1
+    return f"{worker}/{slug}", title, carried
+
+
+def _declared_input_datasets(job: "ADAPTER.Job") -> list[str]:
+    """The `inputDatasets` refs a job declares: the job folder's own
+    `run-config.json` (`generate-job --input-dataset`, validated by
+    `submit` before this is reached), overridden by the submission's
+    `run_config` when it names the key. `[]` when neither does, or when
+    there is no readable job folder (the legacy shape attaches nothing)."""
+    declared: object = None
+    run_config_path = job.entrypoint.parent / RUN_CONFIG_FILENAME
+    if run_config_path.is_file():
+        try:
+            parsed = json.loads(run_config_path.read_text(encoding="utf-8"))
+        except json.JSONDecodeError:
+            parsed = None
+        if isinstance(parsed, Mapping):
+            declared = parsed.get("inputDatasets")
+    if "inputDatasets" in job.run_config:
+        declared = job.run_config["inputDatasets"]
+    if not isinstance(declared, (list, tuple)):
+        return []
+    return [str(ref) for ref in declared if isinstance(ref, str) and ref]
 
 
 def assemble_metadata(run_config: Mapping[str, object]) -> tuple[str, str]:
@@ -523,6 +803,56 @@ def _run_config_notebook_cell(run_config_text: str) -> dict:
     }
 
 
+def _code_bundle_cell(bundle: bytes) -> dict:
+    """One cell that writes the code bundle's bytes to `code-bundle.tar.gz`
+    in the kernel's working directory — relative, for the same reason as
+    the run-config cell. Base64 inside a `repr`'d literal keeps arbitrary
+    bytes one safe Python string."""
+    encoded = base64.b64encode(bundle).decode("ascii")
+    source = (
+        "import base64\nfrom pathlib import Path\n\n"
+        f"Path({CODE_BUNDLE_FILENAME!r}).write_bytes(base64.b64decode({encoded!r}))\n"
+    )
+    return {
+        "cell_type": "code",
+        "metadata": {},
+        "execution_count": None,
+        "outputs": [],
+        "source": source.splitlines(keepends=True),
+    }
+
+
+def _read_declared_code_bundle(job_dir: Path, run_config_text: str) -> bytes | None:
+    """The bundle bytes a job folder's `run-config.json` declares, checked
+    against its recorded sha256 before anything is pushed; `None` for a job
+    that declares none. Refuses an absent or mismatched file: a push without
+    the code would only fail inside the kernel, after quota was spent."""
+    try:
+        block = json.loads(run_config_text).get("codeBundle")
+    except (json.JSONDecodeError, AttributeError):
+        return None
+    if block is None:
+        return None
+    path = job_dir / CODE_BUNDLE_FILENAME
+    if not isinstance(block, Mapping) or block.get("file") != CODE_BUNDLE_FILENAME:
+        raise KaggleAdapterError(
+            f"run-config.json's codeBundle does not name {CODE_BUNDLE_FILENAME!r}: "
+            "refusing to push"
+        )
+    if not path.is_file():
+        raise KaggleAdapterError(
+            f"CODE_BUNDLE_MISMATCH: {path} is absent but run-config.json "
+            "declares a code bundle: refusing to push a kernel with no code"
+        )
+    bundle = path.read_bytes()
+    if hashlib.sha256(bundle).hexdigest() != block.get("sha256"):
+        raise KaggleAdapterError(
+            f"CODE_BUNDLE_MISMATCH: {path} does not hash to run-config.json's "
+            "codeBundle.sha256: refusing to push"
+        )
+    return bundle
+
+
 def _stage_run_config_cell(notebook_path: Path, run_config_text: str) -> None:
     """Prepend the injected cell to the notebook at `notebook_path` — a
     file inside the STAGED copy `submit()` builds, never the job folder's
@@ -567,6 +897,40 @@ class KaggleAdapter(ADAPTER.Adapter):
     # `materialize()` pointed at the exact same script.
     CREDENTIAL_CLI = DEFAULT_ACCOUNTS_CLI
 
+    # The optional seam capability (`adapter.py`): this backend ships a
+    # code bundle inside the pushed notebook, up to this many compressed
+    # bytes. See `KAGGLE_CODE_BUNDLE_MAX_BYTES` for where the number comes
+    # from.
+    CODE_BUNDLE_MAX_BYTES = KAGGLE_CODE_BUNDLE_MAX_BYTES
+
+    # kernel-input-datasets S2: this adapter attaches a job's declared
+    # `inputDatasets` to the push as the metadata's `dataset_sources`, and
+    # the kernel finds them mounted under this root.
+    INPUT_DATASETS_ROOT = DATASET_INPUT_ROOT
+
+    # remote-preflight S2: the dataset host (the datasets skill's `hosts`
+    # module NAME) whose public datasets a push attaches.
+    INPUT_DATASETS_HOST = "kaggle"
+
+    @classmethod
+    def session_limit_seconds(cls, machine_shape: str | None = None) -> int | None:
+        """`KAGGLE_SESSION_LIMIT_SECONDS` for `machine_shape` -- the shape
+        every push requests (`KAGGLE_MACHINE_SHAPE`) when `None`; `None`
+        for a shape the table does not list."""
+        shape = KAGGLE_MACHINE_SHAPE if machine_shape is None else machine_shape
+        return KAGGLE_SESSION_LIMIT_SECONDS.get(shape)
+
+    def carry_source(self, submission_id: str) -> dict[str, str] | None:
+        """kernel-carry S2: an earlier submission's id IS its kernel ref
+        (`<worker>/<slug>`, see `submit()`), so a later kernel names it in
+        `kernel_sources` and reads its output under `KERNEL_INPUT_ROOT`.
+        Asks the service nothing. `None` for an id without the one `/`
+        this adapter's own ids always carry."""
+        owner, _, slug = str(submission_id).partition("/")
+        if not owner or not slug:
+            return None
+        return {"ref": submission_id, "mount": f"{KERNEL_INPUT_ROOT}/{submission_id}"}
+
     def __init__(
         self,
         *,
@@ -578,8 +942,24 @@ class KaggleAdapter(ADAPTER.Adapter):
         timeout: float = SUBPROCESS_TIMEOUT_SECONDS,
         fetch_timeout: float = KAGGLE_FETCH_TIMEOUT_SECONDS,
         driver_script: Path | str | None = None,
+        team_registry: Path | str | None = None,
+        workspace: Path | str | None = None,
     ) -> None:
         self._credential_provider = self._normalize_credentials(credentials)
+        # `workspace` (remote-preflight F3): the workspace `preflight
+        # --workspace` names. Its team registry and its own copy of the
+        # accounts CLI -- whose saved credentials live beside that copy --
+        # are the ones read, so a CLI run from another checkout checks the
+        # accounts that workspace actually holds. Explicit paths still win.
+        if workspace is not None:
+            if team_registry is None:
+                team_registry = Path(workspace) / TEAM_REGISTRY_RELATIVE
+            if not accounts_cli:
+                accounts_cli = (Path(workspace) / "skills" / "kaggle-accounts" / "scripts"
+                                / "accounts_cli.py")
+        # The registry's PATH, read lazily by `_team()`; `None` means the
+        # module default, resolved at read time.
+        self._team_registry = Path(team_registry) if team_registry is not None else None
         self._accounts_cli = Path(accounts_cli) if accounts_cli else DEFAULT_ACCOUNTS_CLI
         self._kaggle_executable = kaggle_executable
         self._timeout = timeout
@@ -771,9 +1151,112 @@ class KaggleAdapter(ADAPTER.Adapter):
         normally even when whatever file backs `accounts_cli`'s own answer
         is unreadable to THIS process directly — this process never tries
         to read it at all.
+
+        Under the TEAM model (`<workspace>/.papersmith/team.json` maps at
+        least one owner to a Kaggle username) only the owner-mapped listed
+        accounts are workers, one per owner; `team_report()` states why
+        every other listed account is excluded and which mappings are not
+        validated. With no registry, or one mapping no Kaggle account, the
+        list is every listed account, exactly as before.
         """
         names = _account_names_on_disk(self._accounts_cli, self._run)
+        team = self._team()
+        if team is not None:
+            names = list(_team_report(names, team).workers)
         return [ADAPTER.Worker(id=name, capacity=KAGGLE_WORKER_CAPACITY) for name in names]
+
+    def _team(self) -> dict[str, str] | None:
+        path = self._team_registry if self._team_registry is not None else DEFAULT_TEAM_REGISTRY
+        return load_kaggle_team(path)
+
+    def team_report(self) -> KaggleTeamReport | None:
+        """The team registry's effect on the listed accounts, or `None` when
+        no registry maps a Kaggle account (every listed account is a
+        worker). Not one of the seam's six operations: an ordinary method a
+        planner or an operator-facing report can ask."""
+        team = self._team()
+        if team is None:
+            return None
+        return _team_report(_account_names_on_disk(self._accounts_cli, self._run), team)
+
+    # -- preflight hooks (remote-preflight S1) -----------------------------
+    # Ordinary methods, never ABC operations: `remote_cli preflight` reads
+    # them with `getattr` and reports a service without them as `warn`.
+
+    def interpreter_check(self) -> dict:
+        """Whether the SDK driver `submit` shells out to is usable under THIS
+        interpreter: the driver's own `selftest`, which refuses an
+        unimportable SDK and one that cannot request the machine.
+        Asks the service nothing and reads no credential."""
+        try:
+            result = self._run([sys.executable, str(self._driver_script), "selftest"])
+        except KaggleAdapterError as exc:
+            return {"ok": False, "evidence": str(exc)}
+        lines = (result.stdout or "").strip().splitlines()
+        try:
+            payload = json.loads(lines[-1]) if lines else {}
+        except ValueError:
+            payload = {}
+        if result.returncode == 0 and payload.get("ok"):
+            return {"ok": True, "evidence": f"the SDK driver {self._driver_script.name} "
+                    "imports its pinned SDK and can request the machine"}
+        error = payload.get("error") or (result.stderr or "").strip() or "no output"
+        return {"ok": False, "evidence": f"the SDK driver's selftest refused: {error}",
+                "fix": f"`{sys.executable} -m pip install -r requirements.txt` for this "
+                       "interpreter, or run remote_cli under the workspace env interpreter"}
+
+    def account_check(self, worker: str) -> dict:
+        """Whether `worker` is one of this service's workers and its saved
+        credential still authenticates: the accounts CLI's own `validate`,
+        narrowed to that one account (`--account`), which takes in nothing
+        and writes nothing. This process never sees the key."""
+        try:
+            names = [w.id for w in self.workers()]
+        except KaggleAdapterError as exc:
+            return {"ok": False, "evidence": f"the accounts could not be listed: {exc}",
+                    "fix": f"run `{self._accounts_cli} list`"}
+        if worker not in names:
+            return {"ok": False,
+                    "evidence": f"{worker!r} is not a worker here (workers: "
+                                f"{', '.join(names) or 'none'})",
+                    "fix": "register the person's own account (`smith team add ... "
+                           "--attest`), then take its credential in with `/kaggle-accounts "
+                           "validate`"}
+        try:
+            result = self._run([sys.executable, str(self._accounts_cli), "validate",
+                                "--account", worker, "--json"])
+        except KaggleAdapterError as exc:
+            return {"ok": False, "evidence": str(exc), "fix": "retry when the service answers"}
+        try:
+            rows = json.loads(result.stdout or "{}").get("accounts") or []
+        except ValueError:
+            rows = []
+        row = next((r for r in rows if isinstance(r, dict) and r.get("username") == worker), {})
+        if row.get("ok"):
+            return {"ok": True, "evidence": f"{worker} authenticates against the service"}
+        if not rows and "--account" in (result.stderr or ""):
+            return {"ok": False, "evidence": f"{self._accounts_cli} predates the read-only "
+                    f"`validate --account`: {(result.stderr or '').strip()[-200:]}",
+                    "fix": "run `smith upgrade` in that workspace, then preflight again"}
+        detail = row.get("detail") or (result.stderr or "").strip() or "no verdict"
+        return {"ok": False, "evidence": f"{worker} does not authenticate: {detail}",
+                "fix": "replace its token with `/kaggle-accounts validate` (or remove it)"}
+
+    def accelerator_request(self, run_config: Mapping[str, object]) -> dict:
+        """The machine every push requests, and whether the job's declared
+        architectures are ones that machine has: the runner's accelerator
+        gate refuses a mismatch only after the session started."""
+        architecture = KAGGLE_MACHINE_SHAPES.get(KAGGLE_MACHINE_SHAPE)
+        declared = run_config.get("accelerator")
+        problem = None
+        if isinstance(declared, Mapping):
+            wanted = [str(a) for a in declared.get("architectures") or []]
+            if wanted and architecture not in wanted:
+                problem = (f"the job declares {', '.join(wanted)} and every push here "
+                           f"requests {KAGGLE_MACHINE_SHAPE} ({architecture}); the runner's "
+                           "accelerator gate would refuse it on arrival")
+        return {"name": KAGGLE_MACHINE_SHAPE, "architectures": [architecture] if architecture
+                else [], "problem": problem}
 
     def submit(self, job: "ADAPTER.Job") -> "ADAPTER.Submission":
         """Push a kernel version and report back the ref this adapter will
@@ -908,6 +1391,16 @@ class KaggleAdapter(ADAPTER.Adapter):
                 "the service would reject for missing metadata"
             )
 
+        # Under the team model a listed account no owner maps is never
+        # spent, even when named explicitly — refused from the registry
+        # alone, before any credential is asked for or any child runs.
+        team = self._team()
+        if team is not None and job.worker not in team:
+            raise KaggleAdapterError(
+                f"worker {job.worker!r} is {TEAM_UNMAPPED_REASON}; submit to "
+                f"an owner-mapped account ({', '.join(sorted(team))})"
+            )
+
         handle = self._credential_for(job.worker)
 
         with tempfile.TemporaryDirectory(prefix="kaggle-push-") as staging_dir:
@@ -947,11 +1440,31 @@ class KaggleAdapter(ADAPTER.Adapter):
             # the former is this defect.
             template.setdefault("machine_shape", KAGGLE_MACHINE_SHAPE)
 
-            title = template.get("title")
-            slug = _slugify(title) if title else _kernel_slug(job.entrypoint)
-            ref = f"{job.worker}/{slug}"
+            ref, title, carried = kernel_ref(
+                worker=job.worker, title=template.get("title"),
+                entrypoint=job.entrypoint, run_config=job.run_config,
+            )
+            if title:
+                template["title"] = title
             template["id"] = ref
             template["code_file"] = job.entrypoint.name
+            # kernel-carry S2: a continuation names each earlier kernel whose
+            # output it resumes from, so the service mounts that output
+            # under `KERNEL_INPUT_ROOT`. Added only when `submit` handed a
+            # `carry` list; a job without one is staged exactly as before.
+            if carried:
+                sources = list(template.get("kernel_sources") or [])
+                sources.extend(ref_ for ref_ in carried if ref_ not in sources)
+                template["kernel_sources"] = sources
+            # kernel-input-datasets S2: the public datasets the job folder
+            # declares are named in the push, so the non-interactive kernel
+            # gets them mounted read-only under `DATASET_INPUT_ROOT`. A job
+            # declaring none is staged exactly as before.
+            declared_inputs = _declared_input_datasets(job)
+            if declared_inputs:
+                datasets = list(template.get("dataset_sources") or [])
+                datasets.extend(ref_ for ref_ in declared_inputs if ref_ not in datasets)
+                template["dataset_sources"] = datasets
             (staging_path / KERNEL_METADATA_FILENAME).write_text(
                 json.dumps(template), encoding="utf-8"
             )
@@ -963,10 +1476,18 @@ class KaggleAdapter(ADAPTER.Adapter):
                     merged = json.loads(run_config_text)
                     merged.update(dict(job.run_config))
                     run_config_text = json.dumps(merged)
+                bundle = _read_declared_code_bundle(
+                    job.entrypoint.parent, run_config_text
+                )
                 _stage_run_config_cell(
                     staging_path / job.entrypoint.name,
                     run_config_text,
                 )
+                if bundle is not None:
+                    staged = staging_path / job.entrypoint.name
+                    notebook = json.loads(staged.read_text(encoding="utf-8"))
+                    notebook["cells"].insert(0, _code_bundle_cell(bundle))
+                    staged.write_text(json.dumps(notebook, indent=1), encoding="utf-8")
 
             self._push(staging_path, handle)
 
@@ -1072,9 +1593,27 @@ class KaggleAdapter(ADAPTER.Adapter):
         result = self._run(
             argv, env=self._env_for(handle), timeout=self._fetch_timeout
         )
-        self._parse_driver_result(result, action=f"fetch for {submission_id}")
+        payload = self._parse_driver_result(result, action=f"fetch for {submission_id}")
         files = tuple(sorted(p.name for p in into.iterdir() if p.is_file()))
-        return ADAPTER.Fetched(path=into, complete=True, files=files)
+        # The driver reports the session's own status beside the files it
+        # wrote, read BEFORE the output listing (`cmd_fetch`). Only a
+        # `complete` session is a complete result: a failed or timed-out
+        # run's output is downloaded all the same -- it may hold the only
+        # checkpoint a later session can resume from -- but it is reported
+        # `complete=False`, so the CLI never records it `returned`. A status
+        # the driver could not read (`None`) is unknown, never complete. A
+        # payload with no `status` key at all is a driver older than this
+        # rule, and keeps that driver's behaviour: complete.
+        complete = True
+        if "status" in payload:
+            raw_status = payload.get("status")
+            state = (
+                _KAGGLE_STATUS_TO_SEAM.get(raw_status.strip().lower(), "unknown")
+                if isinstance(raw_status, str)
+                else "unknown"
+            )
+            complete = state == "complete"
+        return ADAPTER.Fetched(path=into, complete=complete, files=files)
 
     def cancel(self, submission_id: str) -> None:
         """Refuse, explicitly.
@@ -1247,6 +1786,14 @@ def _declared_capacity() -> tuple[int, int] | None:
             DEFAULT_ACCOUNTS_CLI, _run_accounts_cli_for_declared_capacity)
     except (KaggleAdapterError, subprocess.TimeoutExpired, OSError):
         return None
+    # Under the team model only owner-mapped accounts are workers, so only
+    # they count; a registry this process cannot read declares nothing.
+    try:
+        team = load_kaggle_team(DEFAULT_TEAM_REGISTRY)
+    except KaggleAdapterError:
+        return None
+    if team is not None:
+        names = list(_team_report(names, team).workers)
     return (len(names), KAGGLE_WORKER_CAPACITY)
 
 

@@ -56,10 +56,13 @@ and authorizing publication, because it advances the real lineage.
 
 One stretch of this flow is mechanical from end to end, and it is precisely the
 one that used to get lost.
+A second stretch is advisory: a venue-style review of the revision before the
+operator decides whether to accept it.
 
 | Stretch | Delegated to | Begins after | Ends at | Measure this before delegating |
 | --- | --- | --- | --- | --- |
 | Publish | this skill delegates to the `deliberation-publish` agent | the operator accepted the change | the successor published and current | the acceptance itself — the one precondition here that no command reports, because nothing measures `deliberated`. The orchestrator holds it or the stretch does not begin |
+| Pre-acceptance review (advisory) | this skill delegates to the `paper-reviewer` agent, in its proposal mode | a revision `proposals/research-concept-<slug>-rNN.md` exists and the operator asked for a review | a NeurIPS-form review of the revision on the operator's screen, before acceptance | that the revision file exists and is not empty, and whether `sota-pool/candidates.json` exists. The review never closes `deliberated`: only the operator's acceptance does |
 
 **The deliberation itself is never delegated**, and the north above says why:
 nothing measures it, so an agent that could close that stage would be approving
@@ -70,8 +73,9 @@ first instruction is to load this file.
 
 ## When a delegated agent cannot be spawned
 
-The stretch this skill delegates is defined in full by its agent file:
-`.claude/agents/deliberation-publish.md`. When that agent cannot be spawned —
+Each stretch this skill delegates is defined in full by its agent file:
+`.claude/agents/deliberation-publish.md`, `.claude/agents/paper-reviewer.md`.
+When an agent cannot be spawned —
 the harness has no sub-agent mechanism, the agent is not registered in this
 session, or the spawn itself fails — perform the stretch inline: read the
 definition file and follow it as written, from the beginning it states to the
@@ -383,6 +387,7 @@ The engine independently re-resolves every locus at call time and validates what
 - `ALTERED_REPLACEMENT_TEXT` — for an exact-block fidelity edit, your replacement text does not match the block the user asked to preserve byte-for-byte. Copy it exactly.
 - `MALFORMED_DECISION_SHAPE` / `UNEXPECTED_DECISION_FIELD` / `WRONG_ACTION_KIND` — your decision's shape or kind does not match the table above.
 - `NO_MATCHING_DECISION` / `AMBIGUOUS_MATCHING_DECISIONS` — every resolved locus needs exactly one decision; none or more than one was supplied for it.
+- `DECISIONS_OUTSIDE_SELECTION` — a single `selectedEntryId` was sent with decisions for other sections too (listed in `outsideSelection`); those would have been dropped, so nothing is previewed. Send one query per section in `selectedEntryIds`.
 - `SOURCE_EQUALS_DESTINATION` / `HIERARCHY_CYCLE_DESTINATION_DESCENDANT` / `NO_OP_PLAN` — the relocation or replacement you described is structurally impossible (self-referential, nests inside itself, or changes nothing). Ask the user to clarify instead of forcing it through.
 
 None of this is negotiable and none of it is something you should work around — if the engine rejects a decision, the fix is a better resolution or a clarified instruction, never a different request shape designed to slip past validation.

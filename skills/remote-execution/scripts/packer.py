@@ -48,7 +48,7 @@ import importlib.util
 import sys
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Callable, Iterable, Sequence
+from typing import Callable, Iterable, Mapping, Sequence
 
 
 def _load_sibling(module_name: str, filename: str):
@@ -409,12 +409,34 @@ def _round_robin_sequence(plans: list[Plan]) -> list[str]:
     return sequence
 
 
+def slot_shares(assignment: Assignment) -> tuple[tuple[str, ...], ...]:
+    """Split one worker's assigned units into one share per concurrent slot
+    it was granted: `k = min(granted, len(units))` shares, share `j` holding
+    `units[j::k]` -- round-robin by slot, in the order `distribute()` handed
+    them out. Each share becomes its OWN submission (S1, parallel
+    campaigns): a worker granted two slots runs two jobs side by side
+    instead of one job running every unit in sequence.
+
+    A worker granted one slot gets exactly one share holding every unit it
+    was given -- today's one-job-per-worker shape, unchanged. No units (the
+    "had room, didn't need it" case) is no share at all: capacity with
+    nothing to spend never becomes a fabricated job. Pure: reads nothing
+    but the `Assignment` it is handed.
+    """
+    units = tuple(assignment.units)
+    if not units:
+        return ()
+    slots = max(1, min(assignment.plan.granted, len(units)))
+    return tuple(units[index::slots] for index in range(slots))
+
+
 def distribute(
     *,
     adapter: "ADAPTER.Adapter",
     units: Sequence[str],
     ledger_lines: Iterable[str],
     live_digest: str | Callable[[], str],
+    affinity: Mapping[str, str] | None = None,
 ) -> Distribution:
     """Aggregate capacity across EVERY worker `adapter.workers()` reports,
     and assign opaque `units` to it round-robin, ragged rows and all.
@@ -456,6 +478,17 @@ def distribute(
     same function — a unit left `unplaced` becomes assignable again only on
     a SUBSEQUENT `distribute()` call, once the ledger reflects whatever
     changed.
+
+    `affinity` (kernel-carry S4) maps a unit to the one worker it must run
+    on -- a continuation whose earlier output can only be carried within
+    the account that produced it. A pinned unit whose worker is among the
+    granted ones takes one of that worker's places first; when that worker
+    has no place left the unit stays `unplaced` (it waits for a later
+    campaign rather than starting on an account that cannot carry its
+    output). A pinned unit whose worker is not in the pool at all is placed
+    like any other, and `submit` decides about it. Every other unit fills
+    the remaining places in the same round-robin order as before. `None`
+    or an empty mapping is byte-identical to the placement without it.
     """
     if not isinstance(adapter, ADAPTER.Adapter):
         raise PackerError(
@@ -490,7 +523,18 @@ def distribute(
     requested = len(units)
     granted_plans: list[Plan] = []
     skipped: list[Skip] = []
+    # A campaign is placed only on workers the adapter says may take part
+    # in one. `campaign_refusal` is an optional adapter hook (a worker on a
+    # tier whose terms forbid distributed workers, say): an ineligible
+    # worker is skipped by name, before any live probe, so the units go to
+    # the eligible ones instead of the whole campaign being refused later.
+    campaign_refusal = getattr(adapter, "campaign_refusal", None)
     for worker in workers:
+        if callable(campaign_refusal):
+            refusal = campaign_refusal(worker.id)
+            if refusal:
+                skipped.append(Skip(worker=worker.id, reason=f"not a campaign worker: {refusal}"))
+                continue
         candidate, reason = _triage(
             adapter=adapter,
             worker=worker,
@@ -508,9 +552,35 @@ def distribute(
     assigned_count = min(len(units), len(sequence))
 
     units_by_worker: dict[str, list[str]] = {candidate.worker: [] for candidate in granted_plans}
-    for index in range(assigned_count):
-        units_by_worker[sequence[index]].append(units[index])
-    unplaced = units[assigned_count:]
+    if not affinity:
+        for index in range(assigned_count):
+            units_by_worker[sequence[index]].append(units[index])
+        unplaced = units[assigned_count:]
+    else:
+        open_places = list(sequence)
+        placed: dict[str, str] = {}
+        waiting: set[str] = set()
+        for unit in units:
+            pinned = affinity.get(unit)
+            if pinned is None or pinned not in units_by_worker:
+                continue
+            if pinned in open_places:
+                open_places.remove(pinned)
+                placed[unit] = pinned
+            else:
+                waiting.add(unit)
+        free = iter(open_places)
+        for unit in units:
+            if unit in placed or unit in waiting:
+                continue
+            worker_id = next(free, None)
+            if worker_id is None:
+                break
+            placed[unit] = worker_id
+        for unit in units:
+            if unit in placed:
+                units_by_worker[placed[unit]].append(unit)
+        unplaced = tuple(unit for unit in units if unit not in placed)
 
     assignments = tuple(
         Assignment(plan=candidate, units=tuple(units_by_worker[candidate.worker]))

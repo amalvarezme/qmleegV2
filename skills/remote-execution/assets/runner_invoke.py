@@ -44,6 +44,8 @@ from __future__ import annotations
 import importlib
 import json
 import os
+import shutil
+import time
 from pathlib import Path
 from typing import Any, Callable, Mapping
 
@@ -123,6 +125,226 @@ CLONE_COMMIT_ENV = "FORGE_CLONE_COMMIT"
 MODE_ENV = "FORGE_RUN_MODE"
 UNITS_ENV = "FORGE_RUN_UNITS"
 
+# The session deadline handed to the target, in epoch seconds: the moment
+# by which it must have stopped starting new units or trials, written a
+# checkpoint, and exited cleanly. `submit` copies the backend's declared
+# continuous session limit into `run_config["sessionLimitSeconds"]`
+# (`Adapter.session_limit_seconds()`); this cell turns it into
+#
+#     deadline = session start + limit - max(10% of limit, 30 min)
+#
+# where "session start" is the moment this cell composes the environment.
+# The margin covers what ran before it (cell 0's clone and install), the
+# checkpoint write itself, and the upload of the outputs. A run_config with
+# no `sessionLimitSeconds` exports no deadline at all, exactly as before
+# this name existed -- an unknown limit is never turned into a number.
+SESSION_DEADLINE_ENV = "FORGE_SESSION_DEADLINE"
+SESSION_LIMIT_KEY = "sessionLimitSeconds"
+SESSION_MARGIN_FRACTION = 0.10
+SESSION_MARGIN_MIN_SECONDS = 1800
+
+# The carry-over of a continuation (kernel-carry S3). `generate-job
+# --carry-path` declares, in `run_config["carryPaths"]`, the paths relative
+# to the product folder whose contents a continuation needs; `submit` adds
+# `run_config["carry"]`, one `{"submissionId", "ref", "mount"}` row per
+# earlier submission whose output the backend mounted for this job. Before
+# the entrypoint runs, `restore_carry()` copies each declared path from each
+# mount into this cell's working directory -- the folder whose files come
+# back as the result -- so the target finds its checkpoints where it wrote
+# them and needs no code of its own to resume. `FORGE_CARRY_IN` names the
+# mounts that were present (joined with `os.pathsep`), for a target that
+# wants to read the earlier output directly. A missing mount or path is
+# written to the run log and the unit starts fresh; it is never fatal.
+CARRY_IN_ENV = "FORGE_CARRY_IN"
+CARRY_PATHS_KEY = "carryPaths"
+CARRY_KEY = "carry"
+CARRY_LOG_PREFIX = "[carry]"
+
+
+def _carry_relative(raw: Any) -> Path | None:
+    """A declared carry path as a safe relative `Path`, or `None` when it
+    is not one (absolute, `..`, empty, not a string)."""
+    if not isinstance(raw, str) or not raw.strip():
+        return None
+    candidate = Path(raw)
+    if candidate.is_absolute() or ".." in candidate.parts or not candidate.parts:
+        return None
+    return candidate
+
+
+def restore_carry(run_config: Mapping[str, Any], base_dir: str | Path | None = None) -> str | None:
+    """Copy each declared carry path from each mounted earlier output into
+    the working directory, and return the `FORGE_CARRY_IN` value (`None`
+    when nothing was mounted, or when this job carries nothing).
+
+    Never raises for a missing mount, a missing path or a malformed row:
+    each is printed as one `[carry]` line to the run log and skipped, so
+    the unit starts fresh from whatever is not there. A run_config with no
+    `carry` rows prints nothing and copies nothing -- the job runs exactly
+    as it did before this existed.
+    """
+    rows = run_config.get(CARRY_KEY) or []
+    if not isinstance(rows, list) or not rows:
+        return None
+    declared = run_config.get(CARRY_PATHS_KEY) or []
+    if not isinstance(declared, list):
+        declared = []
+    base = Path(base_dir) if base_dir is not None else Path.cwd()
+    present: list[str] = []
+    for row in rows:
+        mount_text = row.get("mount") if isinstance(row, Mapping) else None
+        ref = row.get("ref") if isinstance(row, Mapping) else None
+        if not isinstance(mount_text, str) or not mount_text:
+            print(f"{CARRY_LOG_PREFIX} skipped a carry row with no mount: {row!r}", flush=True)
+            continue
+        mount = Path(mount_text)
+        if not mount.is_dir():
+            print(f"{CARRY_LOG_PREFIX} mount {mount} of {ref!r} is absent; "
+                  "the unit starts fresh", flush=True)
+            continue
+        present.append(str(mount))
+        for raw in declared:
+            relative = _carry_relative(raw)
+            if relative is None:
+                print(f"{CARRY_LOG_PREFIX} skipped carry path {raw!r}: not a "
+                      "relative path inside the product folder", flush=True)
+                continue
+            source = mount / relative
+            destination = base / relative
+            if source.is_dir():
+                shutil.copytree(source, destination, dirs_exist_ok=True)
+            elif source.is_file():
+                destination.parent.mkdir(parents=True, exist_ok=True)
+                shutil.copy2(source, destination)
+            else:
+                print(f"{CARRY_LOG_PREFIX} {raw} is missing from {mount}; it starts "
+                      "fresh", flush=True)
+                continue
+            print(f"{CARRY_LOG_PREFIX} restored {raw} from {ref!r}", flush=True)
+    return os.pathsep.join(present) if present else None
+
+# The public datasets a job reads (kernel-input-datasets S3). `generate-job
+# --input-dataset` declares them in `run_config["inputDatasets"]` as
+# `<owner>/<slug>`; `submit` adds `run_config["inputRoot"]` only for a
+# backend that attaches them to the push. Before the entrypoint runs,
+# `discover_input_datasets()` searches that root for each ref's slug -- the
+# sub-path below the root is the service's, never hard-coded here -- and
+# `FORGE_INPUT_DATASETS` carries a JSON object mapping every declared ref to
+# the directory found, or to null when the backend attached nothing or no
+# directory was found, so the target downloads that dataset itself. A job
+# declaring no inputs exports nothing and prints nothing.
+INPUT_DATASETS_ENV = "FORGE_INPUT_DATASETS"
+
+# `FORGE_DATASET_CHECKS` carries `run_config["datasetChecks"]` as JSON when
+# the job declares one (remote-preflight S2: `generate-job --dataset`): per
+# input ref, the workspace preparation's sha256 values, so the target can
+# verify the data it reads is the data the preparation was made from.
+DATASET_CHECKS_ENV = "FORGE_DATASET_CHECKS"
+INPUT_DATASETS_KEY = "inputDatasets"
+INPUT_ROOT_KEY = "inputRoot"
+INPUT_LOG_PREFIX = "[inputs]"
+# How many directory levels below the root the search descends, and how
+# many directories it opens at most: enough for `<root>/<slug>`,
+# `<root>/<owner>/<slug>` and `<root>/<kind>/<owner>/<slug>`, without
+# walking the contents of a large dataset.
+INPUT_SEARCH_DEPTH = 4
+INPUT_SEARCH_MAX_DIRS = 20000
+
+
+def _input_ref_parts(raw: Any) -> tuple[str, str] | None:
+    """`(owner, slug)` for a well-formed `<owner>/<slug>` ref, else `None`."""
+    if not isinstance(raw, str):
+        return None
+    owner, sep, slug = raw.partition("/")
+    if not sep or not owner or not slug or "/" in slug:
+        return None
+    for part in (owner, slug):
+        if part.startswith(".") or not all(ch.isalnum() or ch in "-_" for ch in part):
+            return None
+    return owner, slug
+
+
+def _find_input_mount(root: Path, owner: str, slug: str) -> Path | None:
+    """The directory named `slug` under `root`, at most
+    `INPUT_SEARCH_DEPTH` levels down: one whose parent is named `owner`
+    first, then the shallowest, then the first in sorted order. `None`
+    when there is none. Never descends into a match."""
+    candidates: list[tuple[int, int, str]] = []
+    frontier = [root]
+    opened = 0
+    for depth in range(1, INPUT_SEARCH_DEPTH + 1):
+        following: list[Path] = []
+        for directory in frontier:
+            if opened >= INPUT_SEARCH_MAX_DIRS:
+                break
+            opened += 1
+            try:
+                children = sorted(child for child in directory.iterdir() if child.is_dir())
+            except OSError:
+                continue
+            for child in children:
+                if child.name == slug:
+                    owned = 0 if child.parent.name == owner else 1
+                    candidates.append((owned, depth, str(child)))
+                else:
+                    following.append(child)
+        frontier = following
+        if not frontier:
+            break
+    if not candidates:
+        return None
+    return Path(min(candidates)[2])
+
+
+def discover_input_datasets(run_config: Mapping[str, Any]) -> str | None:
+    """The `FORGE_INPUT_DATASETS` value for this job, or `None` when it
+    declares no input datasets (nothing is exported, nothing printed).
+
+    Never raises: a malformed ref is logged and left out, an absent root
+    or an unfound slug maps the ref to null and is logged, so the target
+    falls back to downloading."""
+    refs = run_config.get(INPUT_DATASETS_KEY)
+    if not isinstance(refs, list) or not refs:
+        return None
+    root_text = run_config.get(INPUT_ROOT_KEY)
+    root = Path(root_text) if isinstance(root_text, str) and root_text else None
+    found: dict[str, str | None] = {}
+    for raw in refs:
+        parts = _input_ref_parts(raw)
+        if parts is None:
+            print(f"{INPUT_LOG_PREFIX} skipped input dataset {raw!r}: not "
+                  "<owner>/<slug>", flush=True)
+            continue
+        mount = _find_input_mount(root, *parts) if root is not None and root.is_dir() else None
+        if mount is not None:
+            found[raw] = str(mount)
+            print(f"{INPUT_LOG_PREFIX} {raw} is mounted at {mount}", flush=True)
+        else:
+            found[raw] = None
+            reason = ("the service attached no inputs" if root is None
+                      else f"no directory named {parts[1]!r} under {root}")
+            print(f"{INPUT_LOG_PREFIX} {raw} not attached ({reason}); the "
+                  "target downloads it", flush=True)
+    return json.dumps(found, sort_keys=True)
+
+
+def session_deadline(limit_seconds: Any, *, started: float) -> int:
+    """`started + limit - max(limit * SESSION_MARGIN_FRACTION,
+    SESSION_MARGIN_MIN_SECONDS)`, as whole epoch seconds.
+
+    A limit that is not a positive integer is refused, not ignored: it is
+    written by `submit` from a backend's declared constant, so anything
+    else is a defect, and a deadline silently dropped is hours of compute
+    a session limit can still take away.
+    """
+    if isinstance(limit_seconds, bool) or not isinstance(limit_seconds, int) or limit_seconds <= 0:
+        raise InvokeError(
+            f"run-config.json's {SESSION_LIMIT_KEY!r} must be a positive integer "
+            f"number of seconds, got {limit_seconds!r}"
+        )
+    margin = max(limit_seconds * SESSION_MARGIN_FRACTION, SESSION_MARGIN_MIN_SECONDS)
+    return int(started + limit_seconds - margin)
+
 
 def kernel_python_path(clone_root: str | Path, existing: str | None) -> str:
     """`PYTHONPATH` for the kernel a notebook executes in — the clone's own
@@ -147,7 +369,14 @@ def kernel_python_path(clone_root: str | Path, existing: str | None) -> str:
     return clone_src
 
 
-def submission_environment(mode: Any = None, units: list[str] | None = None) -> dict:
+def submission_environment(
+    mode: Any = None,
+    units: list[str] | None = None,
+    session_deadline: int | None = None,
+    carry_in: str | None = None,
+    input_datasets: str | None = None,
+    dataset_checks: str | None = None,
+) -> dict:
     """Compose `FORGE_RUN_MODE` and `FORGE_RUN_UNITS` — the two
     per-submission facts described beside `MODE_ENV`/`UNITS_ENV` above —
     on their own, apart from `kernel_environment()`.
@@ -172,12 +401,24 @@ def submission_environment(mode: Any = None, units: list[str] | None = None) -> 
     no `FORGE_RUN_UNITS` key either. A DECLARED empty list still sets it,
     to the JSON text `"[]"`, because only a present key can tell a reader
     that zero units is what was decided, rather than what is missing.
+
+    Absent `session_deadline` (`None`, no declared session limit): no
+    `FORGE_SESSION_DEADLINE` key either; present, it is the epoch-seconds
+    integer `session_deadline()` computed.
     """
     result: dict[str, str] = {}
     if mode is not None:
         result[MODE_ENV] = str(mode)
     if units is not None:
         result[UNITS_ENV] = json.dumps(list(units))
+    if session_deadline is not None:
+        result[SESSION_DEADLINE_ENV] = str(int(session_deadline))
+    if carry_in:
+        result[CARRY_IN_ENV] = str(carry_in)
+    if input_datasets:
+        result[INPUT_DATASETS_ENV] = str(input_datasets)
+    if dataset_checks:
+        result[DATASET_CHECKS_ENV] = str(dataset_checks)
     return result
 
 
@@ -188,6 +429,10 @@ def kernel_environment(
     *,
     mode: Any = None,
     units: list[str] | None = None,
+    session_deadline: int | None = None,
+    carry_in: str | None = None,
+    input_datasets: str | None = None,
+    dataset_checks: str | None = None,
 ) -> dict:
     """Everything the kernel receives from this cell, composed in one place.
 
@@ -223,7 +468,8 @@ def kernel_environment(
         CLONE_ROOT_ENV: str(Path(clone_root).resolve()),
         CLONE_COMMIT_ENV: str(commit),
     }
-    composed.update(submission_environment(mode, units))
+    composed.update(submission_environment(mode, units, session_deadline, carry_in,
+                                           input_datasets, dataset_checks))
     return composed
 
 
@@ -343,6 +589,10 @@ def execute_notebook(
     commit: Any = None,
     mode: Any = None,
     units: list[str] | None = None,
+    session_deadline: int | None = None,
+    carry_in: str | None = None,
+    input_datasets: str | None = None,
+    dataset_checks: str | None = None,
     client_factory: Callable[..., Any] = _default_notebook_client,
 ) -> dict:
     """Execute the declared notebook — the notebook half of cell 1.
@@ -441,7 +691,11 @@ def execute_notebook(
         ) from exc
 
     handoff = kernel_environment(clone_root, commit, os.environ,
-                                 mode=mode, units=units)
+                                 mode=mode, units=units,
+                                 session_deadline=session_deadline,
+                                 carry_in=carry_in,
+                                 input_datasets=input_datasets,
+                                 dataset_checks=dataset_checks)
     saved = {variable: os.environ.get(variable) for variable in handoff}
     os.environ.update(handoff)
     try:
@@ -517,14 +771,42 @@ def invoke(
     block = select_block(run_config)
     mode = run_config.get("mode")
     units = run_config.get("units")
-    if block_kind(block) == "notebook":
+    deadline = None
+    if run_config.get(SESSION_LIMIT_KEY) is not None:
+        deadline = session_deadline(run_config[SESSION_LIMIT_KEY], started=time.time())
+    kind = block_kind(block)
+    # Restored before the entrypoint, whichever shape it is, so the target
+    # resumes from checkpoints already on disk (kernel-carry S3).
+    carry_in = restore_carry(run_config, base_dir)
+    # Where the declared input datasets are mounted (kernel-input-datasets S3).
+    input_datasets = discover_input_datasets(run_config)
+    checks = run_config.get("datasetChecks")
+    dataset_checks = json.dumps(checks, sort_keys=True) if checks else None
+    if kind == "notebook":
         return execute_notebook(block, base_dir,
                                 commit=run_config.get("commit"),
                                 mode=mode, units=units,
+                                session_deadline=deadline,
+                                carry_in=carry_in,
+                                input_datasets=input_datasets,
+                                dataset_checks=dataset_checks,
                                 client_factory=client_factory)
     func = resolve_callable(block, import_module=import_module)
     kwargs = dict(block.get("kwargs") or {})
-    handoff = submission_environment(mode, units)
+    handoff = submission_environment(mode, units, deadline, carry_in, input_datasets,
+                                     dataset_checks)
+    # remote-preflight F1: a callable job is handed the clone root and the
+    # pinned commit under the same two names a notebook kernel receives, so
+    # a target that stamps its commit on a code-bundle worker (no git
+    # metadata beyond `.git/HEAD`) reads it from `FORGE_CLONE_COMMIT` there
+    # too. Exported only when the pin is present: unlike the notebook
+    # branch, a callable needs neither to run, so a missing pin is not a
+    # refusal here.
+    commit = run_config.get("commit")
+    if isinstance(commit, str) and commit.strip():
+        base = Path(base_dir) if base_dir is not None else Path.cwd()
+        handoff[CLONE_ROOT_ENV] = str((base / CLONE_DIRNAME).resolve())
+        handoff[CLONE_COMMIT_ENV] = commit
     saved = {variable: os.environ.get(variable) for variable in handoff}
     os.environ.update(handoff)
     try:

@@ -42,6 +42,82 @@ blocker is a detour and never a destination.
 Do not decide anything the operator has not decided. Do not run the flow,
 submit anything, or authorize a launch — that is another stretch.
 
+## Estimate when you instrument
+
+When you instrument the flow, make sure the timing probe exists — one epoch of
+one fold per arm, on the target's own interpreter, device recorded — and that
+it writes `Results/timing.json` in the product folder, declared among the
+step's `produces` roots, with `scales` copied from the approved protocol and
+the declared pilot. Run it, then load
+`.claude/skills/remote-parallelism/SKILL.md`, run its `estimate` over that
+record and report the range per stage and host. The estimate is never
+authorization.
+
+`placement` in the same output says where each stage runs: a stage whose
+local estimate exceeds 20 minutes is reported as a remote step on a cloud host, never run
+locally, and a proof of concept whose `placement.pocBudget` reads `exceeds`
+(over 5 hours on its host) is reported as a design to reduce before the pilot,
+never run as it stands.
+
+## Whether to split a campaign
+
+Before generating jobs for more than one unit, load
+`.claude/skills/remote-parallelism/SKILL.md`, run its `assess` with measured
+inputs only (a pilot's per-unit duration, a rehearsal's setup minutes, each
+validated account's sessions, session limit and recorded quota) and record it
+with `--record` into the experiments tree. Instrument what its checklist
+demands so a split can be checked: each unit seeded from its unit id, and
+every field `stamp-fields` prints written into each shard's stamp. Report the
+verdict and every checklist item still unmet. The verdict is never launch
+authorization.
+
+## Every remote unit fits one session, or resumes
+
+A service stops a session after its continuous run limit, and whatever was not
+written out by then is lost with the hours it cost. So every remote unit fits
+one session within the 80% margin (`schedule` and `assess` refuse
+`unit-over-session-margin` otherwise), or its step is declared resumable from a
+checkpoint. The target reads `FORGE_SESSION_DEADLINE` (epoch seconds), writes
+its checkpoint and starts no new unit or trial past it, then exits cleanly.
+A unit that does not fit is split along the declared axis — fold, seed,
+subject block, never by arm — or resumed over chained sessions on the same
+account. After a cut session, run `fetch` (it keeps the partial result), then
+`remaining`, and send again only the units it lists. A checkpoint reaches the
+next session as follows: on a kernel service, the previous kernel's output
+attached to the next kernel through `kernel_sources` and read under its input
+root at `notebooks/<owner>/<slug>/` (checked on a live account on 2026-10-27).
+papersmith attaches it automatically for the paths the job declares with
+`generate-job --carry-path`: `submit` places the continuation on the account
+that produced the checkpoint (`--no-carry` starts it fresh instead), and the
+runner restores those paths before the entrypoint and exports
+`FORGE_CARRY_IN`, so the target code is unchanged. On Colab nothing is carried
+automatically (`carry: unsupported`); upload the checkpoint into the new
+session. The details live in
+`.claude/skills/remote-execution/SKILL.md`, **Sessions, checkpoints and
+resume**, and `.claude/skills/remote-parallelism/SKILL.md`.
+
+A job that reads a public dataset declares it with `generate-job
+--input-dataset <owner>/<slug>` (repeatable). A pushed kernel is a
+non-interactive session and cannot attach a dataset at run time, so on a
+kernel service `submit` names the declared datasets in the push and reports
+`inputs: attached`; a service that attaches none reports `inputs:
+unsupported`. Either way the runner exports `FORGE_INPUT_DATASETS` before the
+entrypoint, a JSON object mapping each ref to its mounted directory or to
+null: the target reads the mounted directory when there is one and downloads
+the dataset only when the value is null. The details live in
+`.claude/skills/remote-execution/SKILL.md`, **Job inputs**.
+
+Before any rehearsal of a job -- its first, and the first after a re-pin --
+run `remote_cli preflight --target <repo> --entrypoint <job folder>/runner.ipynb`
+under the workspace env interpreter, with `--expect-accelerator` naming the
+plan's accelerator and one `--worker` per account the plan uses, and fix every
+`fail` row before a rehearsal is run or the operator is asked to authorize
+one. It never submits. Its local rehearsal runs the job's smoke from a scratch
+copy of the job's code, the way the worker materializes it, and checks the
+`shard.json` it leaves, which is where most remote rehearsals failed. The rules
+it encodes live in `.claude/skills/remote-execution/SKILL.md`, **Before the
+first rehearsal**.
+
 ## What you return
 
 Your report is not shown to the operator. It reaches the orchestrator, which

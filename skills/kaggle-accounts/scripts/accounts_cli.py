@@ -87,6 +87,21 @@ STORE_PATH = STORE_DIR / STORE_FILE
 VALIDATION_URL = "https://www.kaggle.com/api/v1/competitions/list?page=1"
 VALIDATION_TIMEOUT = 20
 
+
+class _RefuseRedirects(urllib.request.HTTPRedirectHandler):
+    """Follow no redirect: the validation request carries the credential, and a
+    redirect would hand it to whatever host `Location` names. Returning `None`
+    makes urllib raise the 3xx as an `HTTPError` (#106). This script ships to
+    workspaces and imports nothing from papersmith, so `smith mcp kaggle`
+    keeps its own copy of this handler."""
+
+    def redirect_request(self, req, fp, code, msg, headers, newurl):
+        return None
+
+
+# The only opener a request carrying a Kaggle credential goes through.
+_OPENER = urllib.request.build_opener(_RefuseRedirects)
+
 STORE_VERSION = 1
 USERNAME_PATTERN = re.compile(r"^[A-Za-z0-9._-]{1,64}$")
 
@@ -477,7 +492,7 @@ def _attempt(scheme: str, credential: str) -> None:
         },
     )
     try:
-        with urllib.request.urlopen(request, timeout=VALIDATION_TIMEOUT) as response:
+        with _OPENER.open(request, timeout=VALIDATION_TIMEOUT) as response:
             if response.status != 200:
                 raise CredentialError(f"Kaggle answered HTTP {response.status}")
     except urllib.error.HTTPError as exc:
@@ -627,6 +642,18 @@ def cmd_validate(args: argparse.Namespace) -> int:
     """
     if args.interactive and args.files:
         raise UsageError("--interactive takes no file arguments")
+    if getattr(args, "json", False) and not getattr(args, "account", None):
+        # Refused before anything is read: `--json` is defined only for the
+        # read-only `--account` probe, and a caller that asked for JSON and
+        # got the human report (exit 0) would read it as a verdict.
+        raise UsageError("JSON_NEEDS_ACCOUNT: --json is only defined with --account "
+                         "<username>; run `validate --account <username> --json`, or "
+                         "`validate` without --json for the human report")
+    if getattr(args, "account", None):
+        if args.interactive or args.files:
+            raise UsageError("--account re-checks stored accounts only; it takes no file "
+                             "arguments and no --interactive")
+        return _validate_stored(args.account, as_json=bool(getattr(args, "json", False)))
 
     store = load_store()
     by_username = {a["username"]: a for a in store["accounts"]}
@@ -708,6 +735,32 @@ def cmd_validate(args: argparse.Namespace) -> int:
         print(f"Nothing to validate. Drop a kaggle.json, or a .txt with one "
               f"`username key` per line, into {INBOX_NAME}/ and run this again.")
     return 1 if failures else 0
+
+
+def _validate_stored(usernames: list[str], *, as_json: bool) -> int:
+    """Re-check only the named stored accounts: the read-only probe a
+    pre-launch check runs. Takes in nothing from the inbox and writes
+    nothing, so it needs none of `validate`'s consent; it prints a verdict
+    per account and never a key."""
+    by_username = {a["username"]: a for a in load_store()["accounts"]}
+    rows = []
+    for username in usernames:
+        account = by_username.get(username)
+        if account is None:
+            rows.append({"username": username, "ok": False,
+                         "detail": "not stored; take its credential in with validate"})
+            continue
+        try:
+            validate(account["username"], account["key"])
+            rows.append({"username": username, "ok": True, "detail": "ok"})
+        except CredentialError as exc:
+            rows.append({"username": username, "ok": False, "detail": str(exc)})
+    if as_json:
+        print(json.dumps({"accounts": rows}, indent=2))
+    else:
+        for row in rows:
+            print(f"  {row['username']} — {'ok' if row['ok'] else 'NOT working: ' + row['detail']}")
+    return 0 if all(row["ok"] for row in rows) else 1
 
 
 def cmd_materialize(args: argparse.Namespace) -> int:
@@ -907,6 +960,14 @@ def main() -> int:
         help="type one credential into a hidden terminal prompt instead of passing a file; "
              "run this yourself in your own shell",
     )
+    p_validate.add_argument(
+        "--account", action="append", default=None, metavar="username",
+        help="repeatable: re-check only this stored account; takes in nothing and writes "
+             "nothing (the read-only probe remote-execution's preflight runs)",
+    )
+    p_validate.add_argument("--json", action="store_true",
+                            help="machine-readable verdicts; only with --account "
+                                 "(refused JSON_NEEDS_ACCOUNT otherwise)")
     p_validate.set_defaults(func=cmd_validate)
 
     p_remove = sub.add_parser("remove", help="delete stored accounts by username")

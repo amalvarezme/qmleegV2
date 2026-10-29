@@ -89,13 +89,16 @@ Run with any Python 3.10+ (stdlib-only):
 from __future__ import annotations
 
 import ast
+import gzip
 import hashlib
+import io
 import json
 import os
 import re
 import shutil
 import subprocess
 import sys
+import tarfile
 import tempfile
 import uuid
 from dataclasses import dataclass
@@ -190,6 +193,26 @@ REQUIRED_RUN_CONFIG_FIELDS = (
 # recorded as if it were immutable, with every downstream check agreeing.
 COMMIT_PATTERN = re.compile(r"\A(?:[0-9a-f]{40}|[0-9a-f]{64})\Z")
 
+# The code bundle (`generate-job --code-bundle`): the declared clone paths
+# at the pin, taken with `git archive` from the COMMIT (never the working
+# tree), gzipped with a fixed mtime so the same pin always yields the same
+# bytes, written beside `run-config.json` and recorded there as
+# `codeBundle: {file, format, sha256, bytes}`. A backend whose runner cannot
+# authenticate a clone of a private repository ships those bytes inside
+# the job it pushes, and the runner unpacks them instead of cloning; no
+# repository credential is read, needed or carried. Only a backend whose
+# adapter class declares `CODE_BUNDLE_MAX_BYTES` accepts one, and that
+# number bounds the compressed size.
+CODE_BUNDLE_FILENAME = "code-bundle.tar.gz"
+CODE_BUNDLE_FORMAT = "tar.gz"
+CODE_BUNDLE_SHA256_PATTERN = re.compile(r"\A[0-9a-f]{64}\Z")
+# Refusal codes, printed first in the message (SKILL.md "Refusal codes").
+CODE_BUNDLE_NOT_CARRIED = "CODE_BUNDLE_NOT_CARRIED"
+CODE_BUNDLE_TOO_LARGE = "CODE_BUNDLE_TOO_LARGE"
+CODE_BUNDLE_UNSAFE_ENTRY = "CODE_BUNDLE_UNSAFE_ENTRY"
+CODE_BUNDLE_MISMATCH = "CODE_BUNDLE_MISMATCH"
+CODE_BUNDLE_WITH_REPO_CREDENTIAL = "CODE_BUNDLE_WITH_REPO_CREDENTIAL"
+
 
 def resolve_target(target: str | Path) -> Path:
     """Resolve `--target` to an absolute path and refuse anything that is
@@ -261,6 +284,128 @@ def validate_clone_paths(
                 ) from None
         validated.append(candidate.as_posix())
     return tuple(validated)
+
+
+def validate_carry_paths(carry_paths: Sequence[str]) -> tuple[str, ...]:
+    """The paths, relative to the product folder, whose contents a
+    continuation of this job needs carried from the session before it
+    (kernel-carry S1): checkpoints, per-unit records, studies. Each must be
+    a non-empty relative path with no `..`, the same structural rule
+    `validate_clone_paths()` holds, because the runner copies each one
+    into its own working directory and a path that escapes it would write
+    somewhere nothing fetches. An empty sequence is valid and means the
+    job declares none.
+    """
+    validated = []
+    for raw in carry_paths:
+        if not isinstance(raw, str) or not raw.strip():
+            raise JobFolderError(f"refusing carry path {raw!r}: must be a non-empty string")
+        candidate = Path(raw)
+        if candidate.is_absolute():
+            raise JobFolderError(f"refusing absolute carry path {raw!r}")
+        if ".." in candidate.parts:
+            raise JobFolderError(f"refusing carry path {raw!r}: contains '..'")
+        if not candidate.parts:
+            raise JobFolderError(
+                f"refusing carry path {raw!r}: names the product folder itself, "
+                "not a path inside it"
+            )
+        validated.append(candidate.as_posix())
+    return tuple(validated)
+
+
+# One part of a public dataset reference `<owner>/<slug>` (kernel-input-
+# datasets S1): a letter or digit, then letters, digits, `-` or `_`. No dot,
+# no space, no version suffix, so a ref can never name a path outside the
+# service's input root nor smuggle a version the service would read
+# differently.
+_INPUT_DATASET_PART = re.compile(r"[A-Za-z0-9][A-Za-z0-9_-]{0,99}")
+
+
+def validate_input_datasets(input_datasets: object) -> tuple[str, ...]:
+    """The public datasets a job reads (`generate-job --input-dataset`),
+    each `<owner>/<slug>` exactly once (kernel-input-datasets S1). A
+    service that attaches inputs to the push mounts them read-only; the
+    runner exports where in `FORGE_INPUT_DATASETS`. Checked at generation
+    and on every read of `run-config.json`, so a hand-edited ref refuses
+    before any submission. An empty sequence is valid and means none.
+    """
+    if not isinstance(input_datasets, (list, tuple)):
+        raise JobFolderError(
+            "run-config.json's inputDatasets must be a list of input dataset "
+            "refs (<owner>/<slug>)"
+        )
+    validated: list[str] = []
+    for raw in input_datasets:
+        parts = raw.split("/") if isinstance(raw, str) else []
+        if len(parts) != 2 or not all(
+            _INPUT_DATASET_PART.fullmatch(part) for part in parts
+        ):
+            raise JobFolderError(
+                f"refusing input dataset {raw!r}: must be <owner>/<slug>, each "
+                "part letters, digits, '-' or '_'"
+            )
+        if raw in validated:
+            raise JobFolderError(
+                f"refusing input dataset {raw!r}: declared more than once"
+            )
+        validated.append(raw)
+    return tuple(validated)
+
+
+_SHA256_HEX = re.compile(r"[0-9a-f]{64}")
+
+
+def validate_dataset_checks(checks: object, input_datasets: object) -> dict:
+    """`datasetChecks` (remote-preflight S2, `generate-job --dataset`): per
+    declared input ref, the workspace preparation's sha256 values the
+    target verifies what it reads against, exported by the runner as
+    `FORGE_DATASET_CHECKS`. Every key must be a declared `inputDatasets`
+    ref and every value carry a full lowercase `sha256` (and, when given,
+    `splitsSha256`). Checked at generation and on every read."""
+    if not isinstance(checks, Mapping):
+        raise JobFolderError("run-config.json's datasetChecks must be an object keyed by "
+                             "input dataset ref")
+    declared = set(input_datasets or []) if isinstance(input_datasets, (list, tuple)) else set()
+    for ref, check in checks.items():
+        if ref not in declared:
+            raise JobFolderError(f"datasetChecks names {ref!r}, which inputDatasets does "
+                                 "not declare")
+        if not isinstance(check, Mapping) or not isinstance(check.get("sha256"), str) \
+                or not _SHA256_HEX.fullmatch(check["sha256"]):
+            raise JobFolderError(f"datasetChecks[{ref!r}] must carry a lowercase 64-hex sha256")
+        splits = check.get("splitsSha256")
+        if splits is not None and not (isinstance(splits, str) and _SHA256_HEX.fullmatch(splits)):
+            raise JobFolderError(f"datasetChecks[{ref!r}].splitsSha256 must be a lowercase "
+                                 "64-hex sha256")
+    return {ref: dict(check) for ref, check in checks.items()}
+
+
+def with_entry_notebooks(
+    clone_paths: Sequence[str], notebooks: Sequence[str]
+) -> list[str]:
+    """The declared clone paths plus every entry notebook no declared path
+    already covers, appended as a clone path of its own (S1).
+
+    The notebook a job runs is the only notebook it needs. Declaring its
+    whole folder made every notebook beside it part of the pin, so an
+    unrelated notebook re-run and committed staled the job (`pin-is-head`)
+    and forced the smoke and the launch chain again. A declared path is
+    never dropped or narrowed: a declared folder that covers the notebook
+    is kept exactly as declared, and nothing is appended.
+
+    A file clone path is delivered by `git sparse-checkout set` in both
+    modes: non-cone matches the file itself, and cone mode (the default
+    since git 2.37) includes every file directly inside the notebook's
+    parent directories — siblings arrive too, read from the same pinned
+    commit, but only the declared notebook enters staleness.
+    """
+    result = list(clone_paths)
+    for raw in notebooks:
+        notebook = validate_notebook_path(raw, where="generation's run block")
+        if not _covered_by_declared(notebook, result):
+            result.append(notebook)
+    return result
 
 
 def _module_to_relpath(dotted: str, source: Path) -> Path | None:
@@ -1104,7 +1249,7 @@ def resolve_clone_paths(
             queued.add(name)
             queue.append((name, False))
 
-    def absorb(file: Path, tree: ast.Module) -> None:
+    def absorb(file: Path, tree: ast.Module, exempt=None) -> None:
         """Everything this walk learns from ONE already-parsed file:
         its own constant table, its read/write call sites, and every
         import it makes enqueued for the walk to follow.
@@ -1176,7 +1321,8 @@ def resolve_clone_paths(
                         f"{file}: non-literal importlib.import_module(...) call is uncertain"
                     )
             elif _is_sys_path_mutation(node):
-                unresolved.append(f"{file}: sys.path mutation is uncertain")
+                if exempt is None or not exempt(node):
+                    unresolved.append(f"{file}: sys.path mutation is uncertain")
 
     # A declared NOTEBOOK is an entry too, and the only one this walk can
     # reach by path rather than by dotted name: nothing imports a notebook,
@@ -1216,7 +1362,7 @@ def resolve_clone_paths(
             )
             continue
         try:
-            notebook_text = notebook_code_source(notebook_file)
+            notebook_text, bootstrap_end = _notebook_scan_source(notebook_file)
         except JobFolderError as exc:
             unresolved.append(str(exc))
             continue
@@ -1230,7 +1376,18 @@ def resolve_clone_paths(
         if notebook_file in visited:
             continue
         visited.add(notebook_file)
-        absorb(notebook_file, notebook_tree)
+        # S5: the kit bootstrap cell binds `ROOT` to the clone, so the one
+        # insert of exactly `ROOT / "src"` after it is the clone's own
+        # source root. Any other mutation, an insert before the cell, or a
+        # notebook that rebinds `ROOT` anywhere stays uncertain.
+        exempt = None
+        if bootstrap_end is not None and not _binds_root(notebook_tree):
+            def exempt(node: ast.AST, _after: int = bootstrap_end) -> bool:
+                return (
+                    getattr(node, "lineno", 0) > _after
+                    and ast.dump(node) == _KIT_SRC_INSERT_DUMP
+                )
+        absorb(notebook_file, notebook_tree, exempt)
 
     while queue:
         dotted, is_entry = queue.pop(0)
@@ -1439,13 +1596,23 @@ def notebook_code_source(path: Path) -> str:
     Raises `JobFolderError` when the file is not readable as a notebook;
     the caller turns that into an `unresolved` entry rather than a crash.
     """
+    return "\n".join(chunk for _raw, chunk in _notebook_code_cells(path)) + "\n"
+
+
+def _notebook_code_cells(path: Path) -> list[tuple[str, str]]:
+    """Every code cell of a notebook as `(raw, chunk)`: `raw` is the cell's
+    source exactly as stored (what `_is_kit_bootstrap_cell()` compares
+    byte for byte), `chunk` is that source with `%` magic and `!` shell
+    lines dropped — the piece `notebook_code_source()` joins. One reader,
+    so the joined text and the per-cell view can never disagree.
+    """
     try:
         payload = json.loads(path.read_text(encoding="utf-8"))
     except (OSError, UnicodeDecodeError, json.JSONDecodeError) as exc:
         raise JobFolderError(f"{path}: not readable as a notebook ({exc})") from exc
     if not isinstance(payload, Mapping):
         raise JobFolderError(f"{path}: notebook does not decode to a JSON object")
-    chunks: list[str] = []
+    cells: list[tuple[str, str]] = []
     for cell in payload.get("cells") or []:
         if not isinstance(cell, Mapping) or cell.get("cell_type") != "code":
             continue
@@ -1460,8 +1627,82 @@ def notebook_code_source(path: Path) -> str:
             line for line in text.splitlines()
             if not line.lstrip().startswith(("%", "!"))
         ]
-        chunks.append("\n".join(kept))
-    return "\n".join(chunks) + "\n"
+        cells.append((text, "\n".join(kept)))
+    return cells
+
+
+#: The kit's notebook bootstrap cell, owned by this skill and copied byte for
+#: byte as the first code cell of every kit notebook. Recognised by exact
+#: text, never by a heuristic: an edited copy is scanned like any other cell.
+KIT_BOOTSTRAP_CELL_ASSET = ASSETS_DIR / "notebook_repo_root.py"
+
+#: The one `sys.path` mutation the kit cell's `ROOT` makes safe: `src/` is
+#: the clone's own source root, already on the kernel's `PYTHONPATH`.
+_KIT_SRC_INSERT_DUMP = ast.dump(
+    ast.parse('sys.path.insert(0, str(ROOT / "src"))', mode="eval").body
+)
+
+_kit_bootstrap_text_cache: list[str | None] = []
+
+
+def _kit_bootstrap_text() -> str | None:
+    if not _kit_bootstrap_text_cache:
+        try:
+            text: str | None = KIT_BOOTSTRAP_CELL_ASSET.read_text(encoding="utf-8")
+        except OSError:
+            text = None
+        _kit_bootstrap_text_cache.append(text)
+    return _kit_bootstrap_text_cache[0]
+
+
+def _is_kit_bootstrap_cell(raw: str) -> bool:
+    """True only for a cell byte-identical to `assets/notebook_repo_root.py`."""
+    owned = _kit_bootstrap_text()
+    return owned is not None and raw == owned
+
+
+def _binds_root(tree: ast.AST) -> bool:
+    """Whether anything in `tree` (re)binds the name `ROOT`."""
+    for node in ast.walk(tree):
+        if isinstance(node, ast.Name) and node.id == "ROOT" and not isinstance(
+            node.ctx, ast.Load
+        ):
+            return True
+        if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef)) \
+                and node.name == "ROOT":
+            return True
+        if isinstance(node, (ast.Import, ast.ImportFrom)) and any(
+            (alias.asname or alias.name.split(".")[0]) == "ROOT"
+            for alias in node.names
+        ):
+            return True
+        if isinstance(node, (ast.Global, ast.Nonlocal)) and "ROOT" in node.names:
+            return True
+    return False
+
+
+def _notebook_scan_source(path: Path) -> tuple[str, int | None]:
+    """The text `resolve_clone_paths()` parses for a notebook entry, and the
+    last line of the first kit bootstrap cell in it (`None` without one).
+
+    A kit bootstrap cell is replaced by as many EMPTY lines as it occupies,
+    so every other cell keeps the line numbers `notebook_code_source()`
+    gives it and nothing else in the scan changes: the cell's own reads
+    (`.git`, `HEAD`, loose and packed refs of the runner's clone) are the
+    kit's proof of the pinned commit, not inputs a clone path must carry.
+    """
+    pieces: list[str] = []
+    line = 0
+    bootstrap_end: int | None = None
+    for raw, chunk in _notebook_code_cells(path):
+        span = chunk.count("\n") + 1
+        if _is_kit_bootstrap_cell(raw):
+            chunk = "\n" * (span - 1)
+            if bootstrap_end is None:
+                bootstrap_end = line + span
+        pieces.append(chunk)
+        line += span
+    return "\n".join(pieces) + "\n", bootstrap_end
 
 
 def validate_run_config(run_config: Mapping[str, object]) -> None:
@@ -1496,6 +1737,9 @@ def validate_run_config(run_config: Mapping[str, object]) -> None:
             f"reads only {RUN_CONFIG_SCHEMA_VERSION}"
         )
     validate_commit_shape(run_config["commit"], source="run-config.json")
+    repo = run_config["repo"]
+    if isinstance(repo, Mapping):
+        refuse_repo_url_credentials(repo.get("url"), where="run-config.json")
     validate_clone_paths(run_config["clonePaths"])
     run_block = run_config["run"]
     # The union check, and the whole of it — see `run_block_kind()`. It is
@@ -1508,6 +1752,189 @@ def validate_run_config(run_config: Mapping[str, object]) -> None:
     if isinstance(run_block, Mapping) and run_block.get("smoke") is not None:
         run_block_kind(
             run_block["smoke"], where="run-config.json's 'run.smoke' block"
+        )
+    carry_paths = run_config.get("carryPaths")
+    if carry_paths is not None:
+        if not isinstance(carry_paths, list):
+            raise JobFolderError("run-config.json's carryPaths must be a list of carry paths")
+        validate_carry_paths(carry_paths)
+    if "inputDatasets" in run_config:
+        validate_input_datasets(run_config["inputDatasets"])
+    if "datasetChecks" in run_config:
+        validate_dataset_checks(run_config["datasetChecks"], run_config.get("inputDatasets"))
+    if "codeBundle" in run_config:
+        validate_code_bundle_block(run_config["codeBundle"])
+
+
+def validate_code_bundle_block(block: object) -> Mapping[str, object]:
+    """The `codeBundle` block's shape, re-checked on every read like the
+    commit's: the file is the one fixed name beside `run-config.json`
+    (never a path a hand-edited config could point elsewhere), the format
+    is the one this generator writes, the sha256 is a full lowercase digest
+    and the size a non-negative integer."""
+    if not isinstance(block, Mapping):
+        raise JobFolderError("run-config.json's codeBundle must be an object")
+    if block.get("file") != CODE_BUNDLE_FILENAME:
+        raise JobFolderError(
+            f"run-config.json's codeBundle.file must be {CODE_BUNDLE_FILENAME!r}, "
+            f"got {block.get('file')!r}"
+        )
+    if block.get("format") != CODE_BUNDLE_FORMAT:
+        raise JobFolderError(
+            f"run-config.json's codeBundle.format must be {CODE_BUNDLE_FORMAT!r}, "
+            f"got {block.get('format')!r}"
+        )
+    sha = block.get("sha256")
+    if not isinstance(sha, str) or not CODE_BUNDLE_SHA256_PATTERN.match(sha):
+        raise JobFolderError(
+            "run-config.json's codeBundle.sha256 must be a lowercase 64-hex digest"
+        )
+    size = block.get("bytes")
+    if isinstance(size, bool) or not isinstance(size, int) or size < 0:
+        raise JobFolderError(
+            "run-config.json's codeBundle.bytes must be a non-negative integer"
+        )
+    return block
+
+
+def code_bundle_limit(service: str) -> int | None:
+    """The backend's `CODE_BUNDLE_MAX_BYTES`, or `None` when it carries no
+    bundle (or no adapter is registered under `service` at all). Read off
+    the adapter CLASS, the same capability pattern as the other optional
+    class attributes: nothing here names a backend."""
+    try:
+        adapter_cls = ADAPTER.resolve(service)
+    except KeyError:
+        return None
+    limit = getattr(adapter_cls, "CODE_BUNDLE_MAX_BYTES", None)
+    if isinstance(limit, bool) or not isinstance(limit, int) or limit <= 0:
+        return None
+    return limit
+
+
+def _covered_by_clone_paths(name: str, clone_paths: Sequence[str]) -> bool:
+    return any(name == path or name.startswith(path.rstrip("/") + "/")
+               for path in clone_paths)
+
+
+def _is_clone_path_ancestor(name: str, clone_paths: Sequence[str]) -> bool:
+    stripped = name.rstrip("/")
+    return any(path.startswith(stripped + "/") for path in clone_paths)
+
+
+def unsafe_bundle_entry(member: tarfile.TarInfo, clone_paths: Sequence[str]) -> str | None:
+    """Why one archive entry may not travel in a code bundle, or `None`.
+
+    Only regular files and directories; never a link (symbolic or hard),
+    device or FIFO, because unpacking one can point outside the clone. A
+    name is relative, has no `..` component, and lies under a declared
+    clone path (a directory may also be one of their ancestors). The
+    runner (`assets/runner_bootstrap.py`) applies the same rule again,
+    in its own copy, before it unpacks anything.
+    """
+    name = member.name
+    parts = name.split("/")
+    if not name or name.startswith("/") or ".." in parts:
+        return f"{name!r} is absolute or escapes the clone with '..'"
+    if ".git" in parts:
+        return f"{name!r} lies inside a .git directory"
+    if not (member.isfile() or member.isdir()):
+        return f"{name!r} is a link or special file, not a regular file or directory"
+    if member.isdir() and _is_clone_path_ancestor(name, clone_paths):
+        return None
+    if not _covered_by_clone_paths(name.rstrip("/"), clone_paths):
+        return f"{name!r} lies outside the declared clone paths"
+    return None
+
+
+def build_code_bundle(target: Path, commit: str, clone_paths: Sequence[str]) -> bytes:
+    """The bundle's bytes: `git archive` of the declared clone paths at
+    `commit`, every entry checked by `unsafe_bundle_entry()`, gzipped with
+    mtime 0 so regeneration at the same pin is byte-identical.
+
+    `git archive` reads the commit's tree, so an untracked or ignored file
+    in the working tree (a token file, say) never enters it. It does honor
+    the commit's own `.gitattributes` `export-ignore`/`export-subst`, so a
+    target that declares those under a clone path ships what they say.
+    """
+    tar_bytes = _run_git(
+        ["archive", "--format=tar", commit, "--", *clone_paths],
+        cwd=target, text=False,
+    ).stdout
+    with tarfile.open(fileobj=io.BytesIO(tar_bytes), mode="r:") as archive:
+        for member in archive.getmembers():
+            why = unsafe_bundle_entry(member, clone_paths)
+            if why is not None:
+                raise JobFolderError(
+                    f"{CODE_BUNDLE_UNSAFE_ENTRY}: generation refuses the code "
+                    f"bundle at {commit}: {why}"
+                )
+    return gzip.compress(tar_bytes, mtime=0)
+
+
+def _bundle_contents(gz_bytes: bytes) -> dict[str, str]:
+    """`{name: sha256}` of every regular file in a tar.gz — the bundle's
+    CODE, independent of tar headers and gzip framing, so a bundle rebuilt
+    by a different git or zlib version compares equal when its files do."""
+    contents: dict[str, str] = {}
+    with tarfile.open(fileobj=io.BytesIO(gz_bytes), mode="r:gz") as archive:
+        for member in archive.getmembers():
+            if member.isfile():
+                data = archive.extractfile(member).read()
+                contents[member.name] = hashlib.sha256(data).hexdigest()
+    return contents
+
+
+def verify_code_bundle(
+    job_dir: Path,
+    run_config: Mapping[str, object],
+    *,
+    target: Path | None = None,
+) -> None:
+    """Refuse a job folder whose bundle file is absent or does not hash to
+    the recorded `codeBundle.sha256` — at `submit`, before any quota. With
+    `target`, the bundle is also rebuilt from the pin and its files compared
+    with the recorded bundle's (`_bundle_contents()`), so a bundle that is
+    not the pin's code — a hand-edited job folder with its sha re-recorded —
+    refuses too, naming the files that differ. Silent for a job that
+    declares no bundle."""
+    block = run_config.get("codeBundle")
+    if block is None:
+        return
+    validate_code_bundle_block(block)
+    path = Path(job_dir) / CODE_BUNDLE_FILENAME
+    if not path.is_file():
+        raise JobFolderError(
+            f"{CODE_BUNDLE_MISMATCH}: {path} is absent, but run-config.json "
+            "declares a code bundle; regenerate the job folder"
+        )
+    actual = hashlib.sha256(path.read_bytes()).hexdigest()
+    if actual != block["sha256"]:
+        raise JobFolderError(
+            f"{CODE_BUNDLE_MISMATCH}: {path} hashes to {actual}, but "
+            f"run-config.json records {block['sha256']}; regenerate the job folder"
+        )
+    if target is None:
+        return
+    clone_paths = validate_clone_paths(run_config["clonePaths"], Path(target))
+    try:
+        recorded = _bundle_contents(path.read_bytes())
+    except (tarfile.TarError, OSError, EOFError) as exc:
+        raise JobFolderError(
+            f"{CODE_BUNDLE_MISMATCH}: {path} is not a readable tar.gz: {exc}"
+        ) from exc
+    expected = _bundle_contents(
+        build_code_bundle(Path(target), str(run_config["commit"]), clone_paths)
+    )
+    differing = sorted(
+        name for name in set(recorded) | set(expected)
+        if recorded.get(name) != expected.get(name)
+    )
+    if differing:
+        raise JobFolderError(
+            f"{CODE_BUNDLE_MISMATCH}: {path} is not the code of the pin "
+            f"{run_config['commit']}; these files differ: {differing}. "
+            "Regenerate the job folder."
         )
 
 
@@ -1548,6 +1975,10 @@ def build_run_config(
     environment_requirements: Sequence[str] | None = None,
     environment_index_url: str | None = None,
     local_budget_seconds: int | None = None,
+    carry_paths: Sequence[str] | None = None,
+    code_bundle: Mapping[str, object] | None = None,
+    input_datasets: Sequence[str] | None = None,
+    dataset_checks: Mapping[str, Mapping[str, object]] | None = None,
 ) -> dict:
     """Assemble `run-config.json`'s exact shape from target-supplied values.
 
@@ -1735,6 +2166,14 @@ def build_run_config(
         }
     if local_budget_seconds is not None:
         run_config["localBudget"] = {"seconds": local_budget_seconds}
+    if carry_paths:
+        run_config["carryPaths"] = list(validate_carry_paths(carry_paths))
+    if input_datasets:
+        run_config["inputDatasets"] = list(validate_input_datasets(input_datasets))
+    if dataset_checks:
+        run_config["datasetChecks"] = validate_dataset_checks(dataset_checks, input_datasets)
+    if code_bundle is not None:
+        run_config["codeBundle"] = dict(code_bundle)
     if has_environment_install:
         install_block: dict = {"requirements": list(environment_requirements)}
         if environment_index_url:
@@ -1828,6 +2267,10 @@ def generate_job(
     environment_index_url: str | None = None,
     local_budget_seconds: int | None = None,
     repo_credential_path: str | Path | None = None,
+    carry_paths: Sequence[str] | None = None,
+    code_bundle: bool = False,
+    input_datasets: Sequence[str] | None = None,
+    dataset_checks: Mapping[str, Mapping[str, object]] | None = None,
 ) -> Path:
     """Generate one job folder, atomically, refusing to overwrite an
     existing one unless `regenerate=True`.
@@ -1902,6 +2345,24 @@ def generate_job(
     `localBudget` block is written at all — see `build_run_config()`'s
     own docstring for why that silence must never become a `0`.
 
+    `carry_paths` (kernel-carry S1), when given, is recorded as
+    `carryPaths`: the paths, relative to the product folder, a
+    continuation of this job restores from the session before it
+    (`validate_carry_paths()`). Omitted or empty, no `carryPaths` key is
+    written and `submit` carries nothing for this job, exactly as before.
+
+    `input_datasets` (kernel-input-datasets S1), when given, is recorded
+    as `inputDatasets`: the public `<owner>/<slug>` datasets the job reads
+    (`validate_input_datasets()`, checked before anything is written). A
+    service that attaches inputs mounts them in the push; the runner
+    exports their mounts in `FORGE_INPUT_DATASETS`. Omitted or empty, no
+    `inputDatasets` key is written, exactly as before.
+
+    `dataset_checks` (remote-preflight S2), when given, is recorded as
+    `datasetChecks`: per declared input ref, the workspace preparation's
+    sha256 values (`validate_dataset_checks()`), which the runner exports
+    as `FORGE_DATASET_CHECKS`. Omitted, no key is written.
+
     `repo_credential_path` (S3) is forwarded verbatim into that same
     condition set, where only the network-reaching `pin-published` probe
     ever reads it: with a path, generation's reachability check
@@ -1909,6 +2370,17 @@ def generate_job(
     runner clone uses, admits `https://` remotes only, and reads the
     token at exactly one expression. Omitted (every pre-S3 caller), every
     condition behaves exactly as before.
+
+    `code_bundle` (`--code-bundle`), when true, ships the declared clone
+    paths inside the job instead of having the runner clone them: only a
+    backend whose adapter declares `CODE_BUNDLE_MAX_BYTES` accepts it
+    (`CODE_BUNDLE_NOT_CARRIED` otherwise, before any git call). The pin is
+    then never asked of the remote — no published-tip default, no
+    `pin-published` probe, the private remote being the reason for the
+    bundle — while every local condition still runs. The bundle is built by
+    `build_code_bundle()` from the pin and refused `CODE_BUNDLE_TOO_LARGE`,
+    naming both sizes, when it would not fit the backend's limit. False
+    (the default), generation is exactly as before.
 
     `service` is validated against BOTH registries together (the
     union-of-registries rule): a service known to either registry is
@@ -1918,8 +2390,35 @@ def generate_job(
     invented for it. A name unknown to both registries refuses here, by
     name, before anything is written.
     """
+    # Before anything is read or written: the credential's only consumer is
+    # the `pin-published` probe, which a bundled job skips, so accepting both
+    # would ignore the credential in silence.
+    if code_bundle and repo_credential_path is not None:
+        raise JobFolderError(
+            f"{CODE_BUNDLE_WITH_REPO_CREDENTIAL}: --code-bundle and "
+            "--repo-credential were both given. A bundled job's runner never "
+            "clones, so a repository credential has nothing to authenticate; "
+            "drop --repo-credential (or drop --code-bundle to clone with it)."
+        )
+    if input_datasets:
+        validate_input_datasets(input_datasets)
+    if dataset_checks:
+        validate_dataset_checks(dataset_checks, input_datasets)
     resolved_target = resolve_target(target)
     destination = resolve_destination(resolved_target, service, job_name)
+    # Before the pin is resolved: resolution may already call git with it.
+    refuse_repo_url_credentials(repo_url, where="generation")
+    # #56: the runner clones with no SSH agent and no key, so an SSH remote
+    # is one no job generated from it could ever clone. Refused by rule here,
+    # before any git call; `submit` still probes an older job folder's remote.
+    if _looks_like_ssh_remote(repo_url):
+        raise JobFolderError(
+            "generation refuses: the declared remote is an SSH remote (scp-shaped "
+            "host:path, ssh://, git+ssh:// or ssh+git://), and the runner's clone "
+            "has no SSH agent and no key, so it could never clone it. Declare the "
+            "repository's https:// URL (with --repo-credential for a private one), "
+            "or a local path for a local rehearsal."
+        )
 
     # The two shapes are decided HERE, before the pin is resolved and long
     # before anything is written, so a caller who declared neither shape —
@@ -1941,10 +2440,33 @@ def generate_job(
             where="generation's smoke block",
         )
 
+    bundle_limit: int | None = None
+    if code_bundle:
+        try:
+            ADAPTER.resolve(service)
+        except KeyError:
+            raise JobFolderError(
+                f"generation refuses: --code-bundle was given, but no adapter is "
+                f"registered under {service!r}; register the service's own module "
+                "under scripts/adapters/ before generating a job for it"
+            ) from None
+        bundle_limit = code_bundle_limit(service)
+        if bundle_limit is None:
+            raise JobFolderError(
+                f"{CODE_BUNDLE_NOT_CARRIED}: --code-bundle was given, but the "
+                f"{service!r} backend does not declare CODE_BUNDLE_MAX_BYTES, so "
+                "it cannot ship a code bundle with its job; omit --code-bundle "
+                "(the runner then clones the declared remote)"
+            )
+
     entry_modules = [name for name in (run_module, smoke_module) if name]
     entry_notebooks = [nb for nb in (run_notebook, smoke_notebook) if nb]
+    clone_paths = with_entry_notebooks(clone_paths, entry_notebooks)
 
-    commit = _resolve_pin(resolved_target, commit, repo_url=repo_url,
+    # A bundled job never asks the remote anything: the published-tip
+    # default is skipped (HEAD stands), like the `pin-published` probe.
+    commit = _resolve_pin(resolved_target, commit,
+                          repo_url=None if code_bundle else repo_url,
                           repo_ref=repo_ref, clone_paths=clone_paths)
     verify_pin_preconditions(
         target=resolved_target,
@@ -1958,6 +2480,7 @@ def generate_job(
         # credential-conditional behavior `submit`'s gate does; `None`
         # (every pre-S3 caller) is byte-identical to today.
         repo_credential_path=repo_credential_path,
+        code_bundle=code_bundle,
     )
 
     clone_resolution = resolve_clone_paths(
@@ -2000,6 +2523,26 @@ def generate_job(
             "which never waives this refusal): "
             f"{clone_resolution['unresolvedReads']}"
         )
+
+    bundle_bytes: bytes | None = None
+    bundle_block: dict | None = None
+    if code_bundle:
+        bundle_bytes = build_code_bundle(
+            resolved_target, commit, validate_clone_paths(clone_paths, resolved_target)
+        )
+        if len(bundle_bytes) > bundle_limit:
+            raise JobFolderError(
+                f"{CODE_BUNDLE_TOO_LARGE}: the code bundle of {list(clone_paths)} "
+                f"at {commit} is {len(bundle_bytes)} bytes compressed; the "
+                f"{service!r} backend carries at most {bundle_limit} bytes "
+                "(CODE_BUNDLE_MAX_BYTES). Declare fewer or smaller clone paths."
+            )
+        bundle_block = {
+            "file": CODE_BUNDLE_FILENAME,
+            "format": CODE_BUNDLE_FORMAT,
+            "sha256": hashlib.sha256(bundle_bytes).hexdigest(),
+            "bytes": len(bundle_bytes),
+        }
 
     resolved_bootstrap = Path(bootstrap_asset) if bootstrap_asset else DEFAULT_BOOTSTRAP_ASSET
     resolved_invoke = Path(invoke_asset) if invoke_asset else DEFAULT_INVOKE_ASSET
@@ -2046,6 +2589,10 @@ def generate_job(
         environment_requirements=environment_requirements,
         environment_index_url=environment_index_url,
         local_budget_seconds=local_budget_seconds,
+        carry_paths=carry_paths,
+        code_bundle=bundle_block,
+        input_datasets=input_datasets,
+        dataset_checks=dataset_checks,
     )
     notebook = build_notebook(resolved_bootstrap, resolved_invoke)
 
@@ -2099,6 +2646,8 @@ def generate_job(
         if metadata_file is not None:
             metadata_name, metadata_text = metadata_file
             (partial / metadata_name).write_text(metadata_text, encoding="utf-8")
+        if bundle_bytes is not None:
+            (partial / CODE_BUNDLE_FILENAME).write_bytes(bundle_bytes)
     except BaseException:
         _rmtree(partial)
         raise
@@ -2174,6 +2723,13 @@ GIT_ENV_ALLOWLIST = (
 )
 GIT_TIMEOUT_SECONDS = 120.0
 
+# The URL schemes a `repo_url` may name before any git call reaches it. Every
+# other `<scheme>://` makes git exec a `git-remote-<scheme>` helper, and the
+# `<transport>::<address>` form (`ext::`, `fd::`) names a helper command
+# outright; both are refused by `_remote_transport_admissible()`. Local and
+# scp-shaped remotes carry no scheme and stay admissible.
+REMOTE_URL_SCHEMES = ("https", "http", "ssh", "git", "file", "git+ssh", "ssh+git")
+
 # The env name the probe's askpass script reads the credential VALUE from.
 # The value is handed to the git child through its environment — never
 # argv, never a file — so it dies with the child process. S3/D6: this
@@ -2190,6 +2746,22 @@ REPO_CREDENTIAL_ASKPASS_SCRIPT = """#!/bin/sh
 # this module, and this is the script it feeds.
 printf '%s' "$PSMITH_REPO_CREDENTIAL"
 """
+
+# What `_run_git()` sets itself on every call, never forwarded from this
+# process. `GIT_TERMINAL_PROMPT=0` closes git's own prompt. The three
+# `GIT_CONFIG_*` entries reset `credential.helper` to empty: dropping `HOME`
+# drops `~/.gitconfig`, but not the SYSTEM config, and Homebrew's git ships
+# one naming `osxkeychain`. Measured 2026-10-26: with no `HOME` that helper
+# waited on the macOS keychain until the probe's whole 240 s budget expired,
+# so a published commit refused as unconfirmable. With the helper reset,
+# only the probe's own askpass (or nothing) answers a credential prompt --
+# which is what "nothing here decides WHO the probe is" already required.
+GIT_FIXED_ENV = {
+    "GIT_TERMINAL_PROMPT": "0",
+    "GIT_CONFIG_COUNT": "1",
+    "GIT_CONFIG_KEY_0": "credential.helper",
+    "GIT_CONFIG_VALUE_0": "",
+}
 
 # `pin-published`'s own budget (Finding 4 case A; Decision 13a) --
 # deliberately a SEPARATE constant from `GIT_TIMEOUT_SECONDS` above, never
@@ -2256,6 +2828,7 @@ def _run_git(
     cwd: str | Path,
     timeout: float = GIT_TIMEOUT_SECONDS,
     extra_env: Mapping[str, str] | None = None,
+    text: bool = True,
 ) -> subprocess.CompletedProcess:
     """The single composition point for every git invocation this module
     makes. `shell=False` with a list argv means a value carrying shell
@@ -2299,7 +2872,7 @@ def _run_git(
     """
     argv = ["git", *args]
     env = {name: os.environ[name] for name in GIT_ENV_ALLOWLIST if name in os.environ}
-    env["GIT_TERMINAL_PROMPT"] = "0"
+    env.update(GIT_FIXED_ENV)
     if extra_env:
         env.update(extra_env)
     try:
@@ -2310,7 +2883,7 @@ def _run_git(
             env=env,
             stdin=subprocess.DEVNULL,
             capture_output=True,
-            text=True,
+            text=text,
             timeout=timeout,
         )
     except subprocess.TimeoutExpired as exc:
@@ -2318,32 +2891,81 @@ def _run_git(
     except OSError as exc:
         raise JobFolderError(f"could not run git: {exc}") from exc
     if result.returncode != 0:
+        stderr = result.stderr if text else result.stderr.decode("utf-8", "replace")
         raise JobFolderError(
-            f"git {' '.join(args)} exited {result.returncode}: {result.stderr.strip()}"
+            f"git {' '.join(args)} exited {result.returncode}: {stderr.strip()}"
         )
     return result
 
 
+def _remote_transport_admissible(repo_url: str) -> bool:
+    """Whether `repo_url` may reach git at all, as a remote and nothing else.
+
+    `run-config.json` travels with a cloned repository, so its `repo_url` is
+    input, not configuration this process wrote. Refused: a value beginning
+    with `-` (an option, even though every call also ends options with
+    `--`), the `<transport>::<address>` helper form, and any `<scheme>://`
+    outside `REMOTE_URL_SCHEMES`. A local path or an scp-shaped
+    `git@host:owner/repo.git` names no helper and stays admissible: this
+    gate decides which transport may run, never which remote is wanted.
+    """
+    # The helper form is `<transport>::<address>` at the start of the URL; a
+    # `::` inside an IPv6 literal (`https://[2001:db8::1]/r.git`) is not one.
+    if not repo_url or repo_url.startswith("-") or re.match(r"[A-Za-z][A-Za-z0-9+.-]*::", repo_url):
+        return False
+    scheme = re.match(r"([A-Za-z][A-Za-z0-9+.-]*)://", repo_url)
+    return scheme is None or scheme.group(1).lower() in REMOTE_URL_SCHEMES
+
+
+def refuse_repo_url_credentials(repo_url: object, *, where: str) -> None:
+    """Refuse a `repo_url` that embeds a credential, without echoing it (#56).
+
+    `run-config.json` is committed and uploaded, and the URL reaches git's
+    argv and refusal text, so `https://<token>@host/…` or
+    `<user>:<password>@…` would leak the secret into all three. Any userinfo
+    is refused, except a bare SSH login name (`git@host:o/r.git`,
+    `ssh://git@host/r.git`), which names an account and carries no secret.
+    Private remotes authenticate through `--repo-credential` instead.
+    """
+    if not isinstance(repo_url, str):
+        return
+    scheme, separator, rest = repo_url.partition("://")
+    authority = re.split(r"[/?#]", rest if separator else repo_url, maxsplit=1)[0]
+    if "@" not in authority:
+        return
+    userinfo = authority.rsplit("@", 1)[0]
+    ssh_login = (not separator or scheme.lower() in ("ssh", "git+ssh", "ssh+git"))
+    if ssh_login and ":" not in userinfo:
+        return
+    raise JobFolderError(
+        f"{where} refuses: the declared remote embeds a credential (a user, "
+        "password or token before '@'); a credential is never written to "
+        "run-config.json, passed to git or printed. Declare the remote "
+        "without it and pass the token file with --repo-credential."
+    )
+
+
 def _looks_like_ssh_remote(repo_url: str) -> bool:
-    """`ssh://…`, or scp-shaped `git@host:owner/repo.git`.
+    """`ssh://…` (or `git+ssh://`, `ssh+git://`), or scp-shaped `git@host:owner/repo.git`.
 
-    Two uses, and they are deliberately different in kind (SD14):
+    Three uses (SD14, then #56):
 
+    * refusing an SSH remote at GENERATION, before any git call (#56,
+      operator decision): the runner's clone has no SSH agent and no key,
+      so no job generated from an SSH remote could ever clone it;
     * enriching a refusal that has already happened — its original use,
-      and the only one the credentialLESS probe has. It never decides
-      whether to probe: refusing SSH URLs on sight would be deciding
-      remote policy on the strength of a colon in a string;
+      and the only one the credentialLESS submit-time probe has, which
+      still probes an older job folder's SSH remote instead of refusing it;
     * deciding an explicit refusal BEFORE the probe's scratch repository
       exists — ONLY when a repository credential was supplied. With a
       credential, the old "not refused on sight" reasoning is void: the
       operator has declared a token path, so the runner will present one,
       and `runner_bootstrap`'s clone has no SSH agent and no key, so a
       credential cannot travel over SSH at all. In that one case an
-      SSH-shaped remote is refused by name; credentialless, this function
-      still never decides anything. See `_verify_commit_reachable()`.
+      SSH-shaped remote is refused by name. See `_verify_commit_reachable()`.
     """
     lowered = repo_url.lower()
-    if lowered.startswith("ssh://"):
+    if lowered.startswith(("ssh://", "git+ssh://", "ssh+git://")):
         return True
     if "://" in repo_url:
         return False
@@ -2641,6 +3263,15 @@ def _verify_commit_reachable(
     reader's `no-local-repository` unmeasurable path without a single git
     call.
     """
+    if not _remote_transport_admissible(repo_url):
+        raise JobFolderError(
+            f"{decision} refuses: the declared remote {repo_url!r} is not a "
+            "repository URL git may fetch from as-is. A remote begins with "
+            f"one of {', '.join(s + '://' for s in REMOTE_URL_SCHEMES)}, or is "
+            "a local path or an scp-shaped host:path; a value beginning with "
+            "'-', a '<transport>::' helper address, or any other scheme would "
+            "make git run a command instead of contacting a remote."
+        )
     if repo_credential_path is not None:
         if repo_url.startswith("https://"):
             try:
@@ -3166,8 +3797,10 @@ def _published_equivalent(
     """
     if not (repo_url and repo_ref and clone_paths):
         return None
+    if not _remote_transport_admissible(repo_url):
+        return None
     try:
-        listed = _run_git(["ls-remote", repo_url, repo_ref], cwd=target).stdout
+        listed = _run_git(["ls-remote", "--", repo_url, repo_ref], cwd=target).stdout
     except JobFolderError:
         return None
     tip = listed.split("\t", 1)[0].strip() if listed.strip() else ""
@@ -3196,6 +3829,7 @@ def verify_pin_preconditions(
     decision: str,
     notebooks: Sequence[str] = (),
     repo_credential_path: str | Path | None = None,
+    code_bundle: bool = False,
 ) -> None:
     """The one home for every condition a pin must satisfy before anything
     irreversible happens, and the ONLY thing either decision point calls.
@@ -3241,6 +3875,14 @@ def verify_pin_preconditions(
     ignores it unless it is `_refuse_unpublished_pin`), so the credential
     travels on the same path as every other input and there is exactly
     one place (`_verify_commit_reachable`) that interprets it.
+
+    `code_bundle` (true for a job that ships its code as a bundle) skips
+    exactly one condition, `pin-published`: the runner never clones, so
+    whether the remote can serve the pin is not a question the job asks,
+    and for a private remote an anonymous probe could only refuse. Every
+    LOCAL condition still runs, in order, so the pin must still exist
+    locally, be HEAD (or unchanged from it under the clone paths) and be
+    clean. No credential is read on this path.
     """
     validate_commit_shape(commit, source=f"{decision}")
     resolved_target = resolve_target(target)
@@ -3249,6 +3891,8 @@ def verify_pin_preconditions(
         validate_notebook_path(notebook, where=decision) for notebook in notebooks
     )
     for condition in PIN_CONDITIONS:
+        if code_bundle and condition == "pin-published":
+            continue
         _PIN_CONDITION_CHECKS[condition](
             target=resolved_target,
             commit=commit,
@@ -3342,6 +3986,22 @@ def _staleness_for(target: Path, pinned_commit: str, clone_paths: Sequence[str])
         "reason": None,
         "changedPaths": changed,
     }
+
+
+def smoke_warnings(run_config: dict) -> list[str]:
+    """What a generated smoke block leaves unproven, reported by `generate-job`.
+
+    `smoke record` passes iff the returned stamp carries every path in
+    `run.smoke.requiredEvidence`; with none declared, any `shard.json` at all
+    passes, so a rehearsal proves nothing about the commit or the device.
+    """
+    smoke = (run_config.get("run") or {}).get("smoke")
+    if not smoke or smoke.get("requiredEvidence"):
+        return []
+    return ["the smoke block declares no --smoke-required-evidence, so `smoke record` "
+            "passes on any shard.json; declare the stamp paths that prove the run "
+            "(its commit, the device it ran on), and make the smoke write shard.json "
+            "into its working directory"]
 
 
 def read(job_dir: str | Path) -> JobFolder:

@@ -1,0 +1,28 @@
+{
+  "mcpServers": {
+    "banco-lia": {
+      "command": "uvx",
+      "args": [
+        "--from",
+        "git+https://github.com/LIAUNAL/bancoProyectosPapersLIA",
+        "banco-lia-mcp"
+      ]
+    },
+    "kaggle": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "mcp-remote@0.14.3",
+        "https://www.kaggle.com/mcp",
+        "--header",
+        "Authorization:Bearer ${KAGGLE_API_TOKEN}"
+      ]
+    },
+    "colab": {
+      "command": "uvx",
+      "args": [
+        "git+https://github.com/googlecolab/colab-mcp@b9ab3899e0f1fa493390b1fd6d54aa2e464ecdf1"
+      ]
+    }
+  }
+}

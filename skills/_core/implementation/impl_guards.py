@@ -41,6 +41,38 @@ def _is_own_bookkeeping(porcelain_line: str) -> bool:
         for side in sides if side.strip())
 
 
+def own_bookkeeping_snapshot(target: Path) -> dict[str, bytes | None]:
+    """The bytes of every dirty path `require_clean_worktree` excuses.
+
+    The guard admits exactly this dirt and refuses every other change, so it
+    is the one pre-existing state a rollback of a failed mutation could
+    destroy: `git reset --hard` reverts a modified ledger and deletes one the
+    operation staged, and `git clean -fd` deletes an untracked one. Keyed by
+    repository-relative path; `None` marks a ledger file deleted in the
+    working tree. Listed file by file (`--untracked-files=all`), so an
+    untracked `.implementation/` directory yields its files.
+    """
+    entries = git(target, "status", "--porcelain", "-z",
+                  "--untracked-files=all").split("\0")
+    kept: dict[str, bytes | None] = {}
+    index = 0
+    while index < len(entries):
+        entry = entries[index]
+        index += 1
+        if len(entry) < 4:
+            continue
+        paths = [entry[3:]]
+        if entry[0] in "RC":            # `-z` puts a rename's source next
+            paths.append(entries[index])
+            index += 1
+        for rel in paths:
+            if LEDGER_DIRECTORY not in Path(rel).parts:
+                continue
+            full = target / rel
+            kept[rel] = full.read_bytes() if full.is_file() else None
+    return kept
+
+
 def require_clean_worktree(target: Path) -> None:
     dirty = [line for line in git(target, "status", "--porcelain").splitlines()
              if line.strip() and not _is_own_bookkeeping(line)]
@@ -52,7 +84,12 @@ def require_clean_worktree(target: Path) -> None:
         )
 
 
-def resolve_target(raw: str) -> Path:
+def require_in_workspace(raw: str) -> Path:
+    """The resolved target, refused `OUTSIDE_WORKSPACE` unless it lives under
+    `implementations/`. Existence is not asked: `adopt`'s survey checks a
+    target that does not exist yet, and shares this one rule with
+    `resolve_target` so the two never disagree about where generated code
+    may live."""
     target = Path(raw).expanduser().resolve()
     try:
         target.relative_to(WORKSPACE.resolve())
@@ -62,6 +99,11 @@ def resolve_target(raw: str) -> Path:
             f"Target must live under {WORKSPACE}. Clone the repository there first — "
             "the forge's own environment is never a workspace for generated code.",
         )
+    return target
+
+
+def resolve_target(raw: str) -> Path:
+    target = require_in_workspace(raw)
     if not (target / ".git").exists():
         raise Refused("NOT_A_GIT_REPO", f"{target} is not a git repository.")
     return target

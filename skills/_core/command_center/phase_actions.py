@@ -6,12 +6,12 @@ A phase runs one of three ways, and the drawer offers exactly these:
   projected to ``.claude/commands``, ``.opencode/commands`` and ``.pi/prompts``).
   The drawer shows a text box with the skill's input rules as a guide, and
   "Ejecutar" types ``/<skill> <text>`` into the support terminal's agent.
-* ``command`` — a real ``papersmith`` subcommand, typed into a shell session.
+* ``command`` — a real ``smith`` subcommand, typed into a shell session.
 * ``redirect`` — the work happens in another dashboard panel (the concept map,
   the math tutor, the PoC board, the PDF preview…), so the drawer opens it.
 
 Every slash command named here exists as a projected command and every shell
-command is a ``papersmith`` subcommand the CLI accepts; tests hold both.
+command is a ``smith`` subcommand the CLI accepts; tests hold both.
 """
 
 from __future__ import annotations
@@ -25,6 +25,22 @@ STAGES: tuple[str, ...] = (
     "harness", "plausibility", "ingestion", "proposal", "poc_experiments",
     "scaffolding", "declarations", "writing", "figures", "paper", "audit",
 )
+
+#: Short Spanish label of each phase, in ``STAGES`` order; the agents table of
+#: the Flujo Archify pane reads "Fase N — <label>" from here.
+PHASE_LABELS: dict[str, str] = {
+    "harness": "Harness",
+    "plausibility": "Plausibilidad",
+    "ingestion": "Ingestión",
+    "proposal": "Deliberación de la propuesta",
+    "poc_experiments": "Prueba de concepto y experimentos",
+    "scaffolding": "Andamiaje",
+    "declarations": "Declaraciones",
+    "writing": "Redacción",
+    "figures": "Figuras",
+    "paper": "Paper",
+    "audit": "Auditoría",
+}
 
 
 def _prompt(slash: str, label: str, guide: list[str], placeholder: str, *,
@@ -52,11 +68,11 @@ _WRITING_GUIDE = [
 ACTIONS: dict[str, dict[str, Any]] = {
     "harness": {
         "skills": ["upgrade-project"],
-        "agent": "papersmith CLI",
+        "agent": "smith CLI",
         "actions": [
-            _command("papersmith status .", "Ver estado del workspace",
+            _command("smith status .", "Ver estado del workspace",
                      "Resumen del workspace: kit, harnesses, etapas y artefactos."),
-            _command("papersmith audit . --check-drift", "Verificar proyecciones",
+            _command("smith audit . --check-drift", "Verificar proyecciones",
                      "Comprueba que .claude, .opencode, .pi y .agents coinciden con el kit."),
             _prompt("/upgrade-project", "Actualizar el workspace (agente)", [
                 "Úsalo cuando el workspace corre una versión anterior de papersmith.",
@@ -89,7 +105,7 @@ ACTIONS: dict[str, dict[str, Any]] = {
                 "Cada PDF se archiva en su carpeta de tema y se convierte a Markdown: ecuaciones en LaTeX, tablas en Markdown, figuras como archivos.",
                 "Local y sin llaves (Marker); nada se publica.",
             ], "Ej.: ingiere guidance/reference-papers/inbox/*.pdf"),
-            _command("papersmith ingest <ruta-o-url> .", "Ingerir desde el CLI",
+            _command("smith ingest <ruta-o-url> .", "Ingerir desde el CLI",
                      "Reemplaza <ruta-o-url> por el PDF o la URL."),
             _redirect("Ver artefactos ingeridos", "artifacts", "Markdown y figuras de las referencias."),
         ],
@@ -111,28 +127,76 @@ ACTIONS: dict[str, dict[str, Any]] = {
         ],
     },
     "poc_experiments": {
-        "skills": ["experimental-deliberation", "proposal-implementation",
-                   "experimental-implementation", "kaggle-accounts", "remote-execution"],
-        "agent": "experimental-deliberation & proposal/experimental-implementation",
+        "skills": ["experimental-deliberation", "datasets", "proposal-implementation",
+                   "remote-parallelism", "hyperparameter-search", "experimental-implementation",
+                   "experiment-diagrams", "kaggle-accounts", "remote-execution"],
+        "agent": ("experimental-validation → experimental-publish → dataset-scout / dataset-curator → "
+                  "paper-replicator → implementation-build → experiments-build → experiments-reviewer → "
+                  "experiments-walk"),
         "actions": [
             _prompt("/experimental-deliberation", "Deliberar el diseño experimental", [
                 "Pregunta que gobierna cada turno: ¿qué experimento pondría a prueba esta afirmación de la propuesta?",
                 "Cada experimento declara la afirmación que prueba, su métrica y su baseline SOTA.",
                 "Pide la primera versión, un cambio o una operación de revisión; nada se aplica sin tu aprobación.",
             ], "Ej.: diseña el experimento que prueba la afirmación C1 contra el baseline más fuerte del SOTA."),
+            _prompt("/datasets", "Datos: toy set siempre y dataset oficial", [
+                "Verbos: synth (toy set sembrado, siempre), search, license, qc, prepare y publish.",
+                "dataset-scout busca en repositorios oficiales del paper, Kaggle, Hugging Face, OpenNeuro y Zenodo, y decide la licencia.",
+                "dataset-curator mide la calidad (qc) y escribe una sola preparación oficial por sujeto que leen la PoC y los experimentos.",
+                "publish sube un dataset privado solo con tu consentimiento explícito; hacerlo público pide un consentimiento aparte.",
+            ], "Ej.: synth un toy set de 8 sujetos y busca un dataset oficial para la tarea.", optional=True),
+            _prompt("/proposal-implementation", "Réplica de métodos de comparación", [
+                "El agente paper-replicator replica cada baseline o paper de comparación ingerido en guidance/.",
+                "Primero busca el código publicado del paper: si existe, lo adopta fijado a un commit con su licencia y audita que corresponda con el paper y esté bien implementado.",
+                "Si no hay código publicado, reimplementa el método desde el Markdown ingerido; cada hiperparámetro cita su sección o ecuación.",
+                "Termina con REPLICATION.md, pruebas de invariantes y una corrida corta sobre el toy set; nunca lanza una corrida remota.",
+            ], "Ej.: replica el baseline de guidance/smith-2024 en ../mi-poc", optional=True),
             _prompt("/proposal-implementation", "Implementar la prueba de concepto", [
                 "Convierte la última propuesta en Python contra un repositorio objetivo, o verifica una implementación existente.",
                 "Indica el repositorio objetivo y si es primera pasada o una pasada posterior.",
             ], "Ej.: implementa la PoC de la propuesta r03 en ../mi-poc", optional=True),
+            _redirect("Estimar tiempo y elegir dónde correr", "experiments",
+                      "Antes del piloto y otra vez antes de la corrida completa: sonda de tiempo corta (una "
+                      "época de un fold por brazo) en Results/timing.json; la pestaña Experimentos estima la "
+                      "PoC y la corrida completa (±20%), muestra el entorno local y las opciones de corrida "
+                      "local, Kaggle y Colab."),
+            _prompt("/hyperparameter-search", "Búsqueda de hiperparámetros (Optuna)", [
+                "Solo si la deliberación lo estimó conveniente: el protocolo declara la búsqueda y su espacio.",
+                "Anidada dentro de los sujetos de entrenamiento de cada fold externo, sin ver los sujetos de prueba.",
+                "Mismo presupuesto de trials para cada brazo y baseline; nunca ajusta una variable independiente que el experimento prueba.",
+                "Sampler con semilla y evaluador de importancia declarado (Optuna 5 usa PED-ANOVA por defecto).",
+                "report escribe contornos e importancia que la pestaña Experimentos muestra.",
+                "Corre en remoto como la corrida completa y solo el operador la lanza.",
+            ], "Ej.: plan para los brazos hybrid y linear con 40 trials y fANOVA como evaluador.", optional=True),
             _prompt("/experimental-implementation", "Implementar y medir los experimentos", [
                 "Convierte el protocolo experimental vigente en Python y corre sus mediciones declaradas.",
                 "Indica el repositorio objetivo; la verificación compara contra el protocolo y la propuesta.",
+                "Antes de cualquier ensayo remoto, experiments-reviewer revisa el código (calidad, optimización, uso de GPU y pruebas estadísticas) y entrega su informe.",
             ], "Ej.: implementa E1 y E2 y reporta las métricas.", optional=True),
-            _prompt("/remote-execution", "Ejecución remota (Kaggle / workers)", [
-                "Envía entrypoints a un worker remoto y lee lo que regresó; el ledger es de solo anexar.",
-                "Si las cuentas no autentican, usa primero /kaggle-accounts.",
-            ], "Ej.: envía experiments/e1.py al mejor worker disponible.", optional=True),
-            _redirect("Ver el tablero PoC", "modelo", "Experimentos y veredictos de la prueba de concepto.", "poc"),
+            _prompt("/experiment-diagrams", "Diagramas de la PoC y de los experimentos", [
+                "Al aprobar la PoC (AGREED.md) dibuja el diagrama poc; al aprobar los experimentos completos (Experimental_AGREED.md), el diagrama experiments.",
+                "Cada uno es una figura TikZ (PDF y PNG) en <producto>/diagrams/; también se genera con el botón \"Generar diagrama\" de la pestaña Experimentos.",
+                "Valídalo tú en la pestaña Experimentos (\"Validar diagrama\") o apruébalo explícitamente en el chat con el agente, que corre validate con tus palabras: submit se niega con DIAGRAM_NOT_VALIDATED hasta entonces, y redibujarlo pide validarlo de nuevo.",
+            ], "Ej.: poc para el producto implementations/mi-poc/Modelo.", optional=True),
+            _prompt("/remote-parallelism", "Decidir si repartir entre cuentas", [
+                "Primero estimate --timing <objetivo>/<Nombre>/Results/timing.json: el rango por etapa y host (±20%).",
+                "Luego assess con las entradas medidas; --owners es el número de propietarios distintos del equipo (smith team list), nunca el de cuentas.",
+                "Regla del equipo: una cuenta por persona y servicio; cada persona se registra con `smith team add --owner <slug> --name \"<nombre>\" --kaggle-username <usuario> --attest`.",
+                "No coloca, no genera ni lanza nada: el veredicto lo lee el operador.",
+            ], "Ej.: estima la PoC con su timing.json y evalúa repartir la corrida completa entre 3 propietarios.",
+                optional=True),
+            _prompt("/kaggle-accounts", "Validar las cuentas Kaggle", [
+                "validate re-comprueba cada cuenta guardada contra el servicio y toma lo que haya en kaggle-inbox/ (kaggle.json o una línea `usuario token`).",
+                "Solo las cuentas que el registro del equipo asigna a un propietario son workers: una por persona.",
+            ], "Ej.: valida las cuentas y toma las credenciales nuevas del inbox.", optional=True, prefix="validate "),
+            _prompt("/remote-execution", "Ensayo remoto y lanzamiento (Kaggle / Colab)", [
+                "Orden: generate-job → submit --smoke → fetch --smoke y smoke record → readiness → gate (solo el operador) → submit → status / poll → fetch.",
+                "El ledger es de solo anexar; si las cuentas no autentican, usa primero /kaggle-accounts.",
+                "Solo el operador autoriza un lanzamiento: ningún agente ejecuta submit por su cuenta.",
+                "submit (también --smoke) exige que hayas validado los diagramas de la PoC y de los experimentos aprobados.",
+            ], "Ej.: genera el job de experiments/e1.py y prepara su ensayo smoke.", optional=True),
+            _redirect("Ver la PoC y los experimentos", "experiments",
+                      "Productos, veredictos y diagramas de la prueba de concepto y de los experimentos."),
         ],
     },
     "scaffolding": {
@@ -185,15 +249,17 @@ ACTIONS: dict[str, dict[str, Any]] = {
     },
     "audit": {
         "skills": ["skill-audit"],
-        "agent": "skill-audit & papersmith audit",
+        "agent": "skill-audit & smith audit",
         "actions": [
-            _command("papersmith audit . --verbose", "Auditar el workspace",
+            _command("smith audit . --verbose", "Auditar el workspace",
                      "Estructura y consistencia del workspace."),
             _prompt("/skill-audit", "Auditar un skill o un CLI", [
                 "Nombra el sujeto: un skill, un CLI o cualquier conjunto cerrado (operaciones, subcomandos, códigos de error).",
                 "La auditoría busca la brecha entre lo que el código acepta y lo que su documentación afirma.",
             ], "Ej.: audita skills/paper-writing"),
-            _redirect("Ver compuertas", "gates", "Estado de las compuertas del framework."),
+            _redirect("Ver compuertas", "pipeline",
+                      "Estado de las compuertas del framework, al final de Pipeline y Avance.",
+                      "gates"),
         ],
     },
 }

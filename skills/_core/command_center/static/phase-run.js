@@ -92,10 +92,20 @@
     const list = fases(data);
     let touched = false;
     for (const run of Object.values(runs)) {
-      if (!live(run)) continue;
-      // A run nothing has touched for QUIET_MS stops being followed.
-      if (now() - run.lastChangeAt > QUIET_MS) { run.expiredAt = now(); touched = true; continue; }
+      if (run.verifiedAt) continue;
       const phase = list.find((f) => f.stage_id === run.stage);
+      // A run that was stopped or stopped being followed is still reconciled
+      // with the server's verdict: when its phase passes later (another
+      // session, a closed dashboard), it reads verified rather than stuck.
+      if (!live(run)) {
+        if (phase && phase.status === 'PASS' && run.startStatus !== 'PASS') {
+          run.status = phase.status;
+          run.verifiedAt = now();
+          run.unlocked = [];
+          touched = true;
+        }
+        continue;
+      }
       if (!phase) continue;
       const changed = changedEvidence(run, phase).map((e) => ({ label: e.label, path: e.path, count: e.count }));
       if (JSON.stringify(changed) !== JSON.stringify(run.changed)) {
@@ -106,6 +116,11 @@
       if (phase.status !== run.status) { run.status = phase.status; touched = true; }
       // A phase that already passed is verified again only by new evidence.
       const fresh = run.startStatus !== 'PASS' || changed.length > 0;
+      // The verdict is read before the quiet expiry, so a phase that passed
+      // while nobody was watching is verified, never expired.
+      if (phase.status !== 'PASS' && now() - run.lastChangeAt > QUIET_MS) {
+        run.expiredAt = now(); touched = true; continue;
+      }
       if (phase.status === 'PASS' && fresh) {
         run.verifiedAt = now();
         run.unlocked = list
@@ -318,20 +333,33 @@
       document.body.appendChild(dock);
     }
     dock.hidden = false;
-    // Never swap the buttons under the pointer: a click split across the old
-    // and new button would land on the dock and be lost.
-    if (dock.matches && dock.matches(':hover')) return;
-    dock.innerHTML = shown.map((r) => {
+    const times = {};
+    const markup = (withTimes) => shown.map((r) => {
       const term = terminalWorking(r);
       const state = r.verifiedAt ? '✅ verificada' : (r.stoppedAt ? '⏹ detenida'
         : (term.gone ? '⚠ sin sesión' : (term.idle ? '⏸ esperando en la terminal' : '⏳ en ejecución')));
-      const time = elapsed((r.verifiedAt || r.stoppedAt || now()) - r.startedAt);
+      times[r.stage] = elapsed((r.verifiedAt || r.stoppedAt || now()) - r.startedAt);
       const steps = [true, r.verifiedAt || term.state !== 'wait', r.changed.length > 0 || r.verifiedAt, r.verifiedAt, r.verifiedAt]
         .map((on) => `<i class="${on ? 'on' : ''}"></i>`).join('');
       return `<button class="run-dock__item${r.verifiedAt ? ' is-verified' : ''}" data-run-open="${esc(r.stage)}" title="Ver el avance de ${esc(r.phaseId)}">
-          <strong>${esc(r.phaseId)}</strong><span>${state} · ${time}</span><span class="run-dock__steps">${steps}</span>
+          <strong>${esc(r.phaseId)}</strong><span>${state} · <span data-run-time="${esc(r.stage)}">${withTimes ? times[r.stage] : ''}</span></span><span class="run-dock__steps">${steps}</span>
         </button>`;
     }).join('');
+    // The 1 s tick only moves the clocks: when nothing else changed, the
+    // times are written in place instead of rebuilding every button.
+    const shape = markup(false);
+    if (shape === dock.dataset.shape) {
+      for (const node of dock.querySelectorAll('[data-run-time]')) {
+        const time = times[node.dataset.runTime];
+        if (time !== undefined && node.textContent !== time) node.textContent = time;
+      }
+      return;
+    }
+    // Never swap the buttons under the pointer: a click split across the old
+    // and new button would land on the dock and be lost.
+    if (dock.matches && dock.matches(':hover')) return;
+    dock.innerHTML = markup(true);
+    dock.dataset.shape = shape;
   }
 
   function notifyIdle(run) {

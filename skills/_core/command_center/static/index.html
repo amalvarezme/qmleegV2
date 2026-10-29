@@ -13,13 +13,17 @@
   <link rel="stylesheet" href="./vendor/xterm.css">
   <script src="./vendor/xterm.js"></script>
   <script src="./vendor/xterm-addon-fit.js"></script>
-  <script src="./cli-console.js?v=0.18.7"></script>
+  <script src="./cli-console.js?v=0.19.1"></script>
   <link rel="stylesheet" href="./vendor/katex/katex.min.css">
   <script src="./vendor/katex/katex.min.js"></script>
-  <script src="./math-panel.js?v=0.17.0"></script>
-  <script src="./model-panel.js?v=0.17.1"></script>
-  <script src="./phase-console.js?v=0.18.6"></script>
-  <script src="./phase-run.js?v=0.18.7"></script>
+  <script src="./math-panel.js?v=0.19.6"></script>
+  <script src="./model-panel.js?v=0.19.6"></script>
+  <script src="./experiments-panel.js?v=0.35.0"></script>
+  <script src="./agents-panel.js?v=0.20.0"></script>
+  <script src="./doctor-panel.js?v=0.26.0"></script>
+  <script src="./ai-history-panel.js?v=0.36.0"></script>
+  <script src="./phase-console.js?v=0.19.1"></script>
+  <script src="./phase-run.js?v=0.21.2"></script>
   <style>
     :root {
       --bg: #0b0f19;
@@ -2170,8 +2174,8 @@
       margin-top: 1rem;
     }
     .model-hypothesis-card {
-      background: rgba(15, 23, 42, 0.65);
-      border: 1px solid rgba(255, 255, 255, 0.08);
+      background: var(--surface-2);
+      border: 1px solid var(--border-subtle);
       border-left: 3px solid var(--accent);
       border-radius: var(--radius);
       padding: 1rem;
@@ -2209,6 +2213,12 @@
       gap: 0.85rem;
       margin-top: 0.85rem;
     }
+    .concept-node-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 0.6rem; margin-top: 0.7rem; }
+    .concept-node {
+      display: flex; flex-direction: column; gap: 0.2rem; padding: 0.6rem 0.75rem; border-radius: 6px;
+      background: var(--surface); border: 1px solid var(--border-subtle); font-size: 0.8rem; color: var(--text);
+    }
+    .concept-node span { color: var(--text-muted); font-size: 0.76rem; line-height: 1.4; }
     .concept-node-item {
       background: rgba(0, 0, 0, 0.35);
       border: 1px solid rgba(255, 255, 255, 0.08);
@@ -2294,16 +2304,42 @@
       gap: 1.15rem;
       margin-top: 1rem;
     }
-    .poc-card {
-      background: var(--surface-2);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      padding: 1.15rem;
-      display: flex;
-      flex-direction: column;
-      gap: 0.65rem;
-    }
 
+
+    [data-theme="light"] .model-header-banner {
+      background: linear-gradient(135deg, var(--surface), var(--surface-2));
+      border-color: var(--border);
+      box-shadow: 0 2px 10px rgba(15, 23, 42, 0.08);
+    }
+    /* Spec colours (--tone) come from the workspace; as text they are lightened
+       on dark surfaces and darkened on light ones to keep WCAG AA contrast. */
+    .tone-ink { color: color-mix(in srgb, var(--tone, var(--accent)) 72%, #fff); }
+    [data-theme="light"] .tone-ink { color: color-mix(in srgb, var(--tone, var(--accent)) 58%, #000); }
+    [data-theme="light"] #pane-modelo .badge--ok { color: #047857; }
+    [data-theme="light"] #pane-modelo .badge--warn { color: #b45309; }
+    [data-theme="light"] #pane-modelo .badge--info,
+    [data-theme="light"] #pane-modelo .math-label,
+    [data-theme="light"] #pane-modelo .eq-card__tag,
+    [data-theme="light"] #pane-modelo .model-subnav-btn.active { color: #0369a1; }
+    [data-theme="light"] #pane-modelo .tutor__status[data-tone="ok"] { color: #047857; }
+    [data-theme="light"] #pane-modelo { --text-muted: #475569; }
+    #pane-modelo h4 { color: var(--text-muted) !important; }
+
+    /* ---- TeX / compiled toggle (math-panel.js setMathView) ---- */
+    .panel__tools { display: flex; align-items: center; gap: 0.6rem; flex-wrap: wrap; justify-content: flex-end; min-width: 0; }
+    .panel__tools .badge { max-width: 52ch; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .math-toggle[aria-pressed="true"] { border-color: var(--accent); color: var(--accent); background: var(--accent-dim); }
+    .tex-dual__src { display: none; }
+    [data-math-view="source"] .tex-dual__out { display: none; }
+    [data-math-view="source"] .tex-dual__src {
+      display: inline; font-family: var(--font-mono); font-size: 0.82em; color: var(--text);
+      background: var(--surface-2); border: 1px solid var(--border-subtle); border-radius: 4px; padding: 0.05rem 0.3rem;
+      white-space: pre-wrap; overflow-wrap: anywhere; user-select: all;
+    }
+    [data-math-view="source"] .tex-dual--block .tex-dual__src {
+      display: block; margin: 0.35rem 0; padding: 0.55rem 0.75rem; font-size: 0.84rem; line-height: 1.55;
+      border-left: 3px solid var(--accent); border-radius: 0 8px 8px 0;
+    }
 
     /* ---- Math panel + Socratic tutor (math-panel.js) ---- */
     .math-panel { --eq-radius: 14px; }
@@ -2315,11 +2351,11 @@
     .math-layout { display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(320px, 1fr); gap: 1.25rem; align-items: start; }
     @media (max-width: 1100px) { .math-layout { grid-template-columns: 1fr; } }
     .math-stack { display: flex; flex-direction: column; gap: 0.75rem; }
-    .eq-card { background: var(--surface); border: 1px solid var(--border-subtle); border-radius: var(--eq-radius); padding: 0.9rem 1.1rem; }
+    .eq-card { background: var(--surface); border: 1px solid var(--border-subtle); border-left: 3px solid var(--accent); border-radius: var(--eq-radius); padding: 0.9rem 1.1rem; }
     .eq-card--empty { color: var(--text-muted); font-size: 0.86rem; }
     .eq-card__head { display: flex; gap: 0.55rem; align-items: baseline; font-size: 0.86rem; font-weight: 700; color: var(--text); }
     .eq-card__tag { font-family: var(--font-mono); font-size: 0.74rem; color: var(--accent); }
-    .eq-card__display { overflow-x: auto; padding: 0.35rem 0; font-size: 1.15rem; }
+    .eq-card__display { overflow-x: auto; padding: 0.35rem 0; font-size: 1.15rem; line-height: 1.6; color: var(--text); }
     .eq-card__conn { font-size: 0.84rem; color: var(--text-muted); line-height: 1.5; }
     .eq-card__vars { display: grid; grid-template-columns: auto 1fr; gap: 0.2rem 0.75rem; margin: 0.55rem 0 0; font-size: 0.78rem; color: var(--text-muted); }
     .eq-card__vars dt code { color: var(--text); }
@@ -2509,6 +2545,185 @@
     .run-panel .run-tracker__foot { justify-content: flex-start; }
     .run-panel__close { position: absolute; top: 0.55rem; right: 0.6rem; background: transparent; border: 0; color: var(--text-muted, var(--text)); font-size: 1rem; cursor: pointer; }
     .btn--danger { border-color: var(--bad, #f87171); color: var(--bad, #f87171); }
+    /* Experiments tab */
+    #pane-experiments .exp-intro { font-size: 0.84rem; color: var(--text-muted); line-height: 1.5; margin-bottom: 0.75rem; }
+    #pane-experiments .exp-empty { font-size: 0.82rem; color: var(--text-dim); font-style: italic; padding: 0.5rem 0; }
+    #pane-experiments .exp-muted { color: var(--text-muted); font-family: var(--font-mono); font-size: 0.72rem; }
+    #pane-experiments .exp-h4 { font-size: 0.85rem; font-weight: 700; margin: 1rem 0 0.5rem; color: var(--text); }
+    #pane-experiments .exp-file { font-family: var(--font-mono); font-size: 0.72rem; color: var(--text-muted); margin: 0.5rem 0 0.25rem; }
+    #pane-experiments .exp-product { border: 1px solid var(--border-subtle); border-radius: var(--radius); padding: 1rem; margin-bottom: 1rem; background: var(--surface-2); }
+    #pane-experiments .exp-product__header { display: flex; justify-content: space-between; gap: 0.75rem; flex-wrap: wrap; align-items: flex-start; }
+    #pane-experiments .exp-chips { display: flex; gap: 0.35rem; flex-wrap: wrap; align-items: center; }
+    #pane-experiments .exp-chart-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 0.75rem; }
+    #pane-experiments .exp-chart { background: var(--surface); border: 1px solid var(--border-subtle); border-radius: var(--radius); padding: 0.5rem; }
+    #pane-experiments .exp-chart figcaption { display: flex; justify-content: space-between; align-items: center; font-size: 0.78rem; margin-bottom: 0.25rem; gap: 0.5rem; }
+    #pane-experiments .exp-chart__svg { width: 100%; height: auto; display: block; }
+    #pane-experiments .exp-axis { color: var(--text-muted); font-size: 10px; }
+    #pane-experiments .exp-axis line { stroke: currentColor; stroke-width: 1; }
+    #pane-experiments .exp-axis text { fill: currentColor; }
+    #pane-experiments .exp-axis line.exp-grid { stroke: var(--border-subtle); }
+    #pane-experiments .exp-legend { display: flex; flex-wrap: wrap; gap: 0.25rem 0.75rem; font-size: 0.72rem; color: var(--text-muted); }
+    #pane-experiments .exp-legend__item i { display: inline-block; width: 10px; height: 3px; margin-right: 4px; vertical-align: middle; }
+    #pane-experiments .exp-log-toggle { font-size: 0.7rem; padding: 0.15rem 0.5rem; }
+    #pane-experiments .exp-gallery { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 0.6rem; }
+    #pane-experiments .exp-figure { display: flex; flex-direction: column; gap: 0.3rem; text-decoration: none; color: var(--text-muted); font-size: 0.72rem; border: 1px solid var(--border-subtle); border-radius: var(--radius); padding: 0.4rem; background: var(--surface); }
+    #pane-experiments .exp-figure img { width: 100%; max-height: 180px; object-fit: contain; background: #fff; border-radius: 4px; }
+    #pane-experiments .exp-hpo-gallery { grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); margin: 0.5rem 0; }
+    #pane-experiments .exp-hpo-gallery .exp-figure img { max-height: 280px; }
+    #pane-experiments .exp-diagram { margin-bottom: 0.8rem; }
+    #pane-experiments .exp-attention { border-left: 3px solid var(--warn); background: var(--warn-dim); }
+    #pane-experiments .exp-attention ul { margin: 0.25rem 0 0 1.2rem; }
+    #pane-experiments .exp-diagram .exp-gallery { grid-template-columns: minmax(0, 3fr) minmax(120px, 1fr); }
+    #pane-experiments .exp-diagram .exp-figure img { max-height: 420px; }
+    #pane-experiments .exp-hpo-importance { margin: 0.5rem 0; max-width: 560px; }
+    #pane-experiments .exp-hpo-bar { display: grid; grid-template-columns: minmax(80px, 160px) 1fr 4.5rem; align-items: center; gap: 0.5rem; font-size: 0.75rem; }
+    #pane-experiments .exp-hpo-bar__name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    #pane-experiments .exp-hpo-bar__track { height: 0.55rem; background: var(--border-subtle); border-radius: 4px; overflow: hidden; }
+    #pane-experiments .exp-hpo-bar__track i { display: block; height: 100%; background: var(--accent); }
+    #pane-experiments .exp-hpo-bar__value { text-align: right; color: var(--text-muted); }
+    #pane-experiments .exp-hpo-study { margin: 0.4rem 0; }
+    #pane-experiments .exp-hpo-notes { font-size: 0.75rem; color: var(--text-muted); }
+    #pane-experiments .exp-figure--file { flex-direction: row; align-items: center; }
+    #pane-experiments .exp-table td.exp-pending { color: var(--text-dim); font-style: italic; }
+    #pane-experiments .exp-table tr.exp-sig td { background: var(--ok-dim); }
+    #pane-experiments .exp-help summary, #pane-experiments .exp-protocol-item summary, #pane-experiments .exp-runs summary, #pane-experiments .exp-warnings summary { cursor: pointer; }
+    #pane-experiments .exp-help h4 { margin-top: 1rem; }
+    #pane-experiments .exp-help ul, #pane-experiments .exp-help ol { padding-left: 1.25rem; font-size: 0.82rem; line-height: 1.6; color: var(--text); }
+    #pane-experiments .exp-help pre { background: var(--surface-2); border: 1px solid var(--border-subtle); border-radius: var(--radius); padding: 0.6rem; font-size: 0.75rem; overflow-x: auto; }
+    #pane-experiments .exp-protocol-item { border-top: 1px solid var(--border-subtle); padding: 0.6rem 0; font-size: 0.82rem; }
+    #pane-experiments .exp-protocol-item p { margin: 0.35rem 0; color: var(--text-muted); }
+    #pane-experiments .exp-runs ul, #pane-experiments .exp-warnings ul { list-style: none; font-size: 0.75rem; padding: 0.25rem 0; }
+    #pane-experiments .exp-reason { color: var(--bad); font-size: 0.72rem; }
+    #pane-experiments .exp-warnings { font-size: 0.75rem; color: var(--warn); margin-top: 0.75rem; }
+  
+    /* Agents table of the Flujo Archify pane (agents-panel.js) */
+    .agents-panel { margin-top: 1rem; }
+    .agents-toolbar { display: flex; gap: 0.75rem; align-items: center; margin-bottom: 0.6rem; flex-wrap: wrap; }
+    .agents-toolbar input { flex: 1 1 260px; max-width: 420px; padding: 0.4rem 0.6rem; border-radius: 6px;
+      border: 1px solid var(--border); background: var(--surface-2); color: var(--text); }
+    .agents-table-wrap { overflow-x: auto; }
+    .agents-table { width: 100%; border-collapse: collapse; font-size: 0.82rem; }
+    .agents-table th, .agents-table td { text-align: left; vertical-align: top; padding: 0.45rem 0.55rem;
+      border-bottom: 1px solid var(--border-subtle); color: var(--text); }
+    .agents-table th { cursor: pointer; user-select: none; color: var(--text-muted); white-space: nowrap; }
+    .agents-table th:hover { color: var(--accent); }
+    .agents-table tbody tr:hover { background: var(--surface-hover); }
+    .agents-role { min-width: 260px; max-width: 480px; }
+    .agents-role details summary { cursor: pointer; color: var(--text-dim); font-size: 0.75rem; }
+    .agents-role details p { color: var(--text-muted); margin: 0.3rem 0 0; }
+    .agents-phase { display: inline-block; white-space: nowrap; padding: 0.05rem 0.4rem; margin: 0 0.2rem 0.2rem 0;
+      border-radius: 999px; background: var(--accent-dim); color: var(--accent); }
+    .agents-empty { color: var(--text-dim); }
+    .agents-warnings { color: var(--warn); font-size: 0.78rem; margin: 0.5rem 0 0; }
+    /* Smith Doctor: one health table grouped by area. */
+    /* Historia con IA pane (ai-history-panel.js) */
+    .aih-legend { display: flex; gap: 1rem; flex-wrap: wrap; font-size: 0.8rem; color: var(--text-muted); margin-bottom: 0.5rem; }
+    .aih-legend span { display: inline-flex; align-items: center; gap: 0.35rem; }
+    .aih-dot { width: 0.8rem; height: 0.8rem; border-radius: 3px; display: inline-block; border: 2px solid; }
+    .aih-dot--gate { transform: rotate(45deg); border-radius: 1px; border-color: var(--text-muted); }
+    .aih-dot.aih--green { background: var(--ok-dim); border-color: var(--ok); }
+    .aih-dot.aih--orange { background: var(--warn-dim); border-color: var(--warn); }
+    .aih-dot.aih--red { background: var(--bad-dim); border-color: var(--bad); }
+    .aih-diagram { overflow-x: auto; }
+    .aih-svg { width: 100%; min-width: 640px; height: auto; font-family: var(--font-sans); }
+    .aih-edge { stroke: var(--border); stroke-width: 1.5; }
+    .aih-arrow { fill: var(--border); }
+    .aih-box { cursor: pointer; }
+    .aih-box rect { fill: var(--surface-2); stroke-width: 2; }
+    .aih-box:hover rect, .aih-box:focus rect { fill: var(--surface-hover); }
+    .aih-box:focus { outline: none; }
+    .aih-box--selected rect { stroke-width: 3.5; }
+    .aih-box.aih--green rect, .aih-gate.aih--green polygon { stroke: var(--ok); }
+    .aih-box.aih--orange rect, .aih-gate.aih--orange polygon { stroke: var(--warn); }
+    .aih-box.aih--red rect, .aih-gate.aih--red polygon { stroke: var(--bad); }
+    .aih-gate.aih--green polygon { fill: var(--ok-dim); }
+    .aih-gate.aih--orange polygon { fill: var(--warn-dim); }
+    .aih-gate.aih--red polygon { fill: var(--bad-dim); }
+    .aih-gate polygon { stroke-width: 2; }
+    .aih-box__id { fill: var(--text-muted); font-size: 11px; font-weight: 600; }
+    .aih-box__label { fill: var(--text); font-size: 13px; font-weight: 600; }
+    .aih-box__meta { fill: var(--text-dim); font-size: 10px; }
+    .aih-gate__label { fill: var(--text-muted); font-size: 9px; text-anchor: middle; font-family: var(--font-mono); }
+    .aih-gate__label--side { text-anchor: start; }
+    .aih-detail { margin-top: 0.75rem; padding: 0.75rem; border: 1px solid var(--border-subtle); border-radius: var(--radius); background: var(--surface); }
+    .aih-detail__head { display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap; }
+    .aih-detail__meta { color: var(--text-muted); font-size: 0.82rem; margin: 0.35rem 0; }
+    .aih-chips { display: flex; gap: 0.4rem; flex-wrap: wrap; margin: 0.4rem 0; }
+    .aih-badge--green { background: var(--ok-dim); color: var(--ok); }
+    .aih-badge--orange { background: var(--warn-dim); color: var(--warn); }
+    .aih-badge--red { background: var(--bad-dim); color: var(--bad); }
+    .aih-timeline { list-style: none; margin: 0.5rem 0 0; padding: 0; max-height: 26rem; overflow-y: auto; }
+    .aih-ev { border-left: 3px solid var(--border); padding: 0.3rem 0.6rem; margin-bottom: 0.4rem; }
+    .aih-ev--command { border-left-color: var(--accent); }
+    .aih-ev--user_message { border-left-color: var(--warn); }
+    .aih-ev--error, .aih-ev--errored { border-left-color: var(--bad); }
+    .aih-ev__kind { font-weight: 600; font-size: 0.78rem; margin-right: 0.5rem; }
+    .aih-ev__when { color: var(--text-dim); font-size: 0.72rem; }
+    .aih-ev__text { font-size: 0.85rem; word-break: break-word; }
+    .aih-ev__ref { font-size: 0.7rem; color: var(--text-dim); }
+    .aih-hint { color: var(--text-muted); font-size: 0.82rem; }
+    .aih-section { margin: 0.8rem 0 0.3rem; font-size: 0.85rem; color: var(--text); }
+    .aih-files { list-style: none; margin: 0; padding: 0; max-height: 14rem; overflow-y: auto; font-size: 0.82rem; }
+    .aih-files li { padding: 0.15rem 0; word-break: break-all; }
+    .aih-file { color: var(--accent); font-family: var(--font-mono); text-decoration: none; }
+    .aih-file:hover, .aih-file:focus { text-decoration: underline; }
+    .aih-modal { position: fixed; inset: 0; z-index: 1200; display: flex; align-items: center; justify-content: center; padding: 2.5vh 2.5vw; }
+    .aih-modal[hidden] { display: none; }
+    .aih-modal__backdrop { position: absolute; inset: 0; background: rgba(2, 6, 23, 0.72); backdrop-filter: blur(2px); }
+    .aih-modal__dialog { position: relative; width: min(1100px, 100%); height: 100%; display: flex; flex-direction: column;
+      margin: 0; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg);
+      box-shadow: 0 24px 64px rgba(0, 0, 0, 0.45); overflow: hidden; }
+    .aih-modal__head { display: flex; gap: 0.75rem; align-items: flex-start; justify-content: space-between; flex-wrap: wrap;
+      padding: 0.85rem 1rem; border-bottom: 1px solid var(--border-subtle); background: var(--surface-2); }
+    .aih-modal__titles { min-width: 0; flex: 1 1 18rem; }
+    .aih-modal__meta { display: block; margin-top: 0.2rem; font-family: var(--font-mono); font-size: 0.72rem; word-break: break-all; }
+    .aih-modal__actions { display: flex; gap: 0.4rem; flex-wrap: wrap; align-items: center; }
+    .aih-modal__actions .btn { text-decoration: none; }
+    .aih-modal__body { flex: 1; overflow: auto; padding: 1rem 1.25rem; }
+    .aih-modal__raw { margin: 0; font-family: var(--font-mono); font-size: 0.82rem; color: var(--text); white-space: pre-wrap; line-height: 1.5; word-break: break-word; }
+    .aih-modal__frame { width: 100%; height: 100%; min-height: 70vh; border: 0; border-radius: var(--radius); background: #fff; }
+    .aih-modal__image { display: flex; justify-content: center; }
+    .aih-modal__image img { max-width: 100%; height: auto; border-radius: var(--radius); background: #fff; }
+    body.aih-modal-open { overflow: hidden; }
+    .aih-strip { display: flex; gap: 0.4rem; flex-wrap: wrap; align-items: center; margin: 0.25rem 0 0.6rem; font-size: 0.8rem; }
+    .aih-strip__title { color: var(--text-muted); font-weight: 600; }
+    .aih-pending { padding: 0.15rem 0.5rem; font-size: 0.75rem; border-color: var(--bad); color: var(--bad); }
+    .aih-dg-key { display: inline-flex; width: 1.1rem; height: 1.1rem; border-radius: 50%; align-items: center; justify-content: center;
+      font-size: 0.7rem; border: 2px solid; }
+    .aih-dgbadge--success, .aih-dg-key.aih-dg--success { background: var(--ok-dim); color: var(--ok); border-color: var(--ok); }
+    .aih-dgbadge--rework, .aih-dg-key.aih-dg--rework { background: var(--warn-dim); color: var(--warn); border-color: var(--warn); }
+    .aih-dgbadge--iteration, .aih-dg-key.aih-dg--iteration { background: var(--accent-dim); color: var(--accent); border-color: var(--accent); }
+    .aih-dgbadge--pending, .aih-dg-key.aih-dg--pending { background: var(--bad-dim); color: var(--bad); border-color: var(--bad); }
+    .aih-dgraph-wrap { overflow-x: auto; padding-bottom: 0.25rem; }
+    .aih-dgraph { display: block; font-family: var(--font-sans); }
+    .aih-dg-node { cursor: pointer; }
+    .aih-dg-node:focus { outline: none; }
+    .aih-dg-node circle, .aih-dg-node rect { stroke-width: 2; fill: var(--surface-2); }
+    .aih-dg-node:hover :is(circle, rect), .aih-dg-node:focus :is(circle, rect) { fill: var(--surface-hover); }
+    .aih-dg-node--selected :is(circle, rect) { stroke-width: 4; }
+    .aih-dg-node.aih-dg--success :is(circle, rect) { stroke: var(--ok); fill: var(--ok-dim); }
+    .aih-dg-node.aih-dg--rework :is(circle, rect) { stroke: var(--warn); fill: var(--warn-dim); }
+    .aih-dg-node.aih-dg--iteration :is(circle, rect) { stroke: var(--accent); fill: var(--accent-dim); }
+    .aih-dg-node.aih-dg--pending :is(circle, rect) { stroke: var(--bad); fill: var(--bad-dim); stroke-dasharray: 4 3; }
+    .aih-dg-glyph { fill: var(--text); font-size: 12px; font-weight: 700; text-anchor: middle; pointer-events: none; }
+    .aih-dg-label { fill: var(--text-muted); font-size: 10px; text-anchor: middle; font-family: var(--font-mono); }
+    .aih-dg-loop { fill: none; stroke: var(--warn); stroke-width: 1.5; stroke-dasharray: 4 3; }
+    .aih-round { margin: 0.5rem 0; padding: 0.5rem 0.7rem; border-left: 4px solid var(--border); border-radius: var(--radius); background: var(--surface-2); font-size: 0.85rem; }
+    .aih-round--success { border-left-color: var(--ok); }
+    .aih-round--rework { border-left-color: var(--warn); }
+    .aih-round--iteration { border-left-color: var(--accent); }
+    .aih-round--pending { border-left-color: var(--bad); }
+    .aih-round__turn { margin-top: 0.3rem; word-break: break-word; }
+    .aih-toggle { display: inline-flex; gap: 0.35rem; align-items: center; font-size: 0.78rem; color: var(--text-muted); cursor: pointer; }
+    .aih-ev--key { background: var(--surface-2); }
+    .aih-ev--hl { background: var(--accent-dim); box-shadow: inset 0 0 0 1px var(--accent); }
+    .aih-ev__round { font-family: var(--font-mono); font-size: 0.7rem; padding: 0 0.3rem; margin-right: 0.4rem; border-radius: 3px;
+      border: 1px solid var(--border); color: var(--text-muted); cursor: pointer; }
+    .doctor-summary { display: flex; gap: 0.6rem; align-items: center; flex-wrap: wrap; margin-bottom: 0.75rem; }
+    .doctor-group th { background: var(--surface-2); color: var(--text); cursor: default; text-transform: uppercase;
+      font-size: 0.72rem; letter-spacing: 0.04em; }
+    .doctor-detail { color: var(--text-muted); word-break: break-word; }
+    .badge--absent { background: transparent; color: var(--text-dim); border-color: var(--border); }
   </style>
 </head>
 <body>
@@ -2552,12 +2767,14 @@
     <button class="tab-nav__btn active" onclick="navigateTab('flow')">Flujo Archify</button>
     <button class="tab-nav__btn" onclick="navigateTab('pipeline')">Pipeline y Avance</button>
     <button class="tab-nav__btn" onclick="navigateTab('modelo')">🧠 Mapa Conceptual &amp; Modelo</button>
+    <button class="tab-nav__btn" onclick="navigateTab('experiments')">🧪 Experimentos</button>
     <button class="tab-nav__btn" onclick="navigateTab('sections')">Secciones del Paper</button>
-    <button class="tab-nav__btn" onclick="navigateTab('gates')">Compuertas (Gates)</button>
-    <button class="tab-nav__btn" onclick="navigateTab('telemetria')">Telemetría y Costos</button>
     <button class="tab-nav__btn" onclick="navigateTab('atlas')">Atlas de Grafos</button>
     <button class="tab-nav__btn" onclick="navigateTab('preview')">Previsualización PDF</button>
     <button class="tab-nav__btn" onclick="navigateTab('artifacts')">Artefactos</button>
+    <button class="tab-nav__btn" onclick="navigateTab('historia')">Historia con IA</button>
+    <button class="tab-nav__btn" onclick="navigateTab('telemetria')">Telemetría y Costos</button>
+    <button class="tab-nav__btn" onclick="navigateTab('doctor')">Smith Doctor</button>
   </nav>
 
   <!-- Main content area -->
@@ -2615,6 +2832,17 @@
           <!-- Rendered by JS -->
         </div>
       </div>
+
+      <!-- The gates live with the phases they guard (was its own tab). -->
+      <div class="panel" id="gatesPanel">
+        <div class="panel__header">
+          <div class="panel__title">Compuertas de Revisión y Validación Formal (Gates)</div>
+          <span class="panel__meta">Revisión de calidad, consistencia y dependencias cruzadas</span>
+        </div>
+        <div class="pipeline-grid" id="gatesGrid">
+          <!-- Rendered by JS -->
+        </div>
+      </div>
     </div>
 
     <!-- TAB 2: ARCHIFY FLOW -->
@@ -2629,6 +2857,13 @@
         </div>
         <iframe id="flowIframe" class="iframe-viewer" src="/api/flow"></iframe>
       </div>
+      <div class="panel agents-panel">
+        <div class="panel__header">
+          <div class="panel__title">Agentes del proyecto smith</div>
+          <span class="panel__meta">Rol, skill, etapa, herramientas y fase(s) donde interviene cada agente · ordena con un clic en la columna</span>
+        </div>
+        <div id="agentsPanel"><p class="agents-empty">Cargando agentes…</p></div>
+      </div>
     </div>
 
     <!-- TAB: MAPA CONCEPTUAL Y MODELO MATEMATICO -->
@@ -2640,9 +2875,9 @@
             <div style="display: flex; align-items: center; gap: 0.6rem; margin-bottom: 0.35rem;">
               <span id="modelTrlBadge" class="badge badge--ok" style="font-size: 0.75rem; font-weight: 700;">FASE INICIAL</span>
               <span id="modelJournalBadge" class="badge badge--info" style="font-size: 0.75rem;">OBJETIVO EDITORIAL</span>
-              <span id="modelDomainBadge" class="badge" style="background: rgba(245, 158, 11, 0.18); color: #f59e0b; border: 1px solid #f59e0b; font-size: 0.75rem; font-weight: 700;">ESPECIFICACIÓN FORMAL</span>
+              <span id="modelDomainBadge" class="badge badge--warn" style="font-size: 0.75rem; font-weight: 700;">ESPECIFICACIÓN FORMAL</span>
             </div>
-            <h2 id="modelMainTitle" style="font-size: 1.35rem; font-weight: 800; color: #fff; letter-spacing: -0.01em; margin-bottom: 0.3rem;">
+            <h2 id="modelMainTitle" style="font-size: 1.35rem; font-weight: 800; color: var(--text); letter-spacing: -0.01em; margin-bottom: 0.3rem;">
               🧠 Mapa Conceptual de la Propuesta &amp; Modelo Matemático Formal
             </h2>
             <p id="modelSummaryDesc" style="font-size: 0.85rem; color: var(--text-muted); max-width: 980px; line-height: 1.45;">
@@ -2659,7 +2894,7 @@
           </div>
         </div>
 
-        <div id="modelMetaStrip" style="display: flex; flex-wrap: wrap; gap: 1.25rem; font-size: 0.78rem; color: #94a3b8; border-top: 1px solid rgba(255,255,255,0.08); padding-top: 0.75rem;">
+        <div id="modelMetaStrip" style="display: flex; flex-wrap: wrap; gap: 1.25rem; font-size: 0.78rem; color: var(--text-muted); border-top: 1px solid var(--border-subtle); padding-top: 0.75rem;">
           <span>👤 <strong>Autores:</strong> <span id="modelAuthorsVal">Sin autor asignado</span></span>
           <span id="modelMetaExtra">⚡ <strong>Estado:</strong> Deliberación y andamiaje formal</span>
         </div>
@@ -2678,9 +2913,6 @@
         </button>
         <button class="model-subnav-btn" onclick="filterModelView('matematico', this)">
           📐 3. Matemática &amp; Tutor
-        </button>
-        <button class="model-subnav-btn" onclick="filterModelView('poc', this)">
-          🧪 4. Plan de Prueba de Concepto (PoC)
         </button>
       </div>
 
@@ -2728,7 +2960,10 @@
             <div class="panel__title">
               <span>🗺️ 2. Mapa Conceptual de la Arquitectura &amp; Flujo de Datos</span>
             </div>
-            <span class="panel__meta">Capas del sistema propuesto, desde la entrada hasta el análisis</span>
+            <div class="panel__tools">
+              <span class="panel__meta">Capas del sistema propuesto, desde la entrada hasta el análisis</span>
+              <button type="button" class="btn btn--sm math-toggle" data-math-toggle aria-pressed="false" title="Alterna entre la ecuación compilada y su código LaTeX">TeX Ver LaTeX</button>
+            </div>
           </div>
           <div id="modelConceptLayers" class="concept-layers-container"></div>
         </div>
@@ -2739,7 +2974,10 @@
         <div class="panel math-panel">
           <div class="panel__header">
             <div class="panel__title"><span>📐 3. Matemática del paper</span></div>
-            <span id="mathSourceBadge" class="badge badge--info">cargando…</span>
+            <div class="panel__tools">
+              <span id="mathSourceBadge" class="badge badge--info">cargando…</span>
+              <button type="button" class="btn btn--sm math-toggle" data-math-toggle aria-pressed="false" title="Alterna entre la ecuación compilada y su código LaTeX">TeX Ver LaTeX</button>
+            </div>
           </div>
           <div id="mathLema" class="math-lema"></div>
           <div class="math-layout">
@@ -2774,21 +3012,18 @@
         </div>
       </div>
 
-      <!-- MODULO 4: PRUEBA DE CONCEPTO (model-panel.js) -->
-      <div id="modelSecPoc" class="model-section">
-        <div class="panel">
-          <div class="panel__header">
-            <div class="panel__title">
-              <span>🧪 4. Deliberación &amp; Experimentos de Prueba de Concepto (PoC)</span>
-            </div>
-            <span id="modelPocBadge" class="badge badge--warn">G-EXP-POC · PENDIENTE</span>
-          </div>
-          <p style="font-size: 0.84rem; color: var(--text-muted); line-height: 1.5; margin-bottom: 1rem;">
-            Protocolos empíricos para someter a prueba la viabilidad de la propuesta antes de la redacción definitiva, cada uno con su métrica objetivo y lo medido.
-          </p>
-          <div id="modelPocGrid" class="poc-grid"></div>
+    </div>
+
+    <!-- TAB: EXPERIMENTS (proof of concept + full experiments) -->
+    <div id="pane-experiments" class="tab-pane">
+      <div class="panel">
+        <div class="panel__header">
+          <div class="panel__title">Experimentos: prueba de concepto y experimentos completos</div>
+          <button type="button" class="btn" onclick="window.refreshExperimentsPanel?.()">Actualizar</button>
         </div>
+        <p class="exp-intro">Convergencia, figuras, tablas, significancia estadística y ejecuciones remotas leídas de <code>implementations/&lt;repo&gt;/&lt;Nombre&gt;/Results/</code>, junto al protocolo vigente de <code>experiments/</code>.</p>
       </div>
+      <div id="experimentsRoot"><p class="exp-empty">Cargando experimentos…</p></div>
     </div>
 
     <!-- TAB 3: SECTIONS -->
@@ -2820,20 +3055,18 @@
       </div>
     </div>
 
-    <!-- TAB 4: GATES -->
-    <div id="pane-gates" class="tab-pane">
+    <!-- TAB 5: TELEMETRÍA -->
+    <!-- HISTORIA CON IA: fases, compuertas e interacciones (GET /api/ai-history, ai-history-panel.js) -->
+    <div id="pane-historia" class="tab-pane">
       <div class="panel">
         <div class="panel__header">
-          <div class="panel__title">Compuertas de Revisión y Validación Formal (Gates)</div>
-          <span class="panel__meta">Revisión de calidad, consistencia y dependencias cruzadas</span>
+          <div class="panel__title">Historia con IA: fases, compuertas e interacciones</div>
+          <span class="panel__meta">Clic en una fase para ver su historial</span>
         </div>
-        <div class="pipeline-grid" id="gatesGrid">
-          <!-- Rendered by JS -->
-        </div>
+        <div id="aiHistoryPanel">Cargando historia…</div>
       </div>
     </div>
 
-    <!-- TAB 5: TELEMETRÍA -->
     <div id="pane-telemetria" class="tab-pane">
       <div class="metrics-grid">
         <div class="metric-card">
@@ -2915,7 +3148,7 @@
 
         <!-- Vista 1: Iframe Constelación 3D Solar Atlas -->
         <div id="atlas3dContainer" style="display: block;">
-          <iframe id="graphIframe" class="iframe-viewer" src="/api/atlas/view"></iframe>
+          <iframe id="graphIframe" class="iframe-viewer" src="about:blank" onload="if (this.getAttribute('src') !== 'about:blank' &amp;&amp; activeTab !== 'atlas') postToGraph({ type: 'atlas-command', command: 'pause' })"></iframe>
         </div>
 
         <!-- Vista 2: Matriz de Candidatos SOTA (Visualización Tipo Tabla Amigable) -->
@@ -3073,7 +3306,7 @@
             <div id="pdfPagesStack" class="pdf-pages-stack">
               <!-- Renderizado continuo vertical multi-página -->
             </div>
-            <iframe id="pdfNativeIframe" class="iframe-viewer" src="/api/pdf" style="display: none; height: 850px; width: 100%;"></iframe>
+            <iframe id="pdfNativeIframe" class="iframe-viewer" src="about:blank" style="display: none; height: 850px; width: 100%;"></iframe>
           </div>
         </div>
 
@@ -3231,6 +3464,17 @@
             </div>
           </div>
         </aside>
+      </div>
+    </div>
+
+    <!-- SMITH DOCTOR: salud del proyecto (GET /api/doctor, doctor-panel.js) -->
+    <div id="pane-doctor" class="tab-pane">
+      <div class="panel">
+        <div class="panel__header">
+          <div class="panel__title">Smith Doctor: salud del proyecto</div>
+          <span class="panel__meta">Misma tabla que <code>smith doctor</code></span>
+        </div>
+        <div id="doctorPanel">Cargando diagnóstico…</div>
       </div>
     </div>
 
@@ -3441,6 +3685,26 @@
       if (tabId === 'preview') {
         ensurePdfLoaded();
       }
+      // The 3D views load the first time their tab is shown, not with the page.
+      if (tabId === 'atlas' && graphFramePath() === 'blank') {
+        switchGraph(currentGraphKind);
+      }
+      // The atlas stops drawing while its tab is not shown.
+      if (graphFramePath() !== 'blank') {
+        postToGraph({ type: 'atlas-command', command: tabId === 'atlas' ? 'resume' : 'pause' });
+      }
+      if (tabId === 'flow') {
+        window.refreshAgentsPanel?.();
+      }
+      if (tabId === 'experiments') {
+        window.refreshExperimentsPanel?.();
+      }
+      if (tabId === 'doctor') {
+        window.refreshDoctorPanel?.();
+      }
+      if (tabId === 'historia') {
+        window.refreshAiHistoryPanel?.();
+      }
       if (tabId === 'modelo') {
         refreshModelData();
         if (window.refreshMathPanel) window.refreshMathPanel();
@@ -3454,33 +3718,23 @@
       const secPropuesta = document.getElementById('modelSecPropuesta');
       const secMapa = document.getElementById('modelSecMapa');
       const secMatematico = document.getElementById('modelSecMatematico');
-      const secPoc = document.getElementById('modelSecPoc');
 
       if (viewName === 'all') {
         if (secPropuesta) secPropuesta.style.display = 'block';
         if (secMapa) secMapa.style.display = 'block';
         if (secMatematico) secMatematico.style.display = 'block';
-        if (secPoc) secPoc.style.display = 'block';
       } else if (viewName === 'propuesta') {
         if (secPropuesta) secPropuesta.style.display = 'block';
         if (secMapa) secMapa.style.display = 'none';
         if (secMatematico) secMatematico.style.display = 'none';
-        if (secPoc) secPoc.style.display = 'none';
       } else if (viewName === 'mapa') {
         if (secPropuesta) secPropuesta.style.display = 'none';
         if (secMapa) secMapa.style.display = 'block';
         if (secMatematico) secMatematico.style.display = 'none';
-        if (secPoc) secPoc.style.display = 'none';
       } else if (viewName === 'matematico') {
         if (secPropuesta) secPropuesta.style.display = 'none';
         if (secMapa) secMapa.style.display = 'none';
         if (secMatematico) secMatematico.style.display = 'block';
-        if (secPoc) secPoc.style.display = 'none';
-      } else if (viewName === 'poc') {
-        if (secPropuesta) secPropuesta.style.display = 'none';
-        if (secMapa) secMapa.style.display = 'none';
-        if (secMatematico) secMatematico.style.display = 'none';
-        if (secPoc) secPoc.style.display = 'block';
       }
     }
 
@@ -4171,6 +4425,52 @@
       }
     }
 
+    /* Spanish labels for the section drawer. The contracts and the state
+       keep their English tokens (the engine reads them); only what the
+       drawer shows is translated, and an unknown token shows as itself. */
+    const SECTION_TITLES_ES = {
+      'materials-and-methods': 'Materiales y métodos',
+      'experimental-setup': 'Configuración experimental',
+      'results-and-discussion': 'Resultados y discusión',
+      'limitations': 'Limitaciones',
+      'related-work': 'Trabajo relacionado',
+      'introduction': 'Introducción',
+      'conclusions': 'Conclusiones',
+      'abstract': 'Resumen',
+      'title-and-keywords': 'Título y palabras clave',
+      'back-matter': 'Material final',
+    };
+    const SECTION_STATUS_ES = {
+      SCAFFOLDED: 'ANDAMIADA',
+      CONTRACTED: 'CONTRATADA',
+      DRAFTING: 'EN REDACCIÓN',
+      AUDITED: 'AUDITADA',
+      SEALED: 'SELLADA',
+    };
+    const CONTRACT_TERMS_ES = {
+      // mode
+      'transposition': 'transposición', 'argument': 'argumentación', 'skeleton': 'esqueleto',
+      // citations
+      'none': 'sin citas', 'resolution': 'resolución', 'discovery': 'descubrimiento',
+      // facts and declarations
+      'author-roles': 'roles de autoría', 'classification-line': 'línea de clasificación',
+      'contributions': 'contribuciones', 'dataset': 'conjunto de datos',
+      'experimental-design': 'diseño experimental', 'formulation': 'formulación',
+      'gap': 'brecha', 'grant-code': 'código de financiación', 'grant-title': 'título de la financiación',
+      'implementation': 'implementación', 'keyword-bounds': 'límites de palabras clave',
+      'limitations': 'limitaciones', 'problem-statement': 'planteamiento del problema',
+      'repository-url': 'URL del repositorio', 'results': 'resultados',
+    };
+    function sectionTitleEs(s) {
+      return SECTION_TITLES_ES[s.section] || s.title;
+    }
+    function sectionStatusEs(status) {
+      return SECTION_STATUS_ES[status] || status;
+    }
+    function contractTermEs(token) {
+      return CONTRACT_TERMS_ES[token] || token;
+    }
+
     function openSectionDrawer(secId) {
       const sections = currentStatus?.sections || [];
       const s = sections.find(item => item.id === secId || item.id.startsWith(secId));
@@ -4182,7 +4482,7 @@
         <div style="display: flex; align-items: center; gap: 0.6rem;">
           <span style="font-size: 1.3rem;">📝</span>
           <div>
-            <div style="font-size: 1.15rem; font-weight: 700; color: var(--text);">${escapeHtml(s.title)}</div>
+            <div style="font-size: 1.15rem; font-weight: 700; color: var(--text);">${escapeHtml(sectionTitleEs(s))}</div>
             <div style="font-size: 0.72rem; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.04em;">Archivo: <code>sections/${escapeHtml(s.filename)}</code> · Pág. PDF: <strong>${s.pdf_page || 1}</strong></div>
           </div>
         </div>
@@ -4215,7 +4515,7 @@
         <!-- 1. Ficha Técnica y Acciones de la Sección -->
         <div style="background: var(--surface-2); border: 1px solid var(--border); border-radius: var(--radius); padding: 1rem; margin-bottom: 1.25rem;">
           <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 0.75rem;">
-            <span class="badge badge--${statusTone}" style="font-size: 0.75rem; padding: 0.25rem 0.6rem;">Estado: ${escapeHtml(s.status)}</span>
+            <span class="badge badge--${statusTone}" style="font-size: 0.75rem; padding: 0.25rem 0.6rem;">Estado: ${escapeHtml(sectionStatusEs(s.status))}</span>
             <div style="display: flex; gap: 0.5rem; font-size: 0.75rem; color: var(--text-dim);">
               <span><strong>${s.words?.toLocaleString() || 0}</strong> palabras</span> · 
               <span><strong>${s.citations || 0}</strong> citas BibTeX</span> · 
@@ -4394,7 +4694,7 @@
               <span class="badge badge--ok" style="font-size: 0.72rem; letter-spacing: 0.04em;">CONTRATO CANÓNICO</span>
               <span class="badge badge--info" style="font-size: 0.72rem; font-family: var(--font-mono);">${escapeHtml(sec)}</span>
               <span class="badge badge--warn" style="font-size: 0.72rem;">Posición: ${pos}</span>
-              <span class="badge badge--live" style="font-size: 0.72rem;">Modo: ${escapeHtml(modeVal)}</span>
+              <span class="badge badge--live" style="font-size: 0.72rem;" title="${escapeHtml(modeVal)}">Modo: ${escapeHtml(contractTermEs(modeVal))}</span>
             </div>
             ${modeQuote ? `<div class="contract-quote">“${escapeHtml(modeQuote)}”</div>` : ''}
           </div>
@@ -4420,7 +4720,7 @@
               <div class="block-card-head">
                 <span class="badge badge--primary" style="font-family: var(--font-mono); font-size: 0.72rem;">${escapeHtml(bId)}</span>
                 <span class="badge ${citations === 'none' ? 'badge--warn' : 'badge--ok'}" style="font-size: 0.65rem;">
-                  ${citations === 'none' ? 'Sin citas' : 'Citas: ' + escapeHtml(citations)}
+                  ${citations === 'none' ? 'Sin citas' : 'Citas: ' + escapeHtml(contractTermEs(citations))}
                 </span>
               </div>
           `;
@@ -4428,12 +4728,12 @@
           if (reqFacts.length > 0) {
             html += `
               <div class="block-card-section">
-                <strong>Hechos Requeridos (requires_facts):</strong>
+                <strong>Hechos requeridos:</strong>
                 <div>
                   ${reqFacts.map(rf => {
                     const val = typeof rf === 'object' ? rf.value : rf;
                     const quote = typeof rf === 'object' && rf.source ? rf.source.quote : '';
-                    return `<span class="block-pill-tag" title="${escapeHtml(quote)}">📥 ${escapeHtml(val)}</span>`;
+                    return `<span class="block-pill-tag" title="${escapeHtml(quote)}">📥 ${escapeHtml(contractTermEs(val))}</span>`;
                   }).join('')}
                 </div>
               </div>
@@ -4443,12 +4743,12 @@
           if (prodFacts.length > 0) {
             html += `
               <div class="block-card-section">
-                <strong>Hechos Producidos (produces_facts):</strong>
+                <strong>Hechos producidos:</strong>
                 <div>
                   ${prodFacts.map(pf => {
                     const val = typeof pf === 'object' ? pf.value : pf;
                     const quote = typeof pf === 'object' && pf.source ? pf.source.quote : '';
-                    return `<span class="block-pill-tag block-pill-tag--green" title="${escapeHtml(quote)}">📤 ${escapeHtml(val)}</span>`;
+                    return `<span class="block-pill-tag block-pill-tag--green" title="${escapeHtml(quote)}">📤 ${escapeHtml(contractTermEs(val))}</span>`;
                   }).join('')}
                 </div>
               </div>
@@ -4458,7 +4758,7 @@
           if (afterList.length > 0) {
             html += `
               <div class="block-card-section">
-                <strong>Precedencia (after):</strong>
+                <strong>Va después de:</strong>
                 <div>
                   ${afterList.map(af => {
                     const target = typeof af === 'object' ? af.target : af;
@@ -4642,7 +4942,15 @@
       if (statusEl) statusEl.textContent = 'Cargando reglas...';
 
       try {
-        const res = await fetch(`/api/artifact?file=sections/${encodeURIComponent(filename)}`);
+        // The Spanish copy is served only while it matches this workspace's
+        // contract; otherwise the drawer shows the contract itself.
+        let translated = false;
+        let res = await fetch(`/api/section-translation?lang=es&file=${encodeURIComponent(filename)}`);
+        if (res.ok) {
+          translated = true;
+        } else {
+          res = await fetch(`/api/artifact?file=sections/${encodeURIComponent(filename)}`);
+        }
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         const text = await res.text();
 
@@ -4656,7 +4964,9 @@
           rawContainer.textContent = text;
         }
 
-        if (statusEl) statusEl.textContent = '✓ Reglas y contrato cargados';
+        if (statusEl) statusEl.textContent = translated
+          ? '✓ Reglas en español (traducción del contrato, que se mantiene en inglés)'
+          : '✓ Contrato original (sin traducción vigente para esta versión)';
       } catch (err) {
         webContainer.innerHTML = `
           <div style="padding: 1rem; color: var(--warn); line-height: 1.4;">
@@ -5021,6 +5331,16 @@
 
     // One load in flight at a time: tab switches and cross-panel jumps share it.
     let pdfLoadPromise = null;
+    // The browser's own viewer, when PDF.js could not open the document. Its
+    // frame starts blank so the page does not fetch the PDF until it is shown.
+    function showNativePdfFallback() {
+      const stack = document.getElementById('pdfPagesStack');
+      if (stack) stack.style.display = 'none';
+      const iframe = document.getElementById('pdfNativeIframe');
+      iframe.style.display = 'block';
+      if (iframe.getAttribute('src') === 'about:blank') iframe.src = `/api/pdf?t=${Date.now()}`;
+    }
+
     function ensurePdfLoaded() {
       if (pdfDoc) return Promise.resolve(true);
       if (!pdfLoadPromise) {
@@ -5130,9 +5450,7 @@
           renderVisiblePdfPages();
           return false;
         }
-        const stack = document.getElementById('pdfPagesStack');
-        if (stack) stack.style.display = 'none';
-        document.getElementById('pdfNativeIframe').style.display = 'block';
+        showNativePdfFallback();
         return false;
       } finally {
         if (spinner) spinner.style.display = 'none';
@@ -6087,7 +6405,11 @@
     // Hash routing on load
     window.addEventListener('load', () => {
       const hash = window.location.hash.replace('#', '');
-      if (hash && ['pipeline', 'flow', 'modelo', 'sections', 'gates', 'telemetria', 'atlas', 'preview', 'artifacts'].includes(hash)) {
+      if (hash === 'gates') {
+        // The gates tab merged into the pipeline; old links still land on it.
+        navigateTab('pipeline');
+        document.getElementById('gatesPanel')?.scrollIntoView();
+      } else if (hash && ['pipeline', 'flow', 'modelo', 'experiments', 'sections', 'historia', 'telemetria', 'doctor', 'atlas', 'preview', 'artifacts'].includes(hash)) {
         navigateTab(hash);
       }
       loadStatus();

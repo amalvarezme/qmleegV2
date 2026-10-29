@@ -222,6 +222,43 @@ class Adapter(ABC):
     subclass could quietly ignore.
     """
 
+    # Optional capability, deliberately NOT a seventh operation: the most
+    # bytes of compressed code bundle (`generate-job --code-bundle`) this
+    # backend can carry inside the job it pushes. A backend whose runner
+    # cannot authenticate a clone of a private repository declares an int
+    # here and ships the bundle's bytes with the job; `None` (this
+    # default) means the backend carries no bundle, and generation refuses
+    # `--code-bundle` for it by code (`CODE_BUNDLE_NOT_CARRIED`).
+    CODE_BUNDLE_MAX_BYTES: int | None = None
+
+    # Optional capability, deliberately NOT a seventh operation either
+    # (kernel-input-datasets S2): the directory inside a job under which
+    # this backend mounts, read-only, the public datasets the job declares
+    # (`generate-job --input-dataset`, `run_config["inputDatasets"]`) and
+    # which this backend attaches to the push itself. `submit` hands it to
+    # the job as `run_config["inputRoot"]`, the runner searches it for each
+    # ref's slug and exports what it found in `FORGE_INPUT_DATASETS`, and
+    # `submit` reports `inputs: attached`. `None` (this default) means the
+    # backend attaches no inputs: `submit` reports `inputs: unsupported`
+    # and the runner exports every ref mapped to null, so the target
+    # downloads the data itself.
+    INPUT_DATASETS_ROOT: str | None = None
+
+    # Optional, and not an operation either (remote-preflight S2): the
+    # dataset host -- as the datasets skill's `hosts` package names it --
+    # whose public datasets this backend attaches. `generate-job --dataset`
+    # refuses `DATASET_HOST_NOT_ATTACHABLE` for a dataset another host
+    # serves. `None` (this default) means no host is named, so none is
+    # refused.
+    INPUT_DATASETS_HOST: str | None = None
+
+    # Optional, and not an operation either (remote-preflight S3): the
+    # distribution names this backend's worker image already provides.
+    # `generate-jobs` leaves them out of the requirements it derives from
+    # the target's pins. Empty (this default) means nothing is assumed
+    # provided, so every pin is installed.
+    PROVIDED_REQUIREMENTS: tuple[str, ...] = ()
+
     @abstractmethod
     def workers(self) -> list[Worker]:
         """Report the workers this backend currently exposes, and each cap."""
@@ -245,6 +282,38 @@ class Adapter(ABC):
     @abstractmethod
     def list_active(self, worker: str) -> list[str]:
         """Report the submission ids the backend still considers active for `worker`."""
+
+    @classmethod
+    def session_limit_seconds(cls, machine_shape: str | None = None) -> int | None:
+        """The service's continuous run limit for one session, in seconds.
+
+        Deliberately NOT abstract, and not a seventh operation: it asks the
+        service nothing. A backend answers from a constant it declares --
+        the limit the service published for that accelerator -- and
+        `machine_shape=None` means the accelerator that backend requests by
+        default. A classmethod so a planner can read it before any worker
+        or credential exists. This default, `None`, means "unknown": a
+        caller must then treat the session as unbounded by this skill's
+        knowledge, never invent a number (see "What this skill cannot see").
+        """
+        return None
+
+    def carry_source(self, submission_id: str) -> Mapping[str, str] | None:
+        """How a later job of this backend reads an earlier submission's
+        output, or `None` when this backend cannot mount one (kernel-carry
+        S2, S5).
+
+        Deliberately NOT abstract, and not a seventh operation: it asks the
+        service nothing. A backend whose jobs can name another job's output
+        as an input answers `{"ref": <the input reference it pushes>,
+        "mount": <the directory that output appears under inside the
+        job>}`; `submit` hands both to the next job in
+        `run_config["carry"]` and the runner restores the job's declared
+        carry paths from `mount`. This default, `None`, means the backend
+        carries nothing automatically, and `submit` reports
+        `carry: unsupported` rather than dropping the continuation silently.
+        """
+        return None
 
 
 _REGISTRY: dict[str, type[Adapter]] = {}

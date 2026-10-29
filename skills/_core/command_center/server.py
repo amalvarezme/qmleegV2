@@ -19,13 +19,16 @@ from __future__ import annotations
 import argparse
 import asyncio
 import contextlib
+import hashlib
 import html
 import json
+import platform
 import re
 import shutil
 import subprocess
 import sys
 import logging
+import os
 import threading
 import time
 from pathlib import Path
@@ -34,9 +37,10 @@ from typing import Any, AsyncIterator, Callable
 from fastapi import FastAPI, Request
 from fastapi.responses import HTMLResponse, JSONResponse, Response, StreamingResponse
 
-from . import atlas, atlas_build, decisions, math_view, phase_actions, terminal, tutor, history, paper_preview, novelty_graph, model_spec
+from . import agents_view, ai_history, ai_transcripts, atlas, atlas_build, decisions, experiments_view, math_view, phase_actions, terminal, tutor, history, paper_preview, novelty_graph, model_spec
+from . import doctor_view, toolchain
 from .health_inspector import get_wiring_health
-from .state_extractor import get_workspace_state
+from .state_extractor import get_workspace_state, memo_by_file
 from .watcher import EventBus, WorkspaceWatcher, is_health_path
 
 #: How long a wiring-health result is reused before it is measured again. The
@@ -44,9 +48,12 @@ from .watcher import EventBus, WorkspaceWatcher, is_health_path
 #: events must not multiply them.
 DEFAULT_HEALTH_TTL_SECONDS = 10.0
 
-_log = logging.getLogger(__name__)
+#: A terminal output stream wakes at least this often to notice a client that
+#: left, and sends a keep-alive comment after this much silence.
+TERMINAL_WAIT_SECONDS = 1.0
+TERMINAL_PING_SECONDS = 15.0
 
-_LOOPBACK_HOSTS = frozenset({"127.0.0.1", "localhost", "::1"})
+_log = logging.getLogger(__name__)
 
 #: Headers on every paper preview response.
 _PAPER_HEADERS = {
@@ -81,6 +88,31 @@ _PLACEHOLDER_HTML = """<!doctype html>
 # --------------------------------------------------------------------------
 # static assets
 # --------------------------------------------------------------------------
+#: Translated copies of the section contracts, shipped beside the dashboard.
+#: ``SOURCES.json`` maps each file to the sha256 of the English contract it
+#: was translated from.
+SECTION_TRANSLATIONS_DIR = Path(__file__).resolve().parent / "static" / "i18n"
+SECTION_TRANSLATION_LANGS = frozenset({"es"})
+SECTION_FILE_RE = re.compile(r"[A-Za-z0-9][A-Za-z0-9._-]*\.md")
+
+
+def section_translation(source: Path, file: str, lang: str) -> bytes | None:
+    """The ``lang`` copy of section contract ``file``, or ``None``.
+
+    ``None`` unless a copy exists and ``source`` is byte-identical to the
+    contract that copy was translated from.
+    """
+    folder = SECTION_TRANSLATIONS_DIR / lang / "sections"
+    try:
+        sources = json.loads((folder / "SOURCES.json").read_text(encoding="utf-8"))
+        current = hashlib.sha256(source.read_bytes()).hexdigest()
+        if sources.get(file) != current:
+            return None
+        return (folder / file).read_bytes()
+    except (OSError, ValueError, AttributeError):
+        return None
+
+
 def resolve_static_dir(root: Path) -> Path | None:
     """Locate the dashboard build.
 
@@ -113,18 +145,18 @@ def export_static(root: Path, destination: Path) -> int:
     """Copy the resolved dashboard build to ``destination`` and report."""
     source = resolve_static_dir(root)
     if source is None:
-        print("papersmith ui: no built dashboard assets found", file=sys.stderr)
+        print("smith ui: no built dashboard assets found", file=sys.stderr)
         return 2
     destination = destination.expanduser().resolve()
     if destination.exists():
         if not destination.is_dir():
-            print(f"papersmith ui: destination is not a directory: {destination}", file=sys.stderr)
+            print(f"smith ui: destination is not a directory: {destination}", file=sys.stderr)
             return 2
         if any(destination.iterdir()):
-            print(f"papersmith ui: destination is not empty: {destination}", file=sys.stderr)
+            print(f"smith ui: destination is not empty: {destination}", file=sys.stderr)
             return 2
     shutil.copytree(source, destination, dirs_exist_ok=True)
-    print(f"papersmith ui: exported {source} -> {destination}")
+    print(f"smith ui: exported {source} -> {destination}")
     return 0
 
 
@@ -155,18 +187,44 @@ def origin_is_same(request: Request) -> bool:
     return urlparse(origin).netloc == request.headers.get("host", "")
 
 
-def build_allowed_hosts(host: str, port: int, extra: list[str] | None = None) -> frozenset[str] | None:
-    """The ``Host`` values to accept for a bind address, or ``None`` for any.
+def is_loopback_bind(host: str) -> bool:
+    """Whether binding ``host`` keeps the dashboard on this machine.
 
-    A loopback bind accepts only its own loopback names on ``port`` (plus every
-    ``--allowed-host``), which stops DNS-rebinding pages from reading the API.
-    Other binds are left open. For ``npm run dev`` (Vite proxies with
-    ``changeOrigin: false``, so the backend sees ``localhost:5173``) start the
-    backend with ``--allowed-host localhost:5173``.
+    ``localhost`` and loopback literals (``127.0.0.0/8``, ``::1``, bracketed or
+    not) do. A wildcard (``0.0.0.0``, ``::``), any other address and any other
+    name do not: the network may reach them.
     """
-    if host.strip("[]").lower() not in _LOOPBACK_HOSTS:
-        return None
-    hosts = {f"127.0.0.1:{port}", f"localhost:{port}", f"[::1]:{port}"}
+    import ipaddress
+
+    bare = host.strip("[]").lower()
+    if bare == "localhost":
+        return True
+    try:
+        return ipaddress.ip_address(bare).is_loopback
+    except ValueError:
+        return False
+
+
+def _host_header(host: str, port: int) -> str:
+    """The ``Host`` value a client sends for ``host`` on ``port``."""
+    bare = host.strip("[]").lower()
+    return f"[{bare}]:{port}" if ":" in bare else f"{bare}:{port}"
+
+
+def build_allowed_hosts(host: str, port: int, extra: list[str] | None = None) -> frozenset[str]:
+    """The ``Host`` values to accept for a bind address.
+
+    Every bind accepts its own address on ``port`` and each ``--allowed-host``;
+    a loopback bind also accepts the loopback names. Any other ``Host`` gets
+    421, which stops DNS-rebinding pages from reading the API, on a non-loopback
+    bind as well (``main`` refuses one without ``--allow-unauthenticated-network``).
+    For ``npm run dev`` (Vite proxies with ``changeOrigin: false``, so the
+    backend sees ``localhost:5173``) start the backend with
+    ``--allowed-host localhost:5173``.
+    """
+    hosts = {_host_header(host, port)}
+    if is_loopback_bind(host):
+        hosts.update(_host_header(name, port) for name in ("127.0.0.1", "localhost", "::1"))
     hosts.update(value.strip().lower() for value in extra or [] if value.strip())
     return frozenset(hosts)
 
@@ -200,7 +258,7 @@ class HostAllowListMiddleware:
         body = (
             f"Host header {host!r} is not allowed for this dashboard. "
             "Open it through one of its own addresses, or start the server with "
-            f"`papersmith ui --allowed-host HOST:PORT` (for example --allowed-host {host or 'localhost:5173'}).\n"
+            f"`smith ui --allowed-host HOST:PORT` (for example --allowed-host {host or 'localhost:5173'}).\n"
         ).encode()
         await send({"type": "http.response.start", "status": 421, "headers": [
             (b"content-type", b"text/plain; charset=utf-8"),
@@ -227,6 +285,23 @@ def _framework_version(root: Path) -> str:
 # --------------------------------------------------------------------------
 # facts the phase actions report, measured on disk
 # --------------------------------------------------------------------------
+def _count_pdf_pages(pdf_file: Path) -> int:
+    """Pages of a PDF: `pdfinfo` when installed, else the first /Count entry."""
+    try:
+        res = subprocess.run(["pdfinfo", str(pdf_file)], capture_output=True, text=True, check=True)
+        m = re.search(r"Pages:\s+(\d+)", res.stdout)
+        if m:
+            return int(m.group(1))
+    except Exception:
+        try:
+            m = re.search(rb"/Count\s+(\d+)", pdf_file.read_bytes())
+            if m:
+                return int(m.group(1))
+        except Exception:
+            pass
+    return 0
+
+
 def _children(folder: Path) -> list[str]:
     return sorted(p.name for p in folder.iterdir() if p.is_dir()) if folder.is_dir() else []
 
@@ -251,6 +326,12 @@ def _candidate_count(root: Path) -> int:
 
 AUDIT_TIMEOUT_SECONDS = 120
 _AUDIT_LOCK = threading.Lock()
+#: How long a Smith Doctor report is served from cache; `?fresh=1` re-measures.
+DOCTOR_TTL_SECONDS = 30.0
+TEX_TIMEOUT_SECONDS = 35
+BUILD_TIMEOUT_SECONDS = 20
+# One job at a time writes paper/: the writing stage's build and the compile.
+_PAPER_LOCK = threading.Lock()
 
 
 def _audit_verdict(root: Path) -> bool | None:
@@ -264,8 +345,83 @@ def _audit_verdict(root: Path) -> bool | None:
     return ok if isinstance(ok, bool) else None
 
 
+#: The first bytes of every managed revision the deliberation engine publishes
+#: (``experimental-deliberation/profile.ts`` ``artifact.marker``); a file
+#: without them is not a published revision, whatever its name.
+MANAGED_ARTIFACT_MARKER = b"<!-- proposal-workspace:artifact:v1 -->\n"
+_EXPERIMENTS_REVISION = re.compile(r"^experiments-.+-v\d+\.md$")
+MAX_PHASE5_NAMES = 200
+
+
+def _starts_with_marker(path: Path) -> bool:
+    try:
+        with path.open("rb") as handle:
+            return handle.read(len(MANAGED_ARTIFACT_MARKER)) == MANAGED_ARTIFACT_MARKER
+    except OSError:
+        return False
+
+
+def _dirs(folder: Path) -> list[Path]:
+    try:
+        return sorted(p for p in folder.iterdir() if p.is_dir() and not p.is_symlink()
+                      and not p.name.startswith("."))[:MAX_PHASE5_NAMES]
+    except OSError:
+        return []
+
+
+def _phase5_evidence(root: Path) -> dict[str, Any]:
+    """What Phase 5 has on disk, from evidence rather than file names; bounded
+    and never raises.
+
+    ``revisions`` counts managed ``experiments/experiments-<slug>-vNN.md``
+    files that open with the artifact marker; a product folder
+    ``implementations/<repo>/<Name>/`` is a proof of concept when it holds
+    ``AGREED.md`` and a full experiment when it holds ``Experimental_AGREED.md``,
+    and it counts as done only with a ``Results/`` directory beside the marker.
+    """
+    from . import remote_services
+    out: dict[str, Any] = {"files": 0, "revisions": 0, "toy": False, "registry": False,
+                           "replications": 0, "poc": 0, "poc_results": 0, "full": 0, "full_results": 0,
+                           "timing": 0, "hpo": 0}
+    exp_dir = root / "experiments"
+    try:
+        names = [f for f in exp_dir.iterdir() if f.is_file() and not f.name.startswith(".")] \
+            if exp_dir.is_dir() else []
+    except OSError:
+        names = []
+    out["files"] = len(names)
+    out["revisions"] = sum(1 for f in names[:MAX_PHASE5_NAMES]
+                           if _EXPERIMENTS_REVISION.match(f.name) and _starts_with_marker(f))
+    registry = root / "datasets" / "registry.json"
+    try:
+        if registry.is_file() and registry.stat().st_size <= 2 * 1024 * 1024:
+            out["registry"] = True
+            data = json.loads(registry.read_text(encoding="utf-8"))
+            out["toy"] = isinstance(data, list) and any(
+                isinstance(e, dict) and e.get("role") == "toy" for e in data)
+    except (OSError, ValueError):
+        pass
+    for repo in _dirs(root / "implementations"):
+        for product in _dirs(repo):
+            if (product / "REPLICATION.md").is_file():
+                out["replications"] += 1
+            results = (product / "Results").is_dir()
+            if (product / "Experimental_AGREED.md").is_file():
+                out["full"] += 1
+                out["full_results"] += results
+            elif (product / "AGREED.md").is_file():
+                out["poc"] += 1
+                out["poc_results"] += results
+            if (product / "Results" / "timing.json").is_file():
+                out["timing"] += 1
+            if any((study / "summary.json").is_file() for study in _dirs(product / "Results" / "hpo")):
+                out["hpo"] += 1
+    out.update(remote_services.launch_evidence(root))
+    return out
+
+
 def _run_audit(root: Path) -> dict[str, Any] | None:
-    """Run `papersmith audit --check-drift` on the workspace with this
+    """Run `smith audit --check-drift` on the workspace with this
     interpreter and record its verdict in `.papersmith/audit.json`.
 
     One audit at a time: None means another one is still running. `ran` is
@@ -289,7 +445,7 @@ def _run_audit(root: Path) -> dict[str, Any] | None:
             returncode, output, ran = -1, f"{type(exc).__name__}: {exc}", False
         record = {"ok": ran and returncode == 0, "ran": ran, "returncode": returncode,
                   "checked_at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
-                  "command": f"papersmith audit {root} --check-drift", "output": output[-4000:]}
+                  "command": f"smith audit {root} --check-drift", "output": output[-4000:]}
         folder = root / ".papersmith"
         try:
             folder.mkdir(exist_ok=True)
@@ -312,9 +468,56 @@ def _pdf_page_count(pdf: Path) -> int:
         return 0
 
 
+def _compile_paper(root: Path) -> tuple[dict[str, Any], int]:
+    """pdflatex, bibtex, pdflatex twice in paper/, each bounded by a timeout.
+    Blocking: the caller runs it off the event loop, holding _PAPER_LOCK."""
+    env = os.environ.copy()
+    # PATH first, then the shared fallback directories (MacTeX, Homebrew, TeX
+    # Live on Linux and WSL). The engine's directory leads PATH so the helpers
+    # TeX itself spawns (kpsewhich, mktextfm) come from the same distribution.
+    # The tools are still called by name, so the inherited PATH keeps deciding
+    # among equals; the search only adds the directories where it found them.
+    found = [toolchain.find_tool(name, path=env.get("PATH")) for name in ("pdflatex", "bibtex")]
+    lead = list(dict.fromkeys(os.path.dirname(f) for f in found if f and os.path.isabs(f)))
+    env["PATH"] = os.pathsep.join(filter(None, (*lead, env.get("PATH", ""))))
+    p_dir = str(root / "paper")
+    pdflatex = ["pdflatex", "-interaction=nonstopmode", "main.tex"]
+    first = None
+    for argv in (pdflatex, ["bibtex", "main"], pdflatex, pdflatex):
+        try:
+            res = subprocess.run(argv, cwd=p_dir, capture_output=True, text=True, env=env,
+                                 timeout=TEX_TIMEOUT_SECONDS)
+        except subprocess.TimeoutExpired:
+            return {"ok": False, "outputs": [],
+                    "error": f"{argv[0]} no terminó en {TEX_TIMEOUT_SECONDS} s; compilación detenida."}, 504
+        first = first or res
+    return {
+        "ok": True,
+        "message": (f"paper/main.pdf compilado ({_pdf_page_count(root / 'paper' / 'main.pdf')} páginas)."
+                    if first.returncode == 0 else
+                    f"pdflatex terminó con código {first.returncode}; revisa el registro."),
+        "outputs": ["paper/main.pdf"],
+        "log_tail": first.stdout[-300:] if first.stdout else "",
+    }, 200
+
+
+def _build_manuscript(root: Path) -> tuple[dict[str, Any], int]:
+    """Run scripts/build_manuscript.py when the workspace has one. Blocking:
+    the caller runs it off the event loop, holding _PAPER_LOCK."""
+    b_script = root / "scripts" / "build_manuscript.py"
+    if b_script.is_file():
+        res = subprocess.run([sys.executable, str(b_script)], cwd=str(root), capture_output=True,
+                             text=True, timeout=BUILD_TIMEOUT_SECONDS)
+        msg = (f"Transposición ejecutada: {_block_count(root)} bloques en paper/main.tex "
+               f"(build_manuscript.py terminó con código {res.returncode}).")
+    else:
+        msg = f"Redacción: {_block_count(root)} bloques en paper/main.tex."
+    return {"ok": True, "message": msg, "outputs": ["paper/main.tex"]}, 200
+
+
 def terminal_allowed(host: str) -> bool:
     """The support terminal is a shell: offer it only on a loopback bind."""
-    return host.strip("[]").lower() in _LOOPBACK_HOSTS
+    return is_loopback_bind(host)
 
 
 def create_app(root: Path | str, *, debounce_ms: int = 300,
@@ -323,6 +526,9 @@ def create_app(root: Path | str, *, debounce_ms: int = 300,
                allowed_hosts: frozenset[str] | None = None,
                enable_terminal: bool = False) -> FastAPI:
     root_path = Path(root).expanduser().resolve()
+    # The release this process loaded its code under; an upgrade on disk does
+    # not reach a running server, so the panel compares the two and says so.
+    started_version = _framework_version(root_path)
     bus = EventBus()
     revision = {"value": 0}
     health_cache: dict[str, Any] = {"at": 0.0, "value": None}
@@ -364,6 +570,9 @@ def create_app(root: Path | str, *, debounce_ms: int = 300,
                     record(history.diff_health(cached, value))
                 except Exception:  # noqa: BLE001
                     _log.exception("history: recording a health change failed")
+            # Every new measurement, forced or past the TTL, reaches every
+            # dashboard once, after its history entry and in measurement order.
+            bus.publish("health_update", value)
             return value
 
     def on_flush(paths: list[Path]) -> None:
@@ -389,8 +598,7 @@ def create_app(root: Path | str, *, debounce_ms: int = 300,
         except Exception:  # noqa: BLE001 - history never blocks the live channel
             _log.exception("history: recording a state change failed")
         if any(is_health_path(path, root_path) for path in paths):
-            health = measure_health(force=True)
-            bus.publish("health_update", health)
+            measure_health(force=True)
 
     watcher = WorkspaceWatcher(root_path, on_flush, debounce_ms=debounce_ms)
     smoke_lock = threading.Lock()
@@ -467,19 +675,7 @@ def create_app(root: Path | str, *, debounce_ms: int = 300,
         # Change token the dashboard polls to reload an open preview.
         pdf_mtime = int(pdf_file.stat().st_mtime * 1000) if pdf_exists else 0
         if pdf_exists:
-            try:
-                res = subprocess.run(["pdfinfo", str(pdf_file)], capture_output=True, text=True, check=True)
-                m = re.search(r"Pages:\s+(\d+)", res.stdout)
-                if m:
-                    pdf_pages = int(m.group(1))
-            except Exception:
-                try:
-                    data = pdf_file.read_bytes()
-                    m = re.search(rb"/Count\s+(\d+)", data)
-                    if m:
-                        pdf_pages = int(m.group(1))
-                except Exception:
-                    pass
+            pdf_pages = memo_by_file("pdf_pages", pdf_file, lambda: _count_pdf_pages(pdf_file))
 
         # Figure counts
         fig_dir = root_path / "paper" / "Figures"
@@ -504,9 +700,7 @@ def create_app(root: Path | str, *, debounce_ms: int = 300,
         guidance_loose_pdfs = list((root_path / "guidance").glob("*.pdf")) + (list(guidance_ref_dir.glob("*.pdf")) if guidance_ref_dir.is_dir() else [])
 
         has_deliberated_prop = any(re.search(r"-r\d+\.md$", p) for p in prop_files)
-        exp_dir = root_path / "experiments"
-        exp_files = [f for f in exp_dir.iterdir() if f.is_file() and not f.name.startswith(".")] if exp_dir.is_dir() else []
-        has_poc = any("protocol" in f.name.lower() or "poc" in f.name.lower() or "validation" in f.name.lower() for f in exp_files)
+        p5 = _phase5_evidence(root_path)
 
         has_scaffold = tex_file.is_file()
         has_decl = False
@@ -545,13 +739,22 @@ def create_app(root: Path | str, *, debounce_ms: int = 300,
         else:
             fase4_status, fase4_prog, fase4_det = "PENDING", 0.0, "Sin propuesta en proposals/"
 
-        # Fase 5
-        if has_poc:
-            fase5_status, fase5_prog, fase5_det = "PASS", 1.0, f"{len(exp_files)} protocolo(s) experimental(es) deliberado(s)"
-        elif exp_files:
-            fase5_status, fase5_prog, fase5_det = "ACTIVE", 0.5, f"{len(exp_files)} archivo(s) en experiments/"
+        # Fase 5: a published protocol revision, a proof of concept with
+        # results and a full experiment with results; never a file name.
+        p5_done = [p5["revisions"] > 0, p5["poc_results"] > 0, p5["full_results"] > 0]
+        fase5_det = (f"Protocolo publicado: {'sí' if p5_done[0] else 'no'} · PoC con Results/: {p5['poc_results']}"
+                     f" · experimentos completos con Results/: {p5['full_results']}")
+        if all(p5_done):
+            fase5_status, fase5_prog = "PASS", 1.0
+        elif any(p5_done) or p5["files"] or p5["poc"] or p5["full"]:
+            fase5_status, fase5_prog = "ACTIVE", round(sum(p5_done) / 3, 3)
         else:
-            fase5_status, fase5_prog, fase5_det = "PENDING", 0.0, "Sin protocolos experimentales en experiments/"
+            fase5_status, fase5_prog = "PENDING", 0.0
+
+        def _p5(done: bool, started: bool = False) -> str:
+            return "PASS" if done else ("ACTIVE" if started else "PENDING")
+
+        p5_protocol = _p5(p5["revisions"] > 0, p5["files"] > 0)
 
         # Fase 6
         if has_scaffold:
@@ -604,7 +807,7 @@ def create_app(root: Path | str, *, debounce_ms: int = 300,
                 "desc": "Estructura de workspace, proyecciones de harness (.claude, .opencode, .pi, .agents), entorno micromamba y validación de runtimes.",
                 "tools": ["read", "bash"],
                 "skills": ["harness-setup", "workspace-verifier"],
-                "cli_command": "papersmith init --harness-only",
+                "cli_command": "smith init --harness-only",
                 "outputs": [".papersmith/", "papersmith.yaml", "pyproject.toml"],
                 "status": fase1_status,
                 "progress": 1.0 if fase1_status == "PASS" else 0.0,
@@ -625,7 +828,7 @@ def create_app(root: Path | str, *, debounce_ms: int = 300,
                 "desc": "Exploración SOTA, validación de plausibilidad y compilación del Atlas 3D de candidatos y constelación conceptual.",
                 "tools": ["read", "write", "mcp"],
                 "skills": ["sota-scout", "semantic-scholar", "pubmed-search"],
-                "cli_command": "papersmith run --stage plausibility",
+                "cli_command": "smith run --stage plausibility",
                 "outputs": ["sota-pool/atlas.json", "sota-pool/atlas.html", "sota-pool/candidates.json"],
                 "status": fase2_status,
                 "progress": fase2_prog,
@@ -646,7 +849,7 @@ def create_app(root: Path | str, *, debounce_ms: int = 300,
                 "desc": "Ingestión a Markdown de artículos de referencia, normalización BibTeX de bibliografía y extracción de insumos base.",
                 "tools": ["read", "write", "marker"],
                 "skills": ["paper-ingestion", "pdf-extractor", "bibtex-parser"],
-                "cli_command": "papersmith ingest guidance/reference-papers/",
+                "cli_command": "smith ingest guidance/reference-papers/",
                 "outputs": ["guidance/reference-papers/", "paper/refs.bib", "paper/Figures/"],
                 "status": fase3_status,
                 "progress": fase3_prog,
@@ -667,7 +870,7 @@ def create_app(root: Path | str, *, debounce_ms: int = 300,
                 "desc": "Deliberación científica formal de la propuesta (rNN), definición de novedad, discusión del mapa conceptual y de la matemática con el tutor socrático.",
                 "tools": ["read", "write", "deliberate"],
                 "skills": ["proposal-deliberation", "peer-review-simulator"],
-                "cli_command": "papersmith deliberate proposals/",
+                "cli_command": "smith deliberate proposals/",
                 "outputs": ["proposals/"],
                 "status": fase4_status,
                 "progress": fase4_prog,
@@ -684,25 +887,31 @@ def create_app(root: Path | str, *, debounce_ms: int = 300,
             {
                 "id": "Fase 5",
                 "stage_id": "poc_experiments",
-                "name": "Fase 5: Deliberación & Planeación Experimental (PoC)",
+                "name": f"Fase 5: {phase_actions.PHASE_LABELS['poc_experiments']}",
                 "gate": "G-EXP-POC",
-                "agent": "experimental-deliberation & experimental-validation",
-                "desc": "Diseño y deliberación del protocolo experimental, implementación de la prueba de concepto y de los experimentos, y ejecución local o remota de sus mediciones.",
+                "agent": phase_actions.ACTIONS["poc_experiments"]["agent"],
+                "desc": "Deliberación del protocolo experimental, toy set, réplica de los métodos de comparación, prueba de concepto, estimación de tiempo, búsqueda de hiperparámetros opcional, experimentos completos, revisión del código, ensayo remoto y lanzamiento autorizado por el operador, en local o en un servicio remoto (CLI o MCP).",
                 "tools": ["read", "write", "validate"],
-                "skills": ["experimental-deliberation", "experimental-implementation"],
-                "cli_command": "papersmith deliberate experiments/",
-                "outputs": ["experiments/"],
+                "skills": ["experimental-deliberation", "datasets", "proposal-implementation", "experimental-implementation"],
+                "cli_command": "/experimental-deliberation <texto>",
+                "outputs": ["experiments/", "datasets/registry.json", "implementations/"],
                 "status": fase5_status,
                 "progress": fase5_prog,
                 "detail": fase5_det,
                 "subfases": [
-                    {"id": "5.1", "name": "Stage bound: Anclaje de Claims & Métricas", "status": fase5_status, "detail": "Criterios de éxito y métricas cuantificables"},
-                    {"id": "5.2", "name": "Stage validated: Baselines & SOTA", "status": fase5_status, "detail": "Contraste contra sistemas y modelos de referencia"},
-                    {"id": "5.3", "name": "Stage deliberated: Diseño Metrológico & Protocolos", "status": fase5_status, "detail": "Protocolos de ensayo y validación"},
-                    {"id": "5.4", "name": "Stage composed: Especificación de Experimentos", "status": fase5_status, "detail": "Formalización de experimentos con instrumentación"},
-                    {"id": "5.5", "name": "Stage published: Aprobación de Gate", "status": fase5_status, "detail": "Superación de compuerta G-EXP-POC"},
-                    {"id": "5.6", "name": "Implementación PoC y experimental", "status": fase5_status, "detail": "proposal-implementation y experimental-implementation contra el repositorio objetivo"},
-                    {"id": "5.7", "name": "Ejecución remota y cuentas", "status": fase5_status, "detail": "remote-execution y kaggle-accounts cuando la medición corre fuera de la máquina"}
+                    {"id": "5.1", "name": "Stage bound: Anclaje de Claims & Métricas", "status": p5_protocol, "detail": "Criterios de éxito y métricas cuantificables (pasa con la revisión publicada)"},
+                    {"id": "5.2", "name": "Stage validated: Baselines & SOTA", "status": p5_protocol, "detail": "experimental-validation contrasta protocolo, métricas y baselines con búsquedas fechadas"},
+                    {"id": "5.3", "name": "Stage deliberated: Diseño Metrológico & Protocolos", "status": p5_protocol, "detail": "Protocolos de ensayo y validación"},
+                    {"id": "5.4", "name": "Stage composed: Especificación de Experimentos", "status": p5_protocol, "detail": "Formalización de experimentos con instrumentación"},
+                    {"id": "5.5", "name": "Stage published: Aprobación de Gate", "status": p5_protocol, "detail": f"experimental-publish deja experiments/experiments-<slug>-vNN.md con el marcador de artefacto ({p5['revisions']} revisión(es) publicada(s))"},
+                    {"id": "5.6", "name": "Datos: toy set siempre y dataset oficial", "status": _p5(p5["toy"], p5["registry"]), "detail": "/datasets synth|search|license|qc|prepare|publish con dataset-scout y dataset-curator; pasa con un toy set en datasets/registry.json; publicación privada solo con consentimiento del operador"},
+                    {"id": "5.7", "name": "Réplica de métodos de comparación", "status": _p5(p5["replications"] > 0), "detail": f"/proposal-implementation → paper-replicator: primero el código publicado, adoptado y auditado; si no existe, reimplementación ({p5['replications']} REPLICATION.md)"},
+                    {"id": "5.8", "name": "Prueba de concepto", "status": _p5(p5["poc_results"] > 0, p5["poc"] > 0), "detail": f"/proposal-implementation (implementation-build): carpeta con AGREED.md y Results/ ({p5['poc_results']} de {p5['poc']})"},
+                    {"id": "5.9", "name": "Estimar tiempo y elegir dónde correr", "status": _p5(p5["timing"] > 0), "detail": "Antes del piloto y otra vez antes de la corrida completa: sonda de tiempo corta (una época de un fold por brazo) en Results/timing.json; la pestaña Experimentos estima la PoC y la corrida completa (±20%) y lista las opciones local y remotas"},
+                    {"id": "5.10", "name": "Búsqueda de hiperparámetros (Optuna, opcional)", "status": _p5(p5["hpo"] > 0), "detail": f"Solo si la deliberación la estimó conveniente: /hyperparameter-search plan|report|status, anidada dentro de cada fold externo, mismo presupuesto por brazo, evaluador de importancia declarado; contornos e importancia en Results/hpo/ ({p5['hpo']} producto(s) con estudios)"},
+                    {"id": "5.11", "name": "Experimentos completos", "status": _p5(p5["full_results"] > 0, p5["full"] > 0), "detail": f"/experimental-implementation (experiments-build): carpeta con Experimental_AGREED.md y Results/ ({p5['full_results']} de {p5['full']})"},
+                    {"id": "5.12", "name": "Revisión del código (experiments-reviewer) antes del ensayo", "status": "PENDING", "detail": "Calidad del código, optimización, uso de GPU y pruebas estadísticas declaradas; el informe va al operador y no deja archivo, así que esta subfase no se verifica desde el disco"},
+                    {"id": "5.13", "name": "Ensayo remoto y autorización del lanzamiento (operador)", "status": _p5(p5["launched"] > 0, p5["jobs"] > 0 or p5["smokes"] > 0), "detail": f"Solo para corridas remotas (local corre directo). /kaggle-accounts validate y smith team add --attest (una cuenta por persona y servicio); luego generate-job → submit --smoke → fetch --smoke y smoke record → readiness → gate (operador) → submit → status / poll → fetch. Ensayos aprobados: {p5['rehearsals_passed']}; ledgers con envíos: {p5['launched']}"}
                 ]
             },
             {
@@ -714,7 +923,7 @@ def create_app(root: Path | str, *, debounce_ms: int = 300,
                 "desc": "Andamiaje de paper/main.tex con bloques canónicos y contratos de sección bajo la clase tipográfica del journal.",
                 "tools": ["read", "write"],
                 "skills": ["scaffold-generator", "latex-contract-indexer"],
-                "cli_command": "papersmith implement scaffold",
+                "cli_command": "smith implement scaffold",
                 "outputs": ["paper/main.tex", "paper/refs.bib", "sections/*.md"],
                 "status": fase6_status,
                 "progress": fase6_prog,
@@ -735,7 +944,7 @@ def create_app(root: Path | str, *, debounce_ms: int = 300,
                 "desc": "Fijación de declaraciones operativas: autoría CRediT, financiación, repositorio abierto y consideraciones éticas.",
                 "tools": ["read", "write"],
                 "skills": ["credit-taxonomy", "ethics-compliance"],
-                "cli_command": "papersmith implement declarations",
+                "cli_command": "smith implement declarations",
                 "outputs": ["paper/main.tex (declarations)"],
                 "status": fase7_status,
                 "progress": fase7_prog,
@@ -778,7 +987,7 @@ def create_app(root: Path | str, *, debounce_ms: int = 300,
                 "desc": "Elaboración de diagramas de arquitectura, figuras vectoriales, esquemas y grounding con el texto.",
                 "tools": ["read", "write", "latexmk"],
                 "skills": ["vector-graphics", "sips-optimizer", "figure-grounding"],
-                "cli_command": "papersmith audit --figures",
+                "cli_command": "smith audit --figures",
                 "outputs": ["paper/Figures/"],
                 "status": fase9_status,
                 "progress": fase9_prog,
@@ -821,7 +1030,7 @@ def create_app(root: Path | str, *, debounce_ms: int = 300,
                 "desc": "Verificación estricta de las 4 compuertas del framework: readiness, acoplamiento de hechos, blindaje de estilo y figuras.",
                 "tools": ["read", "bash"],
                 "skills": ["cross-auditor", "gate-checker", "hash-verifier"],
-                "cli_command": "papersmith audit",
+                "cli_command": "smith audit",
                 "outputs": [".papersmith/audit.json"],
                 "status": fase11_status,
                 "progress": fase11_prog,
@@ -834,6 +1043,10 @@ def create_app(root: Path | str, *, debounce_ms: int = 300,
                 ]
             }
         ]
+        # The phase drawer renders a sub-phase's ``desc``; every sub-phase states it as ``detail``.
+        for phase in fases:
+            for sub in phase.get("subfases") or []:
+                sub.setdefault("desc", sub.get("detail", ""))
         phase_actions.attach(fases, root_path)
 
         artifacts = []
@@ -1041,7 +1254,7 @@ def create_app(root: Path | str, *, debounce_ms: int = 300,
                 "name": "Proof-of-Concept & Experimental Design Gate",
                 "status": "PASS" if fase5_status == "PASS" else ("ACTIVE" if fase5_status == "ACTIVE" else "PENDING"),
                 "criteria": "Validación empírica y diseño experimental: reproducibilidad de pruebas, especificación de baseline y criterios de éxito cuantitativos.",
-                "reviewer": "experimental-auditor",
+                "reviewer": "experiments-reviewer",
                 "phase": "Fase 5"
             },
             {
@@ -1083,7 +1296,7 @@ def create_app(root: Path | str, *, debounce_ms: int = 300,
             "Fase 2": {"fase": "Fase 2: Plausibilidad & SOTA Atlas 3D", "gate": "G-SOTA", "tool_uses": 16, "duracion": "3m 45s", "tokens": "32,800"},
             "Fase 3": {"fase": "Fase 3: Ingestión de Referencias & Tesis Principal", "gate": "G-INGEST", "tool_uses": 24, "duracion": "5m 20s", "tokens": "48,500"},
             "Fase 4": {"fase": "Fase 4: Deliberación de Propuesta & Modelo Conceptual", "gate": "G-PROP", "tool_uses": 14, "duracion": "2m 30s", "tokens": "26,100"},
-            "Fase 5": {"fase": "Fase 5: Deliberación & Planeación de Prueba de Concepto (PoC)", "gate": "G-EXP-POC", "tool_uses": 15, "duracion": "2m 55s", "tokens": "29,400"},
+            "Fase 5": {"fase": "Fase 5: Prueba de concepto y experimentos", "gate": "G-EXP-POC", "tool_uses": 15, "duracion": "2m 55s", "tokens": "29,400"},
             "Fase 6": {"fase": "Fase 6: Andamiaje de Manuscrito & Contratos", "gate": "G-SCAFFOLD", "tool_uses": 10, "duracion": "1m 50s", "tokens": "18,900"},
             "Fase 7": {"fase": "Fase 7: Declaraciones Operativas & Coautoría", "gate": "G-DECLARATIONS", "tool_uses": 7, "duracion": "1m 10s", "tokens": "12,400"},
             "Fase 8": {"fase": "Fase 8: Redacción Técnica & Transposición", "gate": "G-WRITING", "tool_uses": 19, "duracion": "4m 15s", "tokens": "38,200"},
@@ -1173,7 +1386,28 @@ def create_app(root: Path | str, *, debounce_ms: int = 300,
             media_type = "application/pdf"
         elif ext in (".png", ".jpg", ".jpeg"):
             media_type = f"image/{ext.lstrip('.')}"
+        elif ext == ".svg":
+            # An SVG opened directly must not run its scripts on this origin.
+            return Response(target.read_bytes(), media_type="image/svg+xml",
+                            headers={"Content-Security-Policy": "default-src 'none'; style-src 'unsafe-inline'; sandbox",
+                                     "X-Content-Type-Options": "nosniff"})
         return Response(target.read_bytes(), media_type=media_type)
+
+    @app.get("/api/section-translation")
+    def api_section_translation(file: str = "", lang: str = "es") -> Response:
+        # A translated copy of a section contract, for reading only: the
+        # contract itself stays in English because the engine checks every
+        # `quote` against its text. A copy is served only while the
+        # workspace's contract is byte-identical to the one it was made from,
+        # so an edited or newer contract shows as itself, never as a stale
+        # translation.
+        if not SECTION_FILE_RE.fullmatch(file) or lang not in SECTION_TRANSLATION_LANGS:
+            return JSONResponse({"detail": "invalid section or language"}, status_code=400)
+        source = root_path / "sections" / file
+        translated = section_translation(source, file, lang)
+        if translated is None:
+            return JSONResponse({"detail": "no current translation"}, status_code=404)
+        return Response(translated, media_type="text/plain; charset=utf-8")
 
     @app.get("/api/flow")
     def api_flow() -> Response:
@@ -1185,6 +1419,11 @@ def create_app(root: Path | str, *, debounce_ms: int = 300,
         if flow_path.is_file():
             return HTMLResponse(flow_path.read_text(encoding="utf-8"))
         return JSONResponse({"detail": "flow diagram not found"}, status_code=404)
+
+    @app.get("/api/agents")
+    def api_agents() -> JSONResponse:
+        # The agents table under the Flujo Archify diagram.
+        return JSONResponse(agents_view.get_agents_view(root_path))
 
     @app.get("/api/state")
     def api_state() -> JSONResponse:
@@ -1202,6 +1441,60 @@ def create_app(root: Path | str, *, debounce_ms: int = 300,
     @app.get("/api/health/wiring")
     def api_health_wiring() -> JSONResponse:
         return JSONResponse(measure_health())
+
+    doctor_cache: dict[str, Any] = {"at": 0.0, "value": None}
+    doctor_lock = threading.Lock()
+    doctor_refresh = threading.Lock()  # held while one background rebuild runs
+
+    def build_doctor(fresh: bool) -> dict[str, Any]:
+        # The rows `smith doctor --json` prints, built by the same function
+        # from this process's wiring health and phases. Caller holds doctor_lock.
+        # Lock order: doctor_lock -> health_lock (measure_health).
+        wiring = measure_health(force=fresh)
+        try:
+            phases = json.loads(bytes(api_status_adapter().body)).get("fases") or []
+            phases_error = None
+        except Exception as exc:  # noqa: BLE001 - one area degrades, not the report
+            phases, phases_error = None, f"/api/status failed: {type(exc).__name__}: {exc}"
+        value = doctor_view.get_doctor_view(root_path, wiring=wiring, phases=phases,
+                                            phases_error=phases_error)
+        doctor_cache["value"], doctor_cache["at"] = value, time.monotonic()
+        return value
+
+    def refresh_doctor() -> None:
+        try:
+            with doctor_lock:
+                build_doctor(False)
+        except Exception:  # noqa: BLE001 - the expired report stays served
+            _log.exception("doctor: background refresh failed")
+        finally:
+            doctor_refresh.release()
+
+    def warm_doctor() -> None:
+        with doctor_lock:
+            if doctor_cache["value"] is None:
+                build_doctor(False)
+
+    app.state.warm_doctor = warm_doctor
+
+    @app.get("/api/doctor")
+    def api_doctor(fresh: bool = False) -> JSONResponse:
+        # The Smith Doctor tab. An expired report is served as is while one
+        # background rebuild replaces it; `fresh` always rebuilds in line.
+        cached = doctor_cache["value"]
+        if not fresh and cached is not None:
+            if (time.monotonic() - doctor_cache["at"] >= DOCTOR_TTL_SECONDS
+                    and doctor_refresh.acquire(blocking=False)):
+                try:
+                    threading.Thread(target=refresh_doctor, name="doctor-refresh",
+                                     daemon=True).start()
+                except RuntimeError:  # no thread to release it; the next visit retries
+                    doctor_refresh.release()
+            return JSONResponse(cached)
+        with doctor_lock:
+            if not fresh and doctor_cache["value"] is not None:
+                return JSONResponse(doctor_cache["value"])
+            return JSONResponse(build_doctor(fresh))
 
     @app.post("/api/health/run-wiring-smoke")
     def api_run_wiring_smoke(request: Request) -> JSONResponse:
@@ -1232,6 +1525,39 @@ def create_app(root: Path | str, *, debounce_ms: int = 300,
     def api_model_math() -> JSONResponse:
         # The math panel: the paper's own LaTeX and its novelty card (read-only).
         return JSONResponse(math_view.build(root_path), headers=dict(_PAPER_HEADERS))
+
+    @app.get("/api/experiments")
+    def api_experiments() -> JSONResponse:
+        # The experiments tab: protocol, products, convergence, figures,
+        # tables, significance and remote runs (read-only, bounded, contained).
+        view = experiments_view.get_experiments_view(root_path)
+        workspace_version = _framework_version(root_path)
+        view["dashboard"] = {"startedVersion": started_version,
+                             "workspaceVersion": workspace_version,
+                             "stale": workspace_version != started_version}
+        return JSONResponse(view, headers=dict(_PAPER_HEADERS))
+
+    @app.post("/api/experiments/diagrams/validate")
+    async def api_validate_diagram(request: Request) -> JSONResponse:
+        # The operator's "Validar diagrama" button, one of the two writers of
+        # the record `remote-execution submit` reads before a launch (the other
+        # is `diagram_cli.py validate`, run by an agent on the operator's
+        # explicit approval in the conversation). Unlike the
+        # other actions, a request without an Origin header (curl, an agent's
+        # shell) is refused too: the browser always sends one on a POST.
+        if not request.headers.get("origin") or not origin_is_same(request):
+            return JSONResponse({"ok": False, "error": "only the dashboard can validate a diagram"},
+                                status_code=403)
+        try:
+            payload = await request.json()
+        except ValueError:
+            payload = None
+        if not isinstance(payload, dict):
+            return JSONResponse({"ok": False, "error": "expected {repo, name, kind}"}, status_code=422)
+        status, body = experiments_view.validate_diagram(
+            root_path, str(payload.get("repo", "")), str(payload.get("name", "")),
+            str(payload.get("kind", "")))
+        return JSONResponse(body, status_code=status)
 
     @app.get("/api/model")
     def api_model() -> JSONResponse:
@@ -1285,6 +1611,9 @@ def create_app(root: Path | str, *, debounce_ms: int = 300,
 
     @app.post("/api/pdf/execute")
     async def api_pdf_execute(request: Request) -> JSONResponse:
+        if not origin_is_same(request):
+            return JSONResponse({"ok": False, "error": "cross-origin request rejected"},
+                                status_code=403)
         try:
             payload = await request.json()
         except Exception as e:
@@ -1337,6 +1666,9 @@ def create_app(root: Path | str, *, debounce_ms: int = 300,
     async def api_phase_run(request: Request) -> JSONResponse:
         """Run or check one phase, then answer with that phase's verdict as the
         status view computes it, so the dashboard can confirm the stage."""
+        if not origin_is_same(request):
+            return JSONResponse({"ok": False, "error": "cross-origin request rejected"},
+                                status_code=403)
         response = await _phase_check(request)
         try:
             body = json.loads(bytes(response.body))
@@ -1369,45 +1701,27 @@ def create_app(root: Path | str, *, debounce_ms: int = 300,
                 "message": "No hay paper/main.tex que compilar: ábrelo primero con /paper-writing (Fase 6).",
                 "outputs": []
             })
-        if stage == "paper":
+        if stage in ("paper", "writing"):
+            if not _PAPER_LOCK.acquire(blocking=False):
+                return JSONResponse({"ok": False, "phase_id": phase_id, "stage": stage,
+                                     "error": "Otra compilación de paper/ sigue en curso; espera a que termine."},
+                                    status_code=409)
+            job = _compile_paper if stage == "paper" else _build_manuscript
+
+            def locked_job() -> tuple[dict[str, Any], int]:
+                # Released by the worker thread, so a cancelled request never
+                # frees the lock while its job still writes paper/.
+                try:
+                    return job(root_path)
+                finally:
+                    _PAPER_LOCK.release()
+
             try:
-                env = os.environ.copy()
-                env["PATH"] = f"/Library/TeX/texbin:/opt/homebrew/bin:{env.get('PATH', '')}"
-                p_dir = str(root_path / "paper")
-                res = subprocess.run(["pdflatex", "-interaction=nonstopmode", "main.tex"], cwd=p_dir, capture_output=True, text=True, env=env, timeout=35)
-                subprocess.run(["bibtex", "main"], cwd=p_dir, capture_output=True, env=env)
-                subprocess.run(["pdflatex", "-interaction=nonstopmode", "main.tex"], cwd=p_dir, capture_output=True, env=env)
-                subprocess.run(["pdflatex", "-interaction=nonstopmode", "main.tex"], cwd=p_dir, capture_output=True, env=env)
-                return JSONResponse({
-                    "ok": True,
-                    "phase_id": phase_id, "stage": stage,
-                    "message": (f"paper/main.pdf compilado ({_pdf_page_count(root_path / 'paper' / 'main.pdf')} páginas)."
-                                if res.returncode == 0 else
-                                f"pdflatex terminó con código {res.returncode}; revisa el registro."),
-                    "outputs": ["paper/main.pdf"],
-                    "log_tail": res.stdout[-300:] if res.stdout else ""
-                })
+                body, status_code = await asyncio.to_thread(locked_job)
             except Exception as exc:
                 return JSONResponse({"ok": False, "error": str(exc)}, status_code=500)
-                
-        elif stage == "writing":
-            try:
-                b_script = root_path / "scripts" / "build_manuscript.py"
-                if b_script.is_file():
-                    res = subprocess.run([sys.executable, str(b_script)], cwd=str(root_path), capture_output=True, text=True, timeout=20)
-                    msg = (f"Transposición ejecutada: {_block_count(root_path)} bloques en paper/main.tex "
-                           f"(build_manuscript.py terminó con código {res.returncode}).")
-                else:
-                    msg = f"Redacción: {_block_count(root_path)} bloques en paper/main.tex."
-                return JSONResponse({
-                    "ok": True,
-                    "phase_id": phase_id, "stage": stage,
-                    "message": msg,
-                    "outputs": ["paper/main.tex"]
-                })
-            except Exception as exc:
-                return JSONResponse({"ok": False, "error": str(exc)}, status_code=500)
-                
+            return JSONResponse({"phase_id": phase_id, "stage": stage, **body}, status_code=status_code)
+
         elif stage == "figures":
             fig_dir = root_path / "paper" / "Figures"
             figs = [f.name for f in fig_dir.glob("*.pdf")] if fig_dir.is_dir() else []
@@ -1467,7 +1781,7 @@ def create_app(root: Path | str, *, debounce_ms: int = 300,
                 if not record["ran"]:
                     message = "La auditoría no pudo ejecutarse (papersmith no disponible o tiempo agotado)."
                 elif record["ok"]:
-                    message = "Auditoría superada: papersmith audit --check-drift sin hallazgos."
+                    message = "Auditoría superada: smith audit --check-drift sin hallazgos."
                 else:
                     message = f"La auditoría encontró problemas (código {record['returncode']})."
                 if not record["written"]:
@@ -1526,8 +1840,15 @@ def create_app(root: Path | str, *, debounce_ms: int = 300,
             except Exception:
                 pass
         
-        candidates_json = json.dumps(candidates)
-        families_options = "".join(f'<option value="{f}">{f}</option>' for f in families)
+        # Candidates come from scouted literature (titles, abstracts, URLs), so
+        # nothing from them reaches the page unescaped: the JSON cannot close
+        # its <script>, the options are attribute-escaped, and the client
+        # escapes every field it renders (esc/safeUrl below).
+        candidates_json = (json.dumps(candidates).replace("<", "\\u003c")
+                           .replace(">", "\\u003e").replace("&", "\\u0026"))
+        families_options = "".join(
+            f'<option value="{html.escape(str(f), quote=True)}">{html.escape(str(f))}</option>'
+            for f in families)
         
         html_content = f"""<!DOCTYPE html>
 <html lang="es" data-theme="dark">
@@ -1798,6 +2119,13 @@ def create_app(root: Path | str, *, debounce_ms: int = 300,
 
   <script>
     const CANDIDATES = {candidates_json};
+    function esc(v) {{
+      return String(v ?? '').replace(/[&<>"']/g, ch => ({{'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'}})[ch]);
+    }}
+    function safeUrl(u) {{
+      try {{ const url = new URL(String(u), location.href); return (url.protocol === 'http:' || url.protocol === 'https:') ? url.href : '#'; }}
+      catch (e) {{ return '#'; }}
+    }}
     function getFamilyBadgeClass(family) {{
       if (!family) return 'badge-family--c4';
       let h = 0;
@@ -1833,17 +2161,17 @@ def create_app(root: Path | str, *, debounce_ms: int = 300,
         const authors = (c.authors || []).slice(0, 3).join(', ') + ((c.authors || []).length > 3 ? ' et al.' : '');
         tr.innerHTML = `
           <td style="text-align: center; font-weight: 600; color: var(--text-dim);">${{idx + 1}}</td>
-          <td style="text-align: center;"><span class="badge badge--ok" style="font-family: var(--font-mono);">${{c.year || '—'}}</span></td>
+          <td style="text-align: center;"><span class="badge badge--ok" style="font-family: var(--font-mono);">${{esc(c.year || '—')}}</span></td>
           <td>
-            <div style="font-weight: 700; color: var(--text); line-height: 1.35; margin-bottom: 0.25rem;">${{c.title}}</div>
+            <div style="font-weight: 700; color: var(--text); line-height: 1.35; margin-bottom: 0.25rem;">${{esc(c.title)}}</div>
             <div style="font-size: 0.76rem; color: var(--text-muted); display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap;">
-              <span>👥 ${{authors}}</span>
-              ${{c.identifier ? `<a href="${{c.source_url || ('https://doi.org/' + c.identifier)}}" target="_blank" class="badge badge--info">🔗 ${{c.identifier}}</a>` : ''}}
+              <span>👥 ${{esc(authors)}}</span>
+              ${{c.identifier ? `<a href="${{esc(safeUrl(c.source_url || ('https://doi.org/' + c.identifier)))}}" target="_blank" rel="noopener noreferrer" class="badge badge--info">🔗 ${{esc(c.identifier)}}</a>` : ''}}
             </div>
           </td>
-          <td><span style="font-style: italic; color: var(--text-dim);">${{c.venue || 'Revista Q1'}}</span></td>
-          <td><span class="badge ${{getFamilyBadgeClass(c.family)}}">${{c.family || 'general'}}</span></td>
-          <td><div style="font-size: 0.78rem; color: var(--text); background: rgba(56, 189, 248, 0.05); padding: 0.4rem 0.6rem; border-radius: 4px; border-left: 2px solid var(--accent);">${{c.plausibility_note || 'Plausibilidad metodológica validada'}}</div></td>
+          <td><span style="font-style: italic; color: var(--text-dim);">${{esc(c.venue || 'Revista Q1')}}</span></td>
+          <td><span class="badge ${{getFamilyBadgeClass(c.family)}}">${{esc(c.family || 'general')}}</span></td>
+          <td><div style="font-size: 0.78rem; color: var(--text); background: rgba(56, 189, 248, 0.05); padding: 0.4rem 0.6rem; border-radius: 4px; border-left: 2px solid var(--accent);">${{esc(c.plausibility_note || 'Plausibilidad metodológica validada')}}</div></td>
           <td style="text-align: center;"><button class="btn" style="padding: 0.25rem 0.5rem; font-size: 0.72rem;" onclick="toggleAbs(${{idx}})" id="btn-${{idx}}">📄 Resumen ▾</button></td>
         `;
         tbody.appendChild(tr);
@@ -1854,8 +2182,8 @@ def create_app(root: Path | str, *, debounce_ms: int = 300,
         trAbs.innerHTML = `
           <td colspan="7" style="background: var(--surface-2); padding: 1rem 1.25rem;">
             <div style="font-weight: 700; color: var(--accent); font-size: 0.8rem; margin-bottom: 0.35rem; text-transform: uppercase;">Resumen Científico Completo</div>
-            <p style="font-size: 0.81rem; line-height: 1.6; color: var(--text); text-align: justify; margin-bottom: 0.5rem;">${{c.abstract || 'Sin resumen registrado.'}}</p>
-            <div style="font-size: 0.74rem; color: var(--text-dim);"><strong>Autores completos:</strong> ${{ (c.authors || []).join(', ') }}</div>
+            <p style="font-size: 0.81rem; line-height: 1.6; color: var(--text); text-align: justify; margin-bottom: 0.5rem;">${{esc(c.abstract || 'Sin resumen registrado.')}}</p>
+            <div style="font-size: 0.74rem; color: var(--text-dim);"><strong>Autores completos:</strong> ${{ esc((c.authors || []).join(', ')) }}</div>
           </td>
         `;
         tbody.appendChild(trAbs);
@@ -2150,6 +2478,17 @@ def create_app(root: Path | str, *, debounce_ms: int = 300,
             return JSONResponse({"detail": str(exc)}, status_code=422,
                                 headers=dict(_PAPER_HEADERS))
 
+    @app.get("/api/ai-history")
+    def api_ai_history() -> JSONResponse:
+        # The Historia con IA pane: each phase's gate, colour and timeline,
+        # read-only from decisions, revisions and this workspace's transcripts.
+        try:
+            phases = json.loads(bytes(api_status_adapter().body)).get("fases") or []
+        except Exception:  # noqa: BLE001 - the pane still answers without phases
+            phases = []
+        return JSONResponse(ai_history.build_ai_history(root_path, phases),
+                            headers=dict(_PAPER_HEADERS))
+
     @app.get("/api/events")
     async def api_events(request: Request) -> StreamingResponse:
         return StreamingResponse(
@@ -2166,7 +2505,15 @@ def create_app(root: Path | str, *, debounce_ms: int = 300,
     if static_dir is not None:
         from fastapi.staticfiles import StaticFiles
 
-        app.mount("/", StaticFiles(directory=str(static_dir), html=True), name="dashboard")
+        class _RevalidatedStaticFiles(StaticFiles):
+            # `no-cache` makes the browser revalidate each load (a 304 when
+            # unchanged), so a reload after an upgrade never runs an old panel.
+            async def get_response(self, path, scope):
+                response = await super().get_response(path, scope)
+                response.headers["Cache-Control"] = "no-cache"
+                return response
+
+        app.mount("/", _RevalidatedStaticFiles(directory=str(static_dir), html=True), name="dashboard")
     else:
         @app.get("/", response_class=HTMLResponse)
         def placeholder() -> str:
@@ -2180,28 +2527,48 @@ async def _terminal_stream(request: Request, terminals: "terminal.TerminalManage
     """PTY output as SSE ``output`` frames (base64), then one ``exit`` frame."""
     import base64
 
+    # The PTY reader thread sets `wake` on every chunk and when the session
+    # ends, so a quiet session costs one wake-up per TERMINAL_WAIT_SECONDS
+    # (to notice a client that left) instead of a tight polling loop.
+    loop = asyncio.get_running_loop()
+    wake = asyncio.Event()
+    try:
+        session = terminals.watch(sid, loop, wake)
+    except KeyError:
+        yield format_sse("exit", {"reason": "closed"})
+        return
     offset = 0
     idle = 0.0
-    while True:
-        if await request.is_disconnected():
-            break
-        try:
-            chunk, offset, alive = terminals.read_since(sid, offset)
-        except KeyError:
-            yield format_sse("exit", {"reason": "closed"})
-            break
-        if chunk:
-            idle = 0.0
-            yield format_sse("output", {"data": base64.b64encode(chunk).decode("ascii")})
-            continue
-        if not alive:
-            yield format_sse("exit", {"reason": "ended"})
-            break
-        idle += 0.012
-        if idle >= 15.0:
-            idle = 0.0
-            yield ": ping\n\n"
-        await asyncio.sleep(0.012)
+    try:
+        while True:
+            if await request.is_disconnected():
+                break
+            # Cleared before reading: a chunk appended after this point sets
+            # it again, so no output is ever missed between read and wait.
+            wake.clear()
+            try:
+                chunk, offset, alive = terminals.read_since(sid, offset)
+            except KeyError:
+                yield format_sse("exit", {"reason": "closed"})
+                break
+            if chunk:
+                idle = 0.0
+                yield format_sse("output", {"data": base64.b64encode(chunk).decode("ascii")})
+                continue
+            if not alive:
+                yield format_sse("exit", {"reason": "ended"})
+                break
+            started = loop.time()
+            try:
+                await asyncio.wait_for(wake.wait(), TERMINAL_WAIT_SECONDS)
+            except asyncio.TimeoutError:
+                pass
+            idle += loop.time() - started
+            if idle >= TERMINAL_PING_SECONDS:
+                idle = 0.0
+                yield ": ping\n\n"
+    finally:
+        terminals.unwatch(session, loop, wake)
 
 
 async def _event_stream(request: Request, bus: EventBus, root: Path) -> AsyncIterator[str]:
@@ -2311,8 +2678,12 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--export-static", metavar="<dir>", default=None,
                         help="copy the dashboard build to <dir> and exit")
     parser.add_argument("--allowed-host", action="append", default=[], metavar="HOST:PORT",
-                        help="extra Host header to accept on a loopback bind (repeatable); "
+                        help="extra Host header to accept (repeatable); "
                              "for `npm run dev` use --allowed-host localhost:5173")
+    parser.add_argument("--allow-unauthenticated-network", action="store_true",
+                        help="serve on a non-loopback --host; the dashboard has no "
+                             "authentication, so only on a network you trust (the Host "
+                             "check still accepts only the bind address and --allowed-host)")
     parser.add_argument("--no-terminal", action="store_true",
                         help="do not offer the dashboard's support terminal (it is only "
                              "ever offered on a loopback bind)")
@@ -2320,18 +2691,86 @@ def build_parser() -> argparse.ArgumentParser:
     return parser
 
 
+def _is_wsl() -> bool:
+    """Identify WSL by its kernel release, not by inherited environment flags."""
+    return sys.platform == "linux" and "microsoft" in platform.release().lower()
+
+
+#: Launchers that hand a URL to the Windows browser from WSL, in order.
+WSL_BROWSER_LAUNCHERS = ("wslview", "explorer.exe")
+
+
+def _has_graphical_display() -> bool:
+    return bool(os.environ.get("DISPLAY") or os.environ.get("WAYLAND_DISPLAY"))
+
+
+def _print_url(url: str) -> None:
+    print(f"open the dashboard in a browser: {url}", flush=True)
+
+
 def open_browser(url: str) -> None:
+    """Open ``url`` in a browser that fits the platform; never raises.
+
+    Under WSL the Windows browser is reached through ``wslview`` (wslu), then
+    ``explorer.exe``. On Linux without a graphical display Python's
+    ``webbrowser`` would start a text browser (w3m, lynx) on the server's own
+    terminal, so the URL is printed instead. macOS and desktop Linux use
+    ``webbrowser``.
+    """
+    if _is_wsl():
+        for launcher in WSL_BROWSER_LAUNCHERS:
+            executable = shutil.which(launcher)
+            if not executable:
+                continue
+            # argv keeps query strings intact (and avoids cmd.exe/shell
+            # interpolation). Do not expose the terminal login URL through
+            # child process output.
+            try:
+                subprocess.Popen([executable, url], stdin=subprocess.DEVNULL,
+                                 stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
+                                 close_fds=True)
+                return
+            except OSError:
+                continue
+    if sys.platform.startswith("linux") and not _has_graphical_display():
+        _print_url(url)
+        return
     import webbrowser
 
-    with contextlib.suppress(Exception):
-        webbrowser.open(url)
+    try:
+        if webbrowser.open(url):
+            return
+    except Exception:  # Browser setup must not prevent the server from starting.
+        pass
+    _print_url(url)
+
+
+def warm_caches(root: Path, *extra: Callable[[], Any]) -> None:
+    """Fill the slow caches before the first visit: the experiments tab's
+    interpreter and CLI probes, the chat sessions Historia con IA reads and
+    ``extra`` (``main`` passes the Smith Doctor report). Runs off the request
+    path; a failure only means the first visit pays."""
+    for warm in (lambda: experiments_view.get_experiments_view(root),
+                 lambda: ai_transcripts.read_all(root), *extra):
+        try:
+            warm()
+        except Exception:  # noqa: BLE001 - warming is best effort
+            _log.debug("warming a dashboard cache failed", exc_info=True)
 
 
 def main(argv: list[str] | None = None) -> int:
-    args = build_parser().parse_args(argv)
+    parser = build_parser()
+    args = parser.parse_args(argv)
     root = Path(args.root).expanduser().resolve()
     if args.export_static:
         return export_static(root, Path(args.export_static))
+    if not is_loopback_bind(args.host) and not args.allow_unauthenticated_network:
+        parser.error(
+            f"--host {args.host} is not a loopback address, and the dashboard has no "
+            "authentication: anyone who reaches the port could read and edit this "
+            "workspace and start its compile and smoke runs. Serve on 127.0.0.1 and "
+            f"forward the port (ssh -L {args.port}:127.0.0.1:{args.port} <server>), "
+            "or pass --allow-unauthenticated-network on a network you trust.")
 
     import uvicorn
 
@@ -2346,6 +2785,7 @@ def main(argv: list[str] | None = None) -> int:
         # the cookie. Printed so --no-browser users can open it themselves.
         url = f"{url}api/terminal/login?token={app.state.terminal.token}"
         print(f"support terminal enabled; dashboard login URL: {url}", flush=True)
+    threading.Thread(target=warm_caches, args=(root, app.state.warm_doctor), name="warm-caches", daemon=True).start()
     if not args.no_browser:
         threading.Timer(1.0, open_browser, args=(url,)).start()
     uvicorn.run(app, host=args.host, port=args.port, log_level=args.log_level)
