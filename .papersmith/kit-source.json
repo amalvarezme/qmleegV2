@@ -1,8 +1,8 @@
 {
-  "commit": "8bc27d0c34c5a66c6c0530cd14efb18e297abb61",
+  "commit": "c4fbfe6ea267b7407789f13d3f28f6341bf6b9f1",
   "dirty": false,
-  "recordedAt": "2026-10-29T19:23:26Z",
+  "recordedAt": "2026-10-30T03:56:36Z",
   "schema": 1,
-  "source": "bundled",
-  "version": "0.40.0"
+  "source": "checkout",
+  "version": "0.42.0"
 }

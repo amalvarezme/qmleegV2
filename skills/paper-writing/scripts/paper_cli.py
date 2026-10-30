@@ -400,6 +400,8 @@ REFUSAL_CLASSIFICATION: dict[str, str] = {
     "MODE_ABSENT": WORK_STATE,
     "EVIDENCE_SET_REQUIRED": WORK_STATE,
     "AUDIT_EXHAUSTED": WORK_STATE,
+    "DRAFT_UNREADABLE": INVOCATION_DEFECT,
+    "AUDIT_UNREADABLE": INVOCATION_DEFECT,
     # --- the eight-token tripwire (paper_leak.py; WU2) ---------------------
     "STYLE_OVERLAP": WORK_STATE,
     # --- a-diagram-that-compiles-or-says-why: `render`/`place`, the sole
@@ -1517,11 +1519,21 @@ def cmd_full_text(args: argparse.Namespace) -> dict:
 def cmd_bib(args: argparse.Namespace) -> dict:
     paper_dir = paper_scaffold.resolve_paper_dir(args.paper)
     guidance_dir = paper_guidance.resolve_guidance_dir(args.guidance)
-    records = paper_evidence.read_all_records(paper_dir)
-    result = paper_bib.build_refs_bib(paper_dir, records, guidance_dir=guidance_dir)
+    if args.bib_command == "refresh":
+        return paper_bib.refresh_metadata(
+            paper_dir, args.cite_key, args.metadata_digest, guidance_dir=guidance_dir,
+            resolver=args.resolver,
+        )
+    # The evidence store is append-only, so a citation dropped from the text
+    # keeps its records. The bibliography follows the text: only cited keys
+    # are written, each still required to carry sourced, ingested evidence.
     tex_path = paper_block.resolve_main_tex(paper_dir)
+    tex_bytes = tex_path.read_bytes()
+    cited = paper_bib.cited_keys(tex_bytes)
+    records = [r for r in paper_evidence.read_all_records(paper_dir) if r.get("cite_key") in cited]
+    result = paper_bib.build_refs_bib(paper_dir, records, guidance_dir=guidance_dir)
     reciprocal = paper_bib.check_reciprocal(
-        tex_path.read_bytes(), (paper_dir / "refs.bib").read_bytes(),
+        tex_bytes, (paper_dir / "refs.bib").read_bytes(),
     )
     return {**result, "reciprocal": reciprocal}
 
@@ -2413,6 +2425,59 @@ def _guard_section_citations_ready(guidance_dir: Path, section_id: str, regime: 
         )
 
 
+MAX_ENVELOPE_BYTES = 10 * 1024 * 1024  # 10 MB
+
+
+def _strip_markdown_fences(text: str) -> str:
+    """Normalize model output that wrapped JSON in markdown code fences."""
+    stripped = text.strip()
+    if stripped.startswith("```"):
+        lines = stripped.splitlines()
+        if len(lines) >= 2 and lines[-1].strip() == "```":
+            return "\n".join(lines[1:-1]).strip()
+    return stripped
+
+
+def _load_draft_envelope(draft_path: Path) -> dict:
+    """Validate draft envelope before indexing fields (Issue #71)."""
+    try:
+        if draft_path.stat().st_size > MAX_ENVELOPE_BYTES:
+            raise Refused("DRAFT_UNREADABLE", f"{draft_path}: exceeds maximum envelope size")
+        raw_text = draft_path.read_text(encoding="utf-8")
+    except OSError as exc:
+        raise Refused("DRAFT_UNREADABLE", f"{draft_path}: {exc}")
+    try:
+        data = json.loads(_strip_markdown_fences(raw_text))
+    except json.JSONDecodeError as exc:
+        raise Refused("DRAFT_UNREADABLE", f"{draft_path}: invalid JSON: {exc.msg}")
+    if not isinstance(data, dict):
+        raise Refused("DRAFT_UNREADABLE", f"{draft_path}: must be a JSON object")
+    if "latex" not in data or not isinstance(data["latex"], str):
+        raise Refused("DRAFT_UNREADABLE", f"{draft_path}: missing or non-string 'latex'")
+    if "bindings" not in data or not isinstance(data["bindings"], list):
+        raise Refused("DRAFT_UNREADABLE", f"{draft_path}: missing or non-list 'bindings'")
+    return data
+
+
+def _load_audit_envelope(audit_path: Path) -> dict:
+    """Validate audit account envelope before indexing fields (Issue #71)."""
+    try:
+        if audit_path.stat().st_size > MAX_ENVELOPE_BYTES:
+            raise Refused("AUDIT_UNREADABLE", f"{audit_path}: exceeds maximum envelope size")
+        raw_text = audit_path.read_text(encoding="utf-8")
+    except OSError as exc:
+        raise Refused("AUDIT_UNREADABLE", f"{audit_path}: {exc}")
+    try:
+        data = json.loads(_strip_markdown_fences(raw_text))
+    except json.JSONDecodeError as exc:
+        raise Refused("AUDIT_UNREADABLE", f"{audit_path}: invalid JSON: {exc.msg}")
+    if not isinstance(data, dict):
+        raise Refused("AUDIT_UNREADABLE", f"{audit_path}: must be a JSON object")
+    if "verdicts" not in data or not isinstance(data["verdicts"], list):
+        raise Refused("AUDIT_UNREADABLE", f"{audit_path}: missing or non-list 'verdicts'")
+    return data
+
+
 def cmd_write(args: argparse.Namespace) -> dict:
     """`write`: reconciles an already-shuttled redactor draft and
     contract-auditor account against one block's real contract, evidence
@@ -2483,8 +2548,8 @@ def cmd_write(args: argparse.Namespace) -> dict:
     if args.transcript:
         _resolve_repo_path(args.transcript)
 
-    draft = json.loads(draft_path.read_text(encoding="utf-8"))
-    audit_account = json.loads(audit_path.read_text(encoding="utf-8"))
+    draft = _load_draft_envelope(draft_path)
+    audit_account = _load_audit_envelope(audit_path)
 
     # `the-block-asserts-only-what-its-section-carries`, design.md D7:
     # `--grounding` stays `default=None` -- requiring it would break every
@@ -3354,6 +3419,31 @@ def build_parser() -> argparse.ArgumentParser:
     p_bib_build.add_argument(
         "--guidance", default=None,
         help="override guidance/ location; must resolve inside the repository root",
+    )
+    p_bib_refresh = bib_sub.add_parser(
+        "refresh",
+        help="relink one citation's existing evidence to fresher cached metadata of the SAME work: "
+             "appends a copy of the record bib build reads, changing only resolver and "
+             "metadata_digest; never re-judges the source, never creates evidence",
+    )
+    p_bib_refresh.add_argument(
+        "--paper", default=None,
+        help="override paper/ location; must resolve inside the repository root",
+    )
+    p_bib_refresh.add_argument(
+        "--guidance", default=None,
+        help="override guidance/ location; must resolve inside the repository root",
+    )
+    p_bib_refresh.add_argument(
+        "--cite-key", required=True, help="the \\cite{} key whose current evidence record is relinked",
+    )
+    p_bib_refresh.add_argument(
+        "--metadata-digest", required=True,
+        help="digest of an already-cached `resolve` result for the same DOI/arXiv id",
+    )
+    p_bib_refresh.add_argument(
+        "--resolver", default=None, choices=paper_resolve.RESOLVERS,
+        help="optional; must equal the cached metadata's own resolver, which is used when omitted",
     )
 
     p_validate = sub.add_parser(

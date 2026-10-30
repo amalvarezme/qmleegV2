@@ -1,7 +1,7 @@
 # QMLEEG — OpenCode Entrypoint
 
 Generated from the canonical `.claude/` agent definitions by `papersmith`
-0.40.0. Read the workspace configuration and the relevant skill before
+0.42.0. Read the workspace configuration and the relevant skill before
 changing research artifacts.
 
 ## Canonical context
@@ -57,6 +57,14 @@ service is covered by that service's own adapter. It refuses — with a thrown e
 naming the matched surface — a command that names a service's push surface without
 also invoking `remote_cli.py`, and it degrades loudly rather than silently
 allowing when the guard cannot be loaded. It is a tripwire, not a gate.
+
+## Language
+
+Reply to the human in the language they write in (Spanish or English).
+Everything else stays English regardless of the conversation language: skills,
+agent definitions, delegations and messages between agents, tool inputs, and
+every generated artifact (code, comments, docs, commit messages, and paper
+internals unless the paper declares another language).
 
 ## Paper construction flow
 
@@ -141,7 +149,7 @@ skill refuses when its input is missing.
 9. **Figures**: `/figure-review <figure id>` checks a compiled
    `paper/Figures/<id>.pdf`.
 10. **Paper**: compile `paper/main.tex` to `paper/main.pdf` (dashboard:
-    Previsualización PDF).
+    the PDF preview tab).
 11. **Audit** (transversal): `smith audit .` and `/skill-audit <subject>`.
     Audits report; they never repair.
 

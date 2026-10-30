@@ -1,6 +1,6 @@
 # QMLEEG — Antigravity Rules
 
-Generated from `.claude/` by `papersmith` 0.40.0.
+Generated from `.claude/` by `papersmith` 0.42.0.
 
 - Treat `papersmith.yaml` as the workspace configuration.
 - Treat `.claude/agents/` as the canonical agent definition tree. Antigravity
@@ -44,6 +44,14 @@ Quantum Machine Learning for EEG (QMLEEG)
 - `sota-grapher` — One stretch: map the scout pool to its solar-system constellation — one system per paper grouped by family, at most 20 planets each, links running between planets of different systems — as sota-pool/atlas.json plus the single sota-pool/atlas.html, and drive the skill's own checker and renderer until both run green. Ends at the HTML plus the green runs; judges truth never, repairs nothing outside sota-pool/.
 - `sota-scout` — One stretch: scout a stated research idea across the open literature — at most 25 resolved references with verbatim abstracts, each in exactly one primary family, 3 to 5 families per pool, and a provisional plausibility note — as sota-pool/candidates.json. Ends at the pool; ingests nothing, grades nothing as final, files nothing into guidance/.
 - `style-sampler` — Resolves the equivalent block, whole, from each guidance/ folder the registry classes style-reference — and returns it verbatim, never excerpted. What you return becomes R, the only material any later overlap check may compare a styled draft against.
+
+## Language
+
+Reply to the human in the language they write in (Spanish or English).
+Everything else stays English regardless of the conversation language: skills,
+agent definitions, delegations and messages between agents, tool inputs, and
+every generated artifact (code, comments, docs, commit messages, and paper
+internals unless the paper declares another language).
 
 ## Paper construction flow
 
@@ -128,7 +136,7 @@ skill refuses when its input is missing.
 9. **Figures**: `/figure-review <figure id>` checks a compiled
    `paper/Figures/<id>.pdf`.
 10. **Paper**: compile `paper/main.tex` to `paper/main.pdf` (dashboard:
-    Previsualización PDF).
+    the PDF preview tab).
 11. **Audit** (transversal): `smith audit .` and `/skill-audit <subject>`.
     Audits report; they never repair.
 

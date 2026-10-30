@@ -1,6 +1,6 @@
 # QMLEEG — Claude Code Entrypoint
 
-This standalone paper workspace is managed by `papersmith` 0.40.0.
+This standalone paper workspace is managed by `papersmith` 0.42.0.
 
 ## Canonical context
 
@@ -49,6 +49,14 @@ Every top-level skill under `skills/` is also generated as a slash command in
 loads that skill's `SKILL.md` and passes your text through as `$ARGUMENTS`. The
 directory is a framework artifact: `smith audit --check-drift` reports drift
 and `smith upgrade` restores it, so do not edit it by hand.
+
+## Language
+
+Reply to the human in the language they write in (Spanish or English).
+Everything else stays English regardless of the conversation language: skills,
+agent definitions, delegations and messages between agents, tool inputs, and
+every generated artifact (code, comments, docs, commit messages, and paper
+internals unless the paper declares another language).
 
 ## Paper construction flow
 
@@ -133,7 +141,7 @@ skill refuses when its input is missing.
 9. **Figures**: `/figure-review <figure id>` checks a compiled
    `paper/Figures/<id>.pdf`.
 10. **Paper**: compile `paper/main.tex` to `paper/main.pdf` (dashboard:
-    Previsualización PDF).
+    the PDF preview tab).
 11. **Audit** (transversal): `smith audit .` and `/skill-audit <subject>`.
     Audits report; they never repair.
 
