@@ -507,9 +507,13 @@ def _run_audit(root: Path) -> dict[str, Any] | None:
     if not _AUDIT_LOCK.acquire(blocking=False):
         return None
     try:
-        command = [sys.executable, "-c",
-                   "import sys; from papersmith.cli import main; sys.exit(main(sys.argv[1:]))",
-                   "audit", str(root), "--check-drift"]
+        smith_bin = shutil.which("smith") or str(Path.home() / ".local" / "bin" / "smith")
+        if smith_bin and os.path.isfile(smith_bin) and os.access(smith_bin, os.X_OK):
+            command = [smith_bin, "audit", str(root), "--check-drift"]
+        else:
+            command = [sys.executable, "-c",
+                       "import sys; from papersmith.cli import main; sys.exit(main(sys.argv[1:]))",
+                       "audit", str(root), "--check-drift"]
         ran = True
         try:
             done = subprocess.run(command, cwd=str(root), capture_output=True, text=True,
