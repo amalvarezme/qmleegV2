@@ -1,7 +1,7 @@
 # QMLEEG — OpenCode Entrypoint
 
 Generated from the canonical `.claude/` agent definitions by `papersmith`
-0.48.0. Read the workspace configuration and the relevant skill before
+0.49.0. Read the workspace configuration and the relevant skill before
 changing research artifacts.
 
 ## Canonical context
@@ -13,6 +13,7 @@ changing research artifacts.
 
 ## Agents
 
+- `ai-auditor` — Audits a manuscript draft or block for AI fingerprints, Claudeisms, and low burstiness using `paper_ai_metrics`, and verifies strict adherence to F5 invariants. Never invoked by any code path; `write` and `humanize` reconcile your account against the real draft, they never trust either from you.
 - `audit-report` — One stretch: audit a subject that enumerates a closed set — accepted operations, subcommands, error codes, shipped assets — for the gap between what its running code accepts and what its own documentation claims. Derives both halves independently rather than reading either, and arrives at the report. Reports; never repairs.
 - `contract-auditor` — Reads a contract's `## Disqualifiers` bullets verbatim and judges a drafted block against each one, returning fires/clear/undecidable per bullet with a quoted span for every `fires`. Never invoked by any code path; `write` reconciles your account against the real bullets and the real draft, it never trusts either from you.
 - `dataset-curator` — One stretch of the datasets flow, from a dataset need to its arrival: a toy set and a licensed, checked, prepared dataset that the proof of concept and the full experiments both read, published privately only on the operator's consent. Synthesize the seeded toy set, fetch a source whose license is already allowed, measure it with `qc`, write the one official subject-wise preparation with `prepare`, and run `publish` for real only with the operator's own consent tokens. Stages: toy, checked, prepared, published.
