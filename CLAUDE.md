@@ -1,6 +1,6 @@
 # QMLEEG — Claude Code Entrypoint
 
-This standalone paper workspace is managed by `papersmith` 0.46.0.
+This standalone paper workspace is managed by `papersmith` 0.47.0.
 
 ## Canonical context
 
@@ -37,6 +37,7 @@ This standalone paper workspace is managed by `papersmith` 0.46.0.
 - `sota-grapher` — One stretch: map the scout pool to its solar-system constellation — one system per paper grouped by family, at most 20 planets each, links running between planets of different systems — as sota-pool/atlas.json plus the single sota-pool/atlas.html, and drive the skill's own checker and renderer until both run green. Ends at the HTML plus the green runs; judges truth never, repairs nothing outside sota-pool/.
 - `sota-scout` — One stretch: scout a stated research idea across the open literature — at most 25 resolved references with verbatim abstracts, each in exactly one primary family, 3 to 5 families per pool, and a provisional plausibility note — as sota-pool/candidates.json. Ends at the pool; ingests nothing, grades nothing as final, files nothing into guidance/.
 - `style-sampler` — Resolves the equivalent block, whole, from each guidance/ folder the registry classes style-reference — and returns it verbatim, never excerpted. What you return becomes R, the only material any later overlap check may compare a styled draft against.
+- `venue-adapter` — Reads a chosen journal's author guidelines and document template and measures the manuscript against them: writes the venue's requirements (each one a quoted passage and the url it came from), alerts on sections that must be adjusted, sections the venue needs and smith lacks, and every inconsistency between smith's base template and the venue's, and proposes an adjustment plan only when one is prudent, iterating it with the operator until the operator approves its exact text. Ends at an approved plan (or an audit that needs none) and a built paper/venues/<slug>/main.tex; never changes a word of the paper, never invents a requirement, and never submits.
 
 The `.claude/agents/` tree is the single source of truth for agent
 definitions. Other harness documents are generated projections; do not fork
