@@ -1,7 +1,7 @@
 # QMLEEG — OpenCode Entrypoint
 
 Generated from the canonical `.claude/` agent definitions by `papersmith`
-0.45.1. Read the workspace configuration and the relevant skill before
+0.46.0. Read the workspace configuration and the relevant skill before
 changing research artifacts.
 
 ## Canonical context
