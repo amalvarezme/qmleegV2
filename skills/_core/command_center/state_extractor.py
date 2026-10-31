@@ -478,8 +478,8 @@ def _section_status(
     written = [value for value in own.values() if value["has_body"]]
     if not written:
         return "CONTRACTED"
-    required_blocks = [b for b in blocks if not b.get("optional")]
-    if len(written) < len(required_blocks):
+    required = [b for b in blocks if not b.get("optional")]
+    if len(written) < len(required):
         return "DRAFTING"
     if placeholders:
         return "DRAFTING"
