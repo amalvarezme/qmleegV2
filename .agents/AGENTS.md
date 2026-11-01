@@ -1,6 +1,6 @@
 # QMLEEG — Antigravity Rules
 
-Generated from `.claude/` by `papersmith` 0.49.0.
+Generated from `.claude/` by `papersmith` 0.50.0.
 
 - Treat `papersmith.yaml` as the workspace configuration.
 - Treat `.claude/agents/` as the canonical agent definition tree. Antigravity

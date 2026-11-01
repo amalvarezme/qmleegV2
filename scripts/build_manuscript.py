@@ -41,12 +41,7 @@ def make_block(block_id: str, content: str) -> str:
 BLOCKS: dict[str, str] = {
     # 1. Title and Keywords
     "title-and-keywords.title": r"""\title{\Large\textbf{Hybrid Quantum-Classical Neural Network with Circular Data Re-Uploading for Interpretable EEG Biomarker Discovery in ADHD}}
-\author{
-    \textbf{Andr{\'e}s {\'A}lvarez-Meza}$^{1,*}$, \textbf{Research Engineering Consortium}$^{2}$ \\
-    $^{1}$Signal Processing and Recognition Group, Universidad Nacional de Colombia \\
-    $^{2}$Quantum-Enhanced Neurocomputing Laboratory \\
-    $^{*}$Corresponding author: \texttt{corresponding.author@example.org}
-}
+\author{Por definir \\ \textit{Afiliaciones y correos por definir}}
 \date{\today}
 """,
 
@@ -76,59 +71,71 @@ BLOCKS: dict[str, str] = {
 """,
 
     # 3. Introduction
-    "introduction.block-1": r"""Attention Deficit Hyperactivity Disorder (ADHD) affects an estimated 5--7\% of children and adolescents worldwide, with persistent cognitive and executive dysfunction frequently extending into adulthood \cite{nasrabadi2020eeg}. Conventional diagnostic pathways rely on semi-structured clinical interviews and parental rating scales, which are susceptible to subjective bias and inter-rater variability. Consequently, objective electrophysiological correlates derived from multichannel electroencephalography (EEG) have garnered intense interest as non-invasive biomarkers of cortical dysfunction. In particular, resting-state recordings often exhibit characteristic spectral imbalances, such as elevated fronto-central theta power accompanied by attenuated beta band activity, conventionally quantified via the Theta-to-Beta Ratio (TBR).
+    "introduction.block-1": r"""Attention Deficit Hyperactivity Disorder (ADHD) represents one of the most prevalent neurodevelopmental disorders, affecting approximately 5--7\% of school-age children and adolescents globally, with debilitating deficits in executive function, impulse inhibition, and attentional persistence frequently enduring across the lifespan \cite{nasrabadi2020eeg}. Current diagnostic protocols remain heavily dependent on semi-structured psychiatric evaluations, behavioral observer checklists, and DSM-5 diagnostic criteria, which inevitably introduce subjective observer bias, high inter-rater variance, and diagnostic delays. Consequently, the discovery of non-invasive, objective neurophysiological biomarkers through electroencephalography (EEG) has emerged as an urgent imperative in clinical neuroscience. In particular, resting-state electrophysiological recordings systematically reveal abnormal spectral power distributions, characterized by abnormal theta power elevation paired with relative attenuation in the beta oscillatory band, traditionally indexed by the fronto-central Theta-to-Beta Ratio (TBR) \cite{snyder2006clinical,barry2003eeg,arns2013evaluating}.
 """,
 
-    "introduction.block-2": r"""In recent years, deep learning methodologies—most notably spatial-temporal convolutional neural networks (e.g., EEGNet \cite{lawhern2018eegnet} and ADHDeepNet \cite{amini2024adhdeepnet})—have demonstrated remarkable pattern recognition capabilities on physiological time series. However, a pervasive methodological flaw in the biomedical EEG literature involves the random segment-level partitioning of multi-epoch recordings across training and test splits. When short EEG segments from the same subject appear simultaneously in training and test sets, models exploit idiosyncratic subject-specific signatures rather than generalizable disease pathology, yielding unrealistically inflated accuracies exceeding 99\% that catastrophically fail to generalize in genuine clinical cross-subject deployments.
+    "introduction.block-2": r"""In response to the limitations of subjective psychometrics, machine learning and deep convolutional architectures—such as EEGNet \cite{lawhern2018eegnet} and ADHDeepNet \cite{amini2024adhdeepnet}—have been increasingly deployed to automate the detection of pathological electrophysiological signatures from multi-channel sensor arrays. Despite promising classification metrics reported across contemporary studies, the automated identification of reliable ADHD biomarkers remains severely impeded by fundamental methodological vulnerabilities in validation, transparency, and computational modeling \cite{varoquaux2022machine}. Specifically, the prevailing literature suffers from pervasive segment-level data partitioning that distributes correlated temporal windows from identical participants across training and evaluation splits, generating catastrophic subject-identification data leakage that confounds individual neural signatures with disease pathophysiology. Furthermore, deep neural networks function as opaque black boxes whose post-hoc heuristic explanations obscure genuine cortical mechanisms, while emerging variational quantum machine learning algorithms frequently assert ungrounded claims of classification advantage without rigorous classical benchmarking or noise-aware entanglement auditing.
 """,
 
-    "introduction.block-3": r"""Concurrently, Parameterized Quantum Circuits (PQCs) and Variational Quantum Classifiers (VQCs) have emerged as promising paradigms for machine learning on Noisy Intermediate-Scale Quantum (NISQ) systems. By mapping classical inputs into non-linear Hilbert space representations via data re-uploading techniques \cite{perez2020data,jerbi2023quantum}, quantum models can theoretically compute complex functions with compact parameter footprints. Nonetheless, as demonstrated by Bowles et al. \cite{bowles2024better}, claims of near-term quantum supremacy on generic data are frequently confounded by poor classical baselines, arbitrary synthetic tasks, or unjustified assumptions regarding the utility of multi-qubit entanglement in the presence of noise.
+    "introduction.block-3": r"""Methodological efforts to overcome these clinical and computational barriers are broadly organized across distinct research families. The first family comprises classical deep learning architectures tailored for electrophysiology, including compact depthwise and separable convolutional networks such as DeepConvNet \cite{schirrmeister2017deepconvnet} and recurrent models like ChronoNet \cite{roy2019chrononet}. While these models effectively capture temporal dynamics and spatial channel filters without manual feature engineering, their parameter counts induce severe overfitting on small clinical cohorts, and their spatial representations fail to provide direct neurophysiological transparency. The second family encompasses Parameterized Quantum Circuits (PQCs) and Variational Quantum Classifiers (VQCs) utilizing data re-uploading strategies \cite{perez2020data,jerbi2023quantum}, which project classical sensor inputs into high-dimensional Hilbert spaces to evaluate rich non-linear functions with compact parameter footprints \cite{schuld2021effect}. However, near-term variational quantum approaches are severely constrained by hardware-efficient noise sensitivity, and as demonstrated by Bowles et al. \cite{bowles2024better}, their purported performance advantages often evaporate when subjected to rigorous classical comparison or when multi-qubit entanglement is ablated.
+
+The third family centers on post-hoc interpretability and gradient-based attribution methods, encompassing input saliency formulations \cite{simonyan2013deep}, layer-wise relevance propagation, and interpretable deep networks adapted to EEG decoding \cite{sturm2016interpretable}. Although these methods attempt to localize informative electrode channels, classical deep architectures suffer from gradient shattering and noisy heuristic attributions, whereas exact analytical derivatives derived from the quantum parameter-shift rule \cite{crooks2019gradients} have remained largely unexplored for physiological biomarker localization. Finally, the fourth family focuses on validation integrity and rigorous neuroimaging benchmarking protocols \cite{saeb2017need,little2017pitfalls}. While leakage-free subject-independent partitioning protocols prevent participant identity memorization, their adoption remains scarce, leaving published benchmarks fragmented between artificially inflated figures and unverifiable claims. Critically, these four families address the overarching challenges of biomarker discovery separately rather than simultaneously, lacking an integrated framework that unifies leakage-free evaluation, controlled quantum expressivity, and exact analytical attribution within a single trainable architecture.
 """,
 
-    "introduction.block-4a": r"""To address these dual challenges of clinical rigor and quantum sobriety, this paper introduces a hybrid quantum-classical neural network specifically engineered for interpretable EEG classification in ADHD. The proposed framework cascades a lightweight classical temporal-spatial convolutional encoder with a 4-qubit variational circuit that incorporates continuous circular data re-uploading. Classical feature maps are sequentially compressed and transduced through circular parametric Pauli rotations, enabling the quantum processor to capture inter-channel dependencies.
+    "introduction.block-4a": r"""To resolve these intertwined deficiencies, we introduce a hybrid quantum-classical neural network with circular data re-uploading specifically engineered for interpretable, leakage-free EEG biomarker discovery in ADHD. The core idea is to couple a lightweight classical temporal-spatial convolutional encoder with an analytical 4-qubit variational quantum circuit that interleaves continuous parametric rotations with circular entangling operations, enabling end-to-end analytical gradient backpropagation directly to raw electrode channels via the exact parameter-shift rule. We articulate the contributions of this work in four short items:
 """,
 
-    "introduction.block-4b": r"""We evaluate this architecture through five structured empirical questions:
-\begin{itemize}
-    \item \textbf{E1 (Leakage-Free Benchmark):} How does the hybrid model compare against established classical architectures (EEGNet, ADHDeepNet) under strict subject-wise GroupKFold partitioning?
-    \item \textbf{E2 (Entanglement Topology):} Does the inclusion of two-qubit entangling gates (Circular, Linear, All-to-All) confer statistically measurable performance advantages over purely separable operations?
-    \item \textbf{E3 (Gradient Variance and Trainability):} At what circuit depth $L$ do barren plateaus emerge in clinical physiological data?
-    \item \textbf{E4 (Analytical Saliency and Biomarker Discovery):} Can exact parameter-shift quantum derivatives provide interpretable, channel-resolved spatial saliency maps that correspond to known ADHD pathophysiology?
-    \item \textbf{E5 (Fourier Expressivity):} Does multi-layer circular data re-uploading resolve high-frequency Fourier modes inaccessible to single-uploading baselines?
-\end{itemize}
-""",
-
-    "introduction.block-5": r"""The contributions of this work are fourfold:
-\begin{enumerate}
-    \item We establish a standardized, leakage-free GroupKFold evaluation benchmark on the 121-subject clinical ADHD dataset, dispelling inflated performance narratives and reporting realistic cross-subject generalization metrics.
-    \item We demonstrate that while circular entangling layers provide expressive representations, they do not confer statistically significant accuracy advantages over unentangled circuits on noisy EEG ($p = 1.0$), corroborating foundational theoretical predictions.
-    \item We identify the empirical trainability threshold for clinical VQCs, documenting an exponential collapse in gradient variance ($< 10^{-5}$) when circuit depth reaches $L \ge 4$.
-    \item We develop an end-to-end analytical gradient backpropagation formulation bridging classical autograd and quantum parameter-shift rules, extracting fronto-central electrophysiological biomarkers ($F_z, C_z$; $p < 0.0001$) without heuristic post-hoc approximations.
+    "introduction.block-4b": r"""\begin{enumerate}
+    \item \textbf{Leakage-free GroupKFold benchmark:} We establish a standardized subject-level evaluation benchmark on the 121-subject clinical cohort, demonstrating that our hybrid model achieves balanced accuracy of 0.683 and sensitivity of 0.889, eliminating the artificial inflation of segment-split baselines.
+    \item \textbf{Entanglement utility audit:} We systematically evaluate two-qubit entangling topologies against unentangled separable circuits on clinical EEG, empirically confirming that entanglement confers no statistically significant classification advantage ($p = 1.0$).
+    \item \textbf{Empirical trainability boundary:} We quantify the depth-dependent gradient variance decay across circuit depths $L \in \{1, \dots, 6\}$, establishing that a compact depth of $L = 3$ avoids barren plateau collapse while sustaining parameter expressivity.
+    \item \textbf{Exact analytical parameter-shift saliency:} We derive an end-to-end analytical gradient pipeline combining classical backpropagation and quantum parameter shifts, discovering statistically significant fronto-central biomarkers ($F_z, C_z$; $p < 0.001$) that directly ground clinical ADHD pathophysiology.
 \end{enumerate}
 """,
 
-    "introduction.block-6": r"""The remainder of this article is structured as follows. Section~\ref{sec:rw} contextualizes our approach within the related literature. Section~\ref{sec:methods} details the mathematical formulation of circular data re-uploading and analytical gradient backpropagation. Section~\ref{sec:setup} outlines the cross-validation protocol and experimental setup. Section~\ref{sec:results} presents the empirical findings across questions E1--E5. Section~\ref{sec:limitations} addresses key methodological limitations, and Section~\ref{sec:conclusions} concludes with directions for future work.
+    "introduction.block-5": r"""We systematically evaluate the proposed framework on the public 121-subject clinical EEG dataset across five structured empirical questions (E1--E5). The model is benchmarked against established classical baselines, including EEGNet and ADHDeepNet, as well as unentangled separable architectures and single-uploading baselines, under a 5-fold $\times$ 5-seed subject-level GroupKFold protocol evaluated with corrected resampled t-tests and non-parametric rank tests. The empirical results demonstrate that our hybrid model achieves competitive balanced accuracy (0.683) and superior clinical sensitivity (0.889) while completely dismantling the 99\% leaked accuracy narrative of segment-split models. Furthermore, the evaluation establishes that circular data re-uploading at depth $L=3$ resolves non-linear Fourier harmonics without suffering from gradient variance extinction, while exact parameter-shift saliency robustly localizes elevated theta-to-beta oscillatory alterations to fronto-central electrode sites ($p < 0.001$). These findings provide a sober, reproducible blueprint for quantum-enhanced biomedical modeling, illustrating that near-term variational algorithms offer tangible value through rigorous, pathophysiologically interpretable biomarker discovery rather than ungrounded claims of classification supremacy.
+""",
+
+    "introduction.block-6": r"""The remainder of this paper is organized as follows: Section~\ref{sec:rw} contextualizes our approach across the four foundational literature families. Section~\ref{sec:methods} details the mathematical formulation of circular data re-uploading and analytical gradient backpropagation. Section~\ref{sec:setup} describes the clinical dataset, preprocessing pipeline, and leakage-free cross-validation protocol. Section~\ref{sec:results} presents the empirical findings across questions E1--E5. Section~\ref{sec:limitations} addresses key methodological constraints, and Section~\ref{sec:conclusions} concludes with directions for future investigation.
 """,
 
     # 4. Related Work
-    "related-work.rw-preamble": r"""The intersection of deep learning for electroencephalography and parameterized quantum algorithms represents an active frontier in biomedical neuroengineering. This section reviews key developments in both domains and highlights critical methodological gaps.
+    "related-work.rw-preamble": r"""This section reviews the four foundational literature families that frame our investigation: classical deep learning for electrophysiology, parameterized quantum circuits with variational data re-uploading, analytical attribution and interpretability, and validation integrity in neuroimaging benchmarks.
 """,
 
-    "related-work.rw-panorama": r"""\textbf{Deep Learning in EEG Analysis:} Convolutional neural networks tailored for neuroimaging typically decouple temporal filtering from spatial filtering. Lawhern et al. \cite{lawhern2018eegnet} established EEGNet, employing 2D depthwise and separable convolutions to extract band-specific spatial filters while constraining trainable parameters. More recently, Amini et al. \cite{amini2024adhdeepnet} proposed ADHDeepNet, introducing spatial attention mechanisms and reporting near-perfect separation on the Nasrabadi dataset. However, their experimental protocol utilized random segment splitting, which inadvertently distributes correlated epochs from the same participant across train and test folds.
-
-\textbf{Quantum Classifiers and Data Re-Uploading:} Data re-uploading, formalized by P{\'e}rez-Salinas et al. \cite{perez2020data}, proves that a single qubit sequentially interleaved with data encoding and variational rotations can approximate arbitrary continuous functions. Jerbi et al. \cite{jerbi2023quantum} and Schuld et al. \cite{schuld2021effect} expanded this framework to multi-qubit systems, establishing that data re-uploading circuits act as truncated Fourier series whose frequency spectrum scales directly with the number of encoding repetitions $L$.
+    "related-work.rw-panorama": r"""The extraction of diagnostic neurophysiological markers from multi-channel electroencephalography has undergone a major paradigm shift, transitioning from hand-crafted spectral ratios toward end-to-end spatial-temporal representation learning. Early quantitative EEG investigations focused on spectral power disparities in the theta and beta bands to assess cortical arousal deficits in neurodevelopmental disorders \cite{barry2003eeg,snyder2006clinical,arns2013evaluating}. In recent years, the integration of deep convolutional networks and parameterized quantum algorithms has opened promising avenues for automated classification and latent pattern discovery \cite{lotte2018review,craik2019deep}. However, the literature has evolved in fragmented directions: while classical neural architectures emphasize predictive capacity at the cost of opacity, quantum learning formulations focus on theoretical expressivity while often neglecting the rigorous empirical validation standards required for clinical translation. We examine each of the four core methodological families below.
 """,
 
-    "related-work.rw-problem-blocks": r"""Despite these theoretical advances, existing literature exhibits four significant deficiencies:
-\begin{enumerate}
-    \item \textit{Data Leakage:} A substantial portion of published EEG classification studies fail to enforce subject-level cross-validation, confusing participant identification with generalized pathological biomarker detection.
-    \item \textit{Uncritical Quantum Advantage Claims:} Benchmarking studies often contrast complex quantum models against weak linear baselines or evaluate them on synthetic toy problems disconnected from noisy biomedical realities \cite{bowles2024better}.
-    \item \textit{Trainability and Barren Plateaus:} As proven by McClean et al. \cite{mcclean2018barren}, random parameterized quantum circuits suffer from concentration of measure, where the variance of the cost function gradient vanishes exponentially in the number of qubits and circuit depth.
-    \item \textit{Black-Box Interpretability:} Classical explainability tools (e.g., Integrated Gradients, Grad-CAM) suffer from gradient shattering in deep networks, whereas quantum circuits permit exact analytical derivatives via parameter-shift rules that remain largely unexplored for physiological signal discovery.
-\end{enumerate}
+    "related-work.rw-problem-blocks": r"""\subsection{Deep Learning Architectures for Electrophysiological Signal Processing}
+Deep learning approaches for electroencephalography are grounded in the continuous spatial-temporal modeling of multichannel voltage potentials recorded across scalp electrodes. Under the standard neuroimaging assumption, cortical dipoles project volume-conducted potentials that can be decomposed into spatial spatial filters and temporal frequency decompositions. In early formulations, convolutional architectures adapted from computer vision applied two-dimensional kernels directly over raw or spectrogram-transformed multichannel inputs \cite{cecotti2011convolutional,alsaegh2021deep}.
+
+To respect the distinct physical characteristics of electrophysiological signals, specialized compact convolutional architectures were introduced. Lawhern et al. \cite{lawhern2018eegnet} developed EEGNet, which systematically decouples temporal convolutions from depthwise spatial filters, yielding an ultra-compact representation tailored for brain-computer interfaces. Concurrently, Schirrmeister et al. \cite{schirrmeister2017deepconvnet} established DeepConvNet, utilizing deeper hierarchical receptive fields to capture fine-grained oscillatory features, while Roy et al. \cite{roy2019chrononet} introduced ChronoNet, combining stacked multiple 1D convolutions with recurrent gated units to model long-range temporal dependencies. More recently, Amini et al. \cite{amini2024adhdeepnet} proposed ADHDeepNet, incorporating temporal-spatial processing and adaptive attention modules to identify diagnostic signatures in pediatric ADHD cohorts.
+
+Despite achieving high classification accuracies, deep convolutional models present acute methodological vulnerabilities. Their high parameter capacity makes them prone to overfitting on small clinical sample cohorts, often memorizing background noise artifacts. Furthermore, standard convolutional operations act as opaque feature extractors whose latent embeddings resist straightforward biophysical interpretation, leaving clinicians unable to verify whether classifications reflect true cortical abnormalities or non-neural recording artifacts.
+
+\subsection{Parameterized Quantum Circuits and Variational Data Re-Uploading}
+Variational Quantum Circuits (VQCs) and Parameterized Quantum Circuits (PQCs) represent the leading computational paradigm for quantum machine learning on Noisy Intermediate-Scale Quantum (NISQ) devices. The foundational premise relies on mapping low-dimensional classical feature vectors into the exponentially vast Hilbert space of multi-qubit quantum states via parameterized unitary transformations $U(\mathbf{x}, \boldsymbol{\theta})$ \cite{havlicek2019supervised,mitarai2018quantum}. P{\'e}rez-Salinas et al. \cite{perez2020data} proved that interleaving data encoding operations with trainable variational rotations—a technique termed data re-uploading—enables a low-qubit quantum system to act as a universal function approximator.
+
+Theoretical analyses by Schuld et al. \cite{schuld2021effect} and Jerbi et al. \cite{jerbi2023quantum} demonstrated that data re-uploading circuits mathematically correspond to truncated Fourier series, whose accessible frequency spectrum scales linearly with the number of re-uploading layers $L$. Abbas et al. \cite{abbas2021power} further showed that quantum neural networks can achieve superior effective dimension and geometric capacity compared to classical feedforward networks. In practical biomedical applications, hybrid quantum-classical frameworks typically deploy a classical convolutional front-end to compress high-dimensional raw time series into a compact latent vector suitable for few-qubit variational processing.
+
+Notwithstanding theoretical promise, variational quantum classifiers face fundamental trainability and benchmarking hurdles. McClean et al. \cite{mcclean2018barren} and Cerezo et al. \cite{cerezo2021cost} demonstrated that random parameterized circuits suffer from the barren plateau phenomenon, wherein gradient variances vanish exponentially in system size and circuit depth. Additionally, Bowles et al. \cite{bowles2024better} emphasized that reported quantum advantages frequently stem from flawed classical baselines or arbitrary synthetic datasets; in realistic, noisy biomedical applications, the actual utility of multi-qubit entangling gates remains largely unverified.
+
+\subsection{Interpretability and Analytical Attribution in Biomedical Machine Learning}
+Model interpretability in high-stakes clinical neuroimaging is essential for diagnostic verification and scientific discovery. Attribution methods seek to quantify the marginal relevance of each input dimension—such as electrode channels and temporal intervals—to the final diagnostic prediction. Classical interpretability frameworks broadly divide into perturbation-based surrogate models, such as LIME \cite{ribeiro2016why}, and gradient-based backpropagation techniques \cite{simonyan2013deep}.
+
+In the deep learning domain, Sundararajan et al. \cite{sundararajan2017axiomatic} introduced Integrated Gradients to satisfy the axioms of completeness and implementation invariance, while Selvaraju et al. \cite{selvaraju2017gradcam} proposed Grad-CAM to localize coarse spatial heatmaps from intermediate convolutional feature maps. For electrophysiological signals, Sturm et al. \cite{sturm2016interpretable} adapted layer-wise relevance propagation to single-trial EEG classification, successfully mapping task-related activations. In quantum computing, Mitarai et al. \cite{mitarai2018quantum}, Crooks \cite{crooks2019gradients}, and Banchi and Crooks \cite{banchi2021measuring} derived the parameter-shift rule, demonstrating that exact analytic gradients of expectation values can be evaluated directly on quantum processors without numerical finite differences, which Vidal and Theis \cite{vidal2020input} extended to input-parameter sensitivity analysis.
+
+Existing explainability approaches suffer from critical practical shortcomings in clinical workflows. Classical backpropagation through deep, non-linear convolutional networks is susceptible to gradient shattering and noisy attribution maps, while heuristic perturbation methods lack mathematical fidelity. Conversely, while the quantum parameter-shift rule provides exact gradients, its end-to-end integration with classical backpropagation to extract channel-resolved electrophysiological saliency maps has remained largely unexploited in the biomedical literature.
+
+\subsection{Validation Integrity, Data Leakage, and Benchmarking Protocols}
+The validity of machine learning findings in biomedical neuroimaging hinges on strict statistical independence between training and evaluation partitions. In electrophysiological datasets where continuous multichannel recordings are segmented into short overlapping epochs, individual participants exhibit distinct, idiosyncratic baseline characteristics such as skull thickness, anatomical impedance, and resting alpha frequencies \cite{yarkoni2017choosing,saeb2017need}. Consequently, evaluation protocols must prevent identity memorization to measure genuine pathological generalizability.
+
+Methodological guidelines established by Varoquaux and Cheplygina \cite{varoquaux2022machine} and Little et al. \cite{little2017pitfalls} advocate for strict subject-level GroupKFold cross-validation and independent external cohort testing. In neuroimaging connectomics, Scheinost et al. \cite{scheinost2019connectome} emphasized leave-one-subject-out predictive modeling to ensure unbiased biomarker extraction. In parallel, statistical comparison standards formulated by Nadeau and Bengio \cite{nadeau2003inference} and Dem{\v{s}}ar \cite{demsar2006statistical} provide corrected resampled t-tests and non-parametric rank tests to account for the non-independence of cross-validation folds.
+
+Despite widespread recognition of these principles, data leakage remains pervasive across published EEG machine learning literature. In particular, numerous studies on the Nasrabadi ADHD cohort \cite{nasrabadi2020eeg} apply random epoch-level train-test splits, inadvertently distributing epochs from the same subject across folds and producing misleading classification accuracies exceeding 99\%. When evaluated under strict subject-independent partitioning, these inflated metrics collapse dramatically, underscoring the urgent necessity of standardized, leakage-free benchmark standards.
 """,
 
-    "related-work.rw-synthesis-artefact": r"""\begin{table*}[t]
+    "related-work.rw-synthesis-artefact": r"""\begin{table}[t]
 \centering
 \caption{Systematic comparison of EEG classification models on the 121-subject ADHD benchmark.}
 \label{tab:rw_comparison}
@@ -140,13 +147,13 @@ BLOCKS: dict[str, str] = {
 ADHDeepNet \cite{amini2024adhdeepnet} & Segment Split (Leaked) & $\sim$142,000 & N/A & Attention Weights & Overfit / Leaked \\
 EEGNet \cite{lawhern2018eegnet} & GroupKFold (Subject) & 2,460 & N/A & Convolutional Filters & Robust Classical \\
 QEEGNet Baseline & GroupKFold (Subject) & 3,120 & Linear CNOT & None (Black-Box) & Unstable Depth \\
-\textbf{Proposed Hybrid DRU} & \textbf{GroupKFold (Subject)} & \textbf{2,840} & \textbf{Circular CNOT} & \textbf{Analytical Saliency} & \textbf{Validated / Honest} \\
+\textbf{Proposed Hybrid DRU} & \textbf{GroupKFold (Subject)} & \textbf{2,817} & \textbf{Circular CNOT} & \textbf{Analytical Saliency} & \textbf{Validated / Honest} \\
 \bottomrule
 \end{tabular}
-\end{table*}
+\end{table}
 """,
 
-    "related-work.rw-closing": r"""As summarized in Table~\ref{tab:rw_comparison}, our proposed architecture directly resolves the identified gaps by enforcing strict subject-level cross-validation, systematically auditing entanglement topologies, bounding depth to avoid barren plateaus, and utilizing analytical parameter shifts for exact physiological saliency mapping.
+    "related-work.rw-closing": r"""In summary, while classical deep learning excels at temporal feature extraction, variational quantum algorithms offer rich Fourier expressivity, gradient attribution provides interpretability, and GroupKFold ensures statistical validity, existing literature treats these dimensions in isolation. As synthesized in Table~\ref{tab:rw_comparison}, our proposed architecture directly bridges these disconnected domains: it couples lightweight convolutional encoders with circular data re-uploading, enforces strict subject-level GroupKFold validation to eliminate data leakage, systematically audits the empirical necessity of multi-qubit entanglement, and leverages exact parameter-shift gradients to discover genuine neurophysiological biomarkers in ADHD.
 """,
 
     # 5. Materials and Methods
@@ -316,10 +323,10 @@ The classical front-end accounts for 2,776 parameters, while the 4-qubit, $L=3$ 
 """,
 
     # 10. Back Matter
-    "back-matter.bm-author-contributions": r"""\textbf{Author Contributions:} A.{\'A}.-M.: Conceptualization, Methodology, Formal Analysis, Software, Writing -- Original Draft, Supervision. Research Engineering Consortium: Investigation, Validation, Data Curation, Writing -- Review \& Editing.
+    "back-matter.bm-author-contributions": r"""\textbf{Author Contributions:} Por definir (manuscrito inicial en formato de revisi{\'o}n a ciegas).
 """,
 
-    "back-matter.bm-funding": r"""\textbf{Funding:} This research was supported by the Universidad Nacional de Colombia and the Quantum-Enhanced Neurocomputing Initiative under Grant QML-EEG-2026.
+    "back-matter.bm-funding": r"""\textbf{Funding:} Por definir.
 """,
 
     "back-matter.bm-data-availability": r"""\textbf{Data and Code Availability:} The clinical EEG dataset is publicly available via IEEE Dataport \cite{nasrabadi2020eeg}. All reproduction code, trained models, and analysis scripts are accessible in the open-source repository: \url{https://github.com/amalvarezme/QMLEEG}.
@@ -328,7 +335,7 @@ The classical front-end accounts for 2,776 parameters, while the 4-qubit, $L=3$ 
     "back-matter.bm-conflicts-of-interest": r"""\textbf{Conflicts of Interest:} The authors declare no competing financial or non-financial interests.
 """,
 
-    "back-matter.bm-acknowledgments": r"""\textbf{Acknowledgments:} The authors gratefully acknowledge the Xanadu PennyLane development team and the open-source scientific Python community (PyTorch, MNE, SciPy) for computational infrastructure.
+    "back-matter.bm-acknowledgments": r"""\textbf{Acknowledgments:} Por definir.
 """,
 
     "back-matter.bm-appendices": r"""\textbf{Appendix: Analytical Parameter-Shift Derivations.}
@@ -344,7 +351,7 @@ For standard Pauli rotations ($r = 1/2$), this reduces to the symmetric $\pm \pi
 # Document Construction
 # ---------------------------------------------------------------------------
 
-PREAMBLE = r"""\documentclass[10pt,twocolumn,a4paper]{article}
+PREAMBLE = r"""\documentclass[11pt,onecolumn,a4paper]{article}
 \usepackage[utf8]{inputenc}
 \usepackage{amsmath,amssymb,amsfonts,amsthm}
 \usepackage{graphicx}
@@ -354,7 +361,9 @@ PREAMBLE = r"""\documentclass[10pt,twocolumn,a4paper]{article}
 \usepackage{cite}
 \usepackage{microtype}
 \usepackage{geometry}
-\geometry{top=2cm,bottom=2cm,left=1.8cm,right=1.8cm}
+\usepackage{setspace}
+\onehalfspacing
+\geometry{top=2.5cm,bottom=2.5cm,left=2.5cm,right=2.5cm}
 
 \hypersetup{
     colorlinks=true,
