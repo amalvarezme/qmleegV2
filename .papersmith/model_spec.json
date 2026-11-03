@@ -1,104 +1,170 @@
 {
   "title": "Hybrid Quantum-Classical Neural Network with Data Re-uploading for EEG-based ADHD Classification",
   "target_journal": "IEEE Transactions on Neural Systems and Rehabilitation Engineering / MDPI Technologies",
-  "authors": "Equipo de Investigación QMLEEG",
-  "trl": "Fase 4 Completada (Propuesta Formalizada r02)",
-  "executive_summary": "Arquitectura híbrida clásica-cuántica para la clasificación diagnóstica de TDAH a partir de registros EEG de 19 canales. Un extractor espacio-temporal clásico condensa la señal a 4 dimensiones clínicas, seguido de un circuito variacional con Data Re-uploading (DRU) y entrelazamiento circular en 4 qubits, preservando interpretabilidad clínica mediante gradientes analíticos por parameter-shift.",
+  "authors": "QMLEEG Research Team",
+  "trl": "Phase 4 complete (proposal r04)",
+  "executive_summary": "A hybrid quantum-classical architecture for ADHD diagnosis from 19-channel EEG: a classical spatial-temporal backbone $f_{\\phi}$ condenses each epoch into $d = N_q = 4$ features bounded to $[-\\pi, \\pi]$, and a parameterized quantum circuit with circular Data Re-uploading (DRU) over $L$ layers acts as an expressive non-linear classifier. The whole network is trained end-to-end with a subject-weighted binary cross-entropy, and analytical gradients through both stages give a channel-time saliency map for clinical audit.",
   "novelty": {
-    "problem_statement": "La alta variabilidad inter-sujeto del EEG y la escasa expresividad de las codificaciones cuánticas de una sola capa limitan el rendimiento diagnóstico del QML en cohortes pediátricas sin provocar mesetas estériles o requerir profundidades prohibitivas.",
+    "problem_statement": "Shallow quantum embeddings fail on high-dimensional, noisy EEG without exploding circuit depth: multichannel EEG carries strong inter-subject variability, a low signal-to-noise ratio and volume-conduction artifacts, while single-shot encodings limit the expressivity of the quantum classifier and deeper circuits risk barren plateaus.",
     "pillars": [
       {
-        "id": "pillar-1",
-        "name": "Compresión Espacio-Temporal Cuántico-Alineada",
-        "badge": "DIMENSIONALIDAD",
+        "id": "C1",
+        "name": "Spatial-temporal EEG feature compression matching the qubit register",
+        "badge": "DIMENSIONALITY",
         "color": "#38bdf8",
-        "summary": "Mapeo f_phi: R^{19 x T} -> R^4 preservando bandas Theta, Beta, TBR y coherencia frontal.",
-        "details": "Evita mesetas estériles al emparejar exactamente el número de dimensiones latentes con los 4 qubits del registro."
+        "summary": "$f_{\\phi}: \\mathbb{R}^{C \\times T} \\to [-\\pi, \\pi]^d$ with $d = N_q = 4$, bounded by a scaled hyperbolic tangent (Eq. 1).",
+        "details": "One feature per qubit keeps the register small enough to measure its gradient variance directly (E3). The features are learned generically; whether they track Theta, Beta, the Theta/Beta ratio or frontal coherence is a post-hoc contrast, never imposed by the architecture."
       },
       {
-        "id": "pillar-2",
-        "name": "Circuito Cuántico DRU con Entrelazamiento Circular",
-        "badge": "EXPRESIVIDAD",
+        "id": "C2",
+        "name": "L-layer circular-entanglement DRU circuit with Fourier expressivity of degree L",
+        "badge": "EXPRESSIVITY",
         "color": "#10b981",
-        "summary": "Unitario U(x, theta) = prod_{l=1}^L W_l(theta_l) S_l(x) con topología circular CNOT.",
-        "details": "Alcanza un espectro de Fourier de grado L garantizando aproximación universal en espacios compactos."
+        "summary": "$U(x, \\theta, \\beta) = \\prod_{l=1}^{L} W_l(\\theta_l) S_l(x, \\beta_l)$ with $S_l = \\bigotimes_j R_y(x_j + \\beta_{l,j})$ at unit scale and a closed CNOT ring (Eqs. 2-5).",
+        "details": "Every expectation value is a truncated Fourier series whose frequencies per feature are the integers $-L, \\dots, L$; $\\theta$, $\\beta$ and the topology set its coefficients, never its frequencies. The ring entangles every bipartition of the register, though no 4-qubit state is maximally entangled across all of them."
       },
       {
-        "id": "pillar-3",
-        "name": "Interpretabilidad Clínica y Saliencia Parameter-Shift",
-        "badge": "TRANSPARENCIA",
+        "id": "C3",
+        "name": "Clinical interpretability via channel-time gradient saliency",
+        "badge": "TRANSPARENCY",
         "color": "#f59e0b",
-        "summary": "Derivación analítica del gradiente de decisión con respecto a canales y frecuencias EEG.",
-        "details": "Permite auditar que la clasificación responde a biomarcadores fronto-centrales (F3, F4, Fz, Cz) y no a ruido de volumen."
+        "summary": "$\\mathcal{I}(c, t) = \\left| \\sum_{k} \\frac{\\partial \\hat{y}}{\\partial x_k} \\frac{\\partial f_{\\phi}(X)_k}{\\partial X_{c,t}} \\right|$ (Eq. 9).",
+        "details": "Exact gradients through the classical and quantum stages (backpropagation in simulation, the parameter-shift rule on hardware) expose each electrode and time sample, to audit that the decision rests on fronto-central sites (Fp1, Fp2, F3, F4, Fz, Cz) rather than noise."
       }
     ],
     "hypotheses": [
       {
-        "id": "H1",
-        "title": "Ventaja en Capacidad Expresiva DRU vs Codificación Simple",
-        "statement": "El circuito DRU de L capas sobre 4 qubits alcanzará mayor precisión y convergencia en la frontera TDAH/Control que un circuito variacional estándar de una sola codificación angular.",
-        "status": "Formulada (r02)",
-        "evidence": "Teorema de aproximación universal (Pérez-Salinas et al.) y grado de Fourier L (Schuld et al.)."
+        "id": "E1",
+        "title": "Hybrid classification and Fourier expressivity",
+        "status": "Stated in protocol v10",
+        "evidence": "Experiment E1",
+        "statement": "The hybrid architecture combining classical convolutional embedding with circular data re-uploading (L=3, 4 qubits) provides superior non-linear representation compared to single-shot angle encoding and to a classical linear baseline operating on the identical 4-dimensional representation."
       },
       {
-        "id": "H2",
-        "title": "Robustez y Mitigación de Ruido vía Cuello de Botella Clásico",
-        "statement": "El cuello de botella clásico de 4 dimensiones aísla al circuito cuántico del ruido de alta frecuencia del EEG, mitigando mesetas estériles durante la optimización.",
-        "status": "Formulada (r02)",
-        "evidence": "Simulaciones NISQ y benchmark SOTA en EEG-TACT."
+        "id": "E2",
+        "title": "Entanglement topology ablation",
+        "status": "Stated in protocol v10",
+        "evidence": "Experiment E2",
+        "statement": "Circular CNOT entanglement topology, which entangles every bipartition of the 4-qubit register without making all of them maximally entangled (no 4-qubit state is maximally entangled across its three two-versus-two bipartitions at once, as proposal r04 states), yields higher diagnostic discriminability than linear nearest-neighbor entanglement or separable non-entangled single-qubit rotations."
+      },
+      {
+        "id": "E3",
+        "title": "Re-uploading depth and barren plateaus",
+        "status": "Stated in protocol v10",
+        "evidence": "Experiment E3",
+        "statement": "Expressivity in the accessible Fourier spectrum increases with re-uploading depth L up to an optimal bound, beyond which gradient variance decays (barren plateau effect) and causes training stagnation or overfitting on validation folds."
+      },
+      {
+        "id": "E4",
+        "title": "Clinical interpretability via analytical gradients",
+        "status": "Stated in protocol v10",
+        "evidence": "Experiment E4",
+        "statement": "Analytical gradient saliency derived from the classical backbone and quantum parameter-shift rule concentrates its mass on electrophysiologically relevant fronto-central channels and Theta/Beta frequency components rather than posterior noise."
+      },
+      {
+        "id": "E5",
+        "title": "Controlled synthetic capacity and robustness",
+        "status": "Stated in protocol v10",
+        "evidence": "Experiment E5",
+        "statement": "With a fixed feature front end, the re-uploading readout (L=3) represents a class rule that needs Fourier frequency two in one feature, which single-shot angle encoding (L=1) cannot represent; when the class signal is monotone every arm stays close to the known ceiling, and its degradation with the training label-noise rate is measured."
       }
     ]
   },
   "conceptual_map": {
     "layers": [
       {
-        "name": "Capa 1: Insumos & Señales EEG",
+        "name": "Layer 1: EEG inputs",
         "color": "#6366f1",
-        "desc": "Registros multicanal (19 canales estándar 10-20, 128 Hz) del IEEE Dataport ADHD Dataset (121 sujetos).",
+        "desc": "Epochs $X \\in \\mathbb{R}^{C \\times T}$ with $C = 19$ channels of the 10-20 montage; subjects labeled ADHD ($y = 1$) or healthy control ($y = 0$).",
         "nodes": [
-          {"name": "Señal Cruda X", "desc": "Épocas de EEG multicanal en R^{19 x T}"},
-          {"name": "Montaje 10-20", "desc": "Electrodos Fp1, Fp2, F3, F4, Fz, C3, C4, Cz, Pz"},
-          {"name": "Bandas Ritmo", "desc": "Theta (4-8 Hz), Alpha (8-12 Hz), Beta (12-30 Hz)"}
+          {
+            "name": "Raw epoch X",
+            "desc": "$X \\in \\mathbb{R}^{C \\times T}$, $C = 19$"
+          },
+          {
+            "name": "10-20 montage",
+            "desc": "Standardized electrode positions, fronto-central sites included"
+          },
+          {
+            "name": "Subject label",
+            "desc": "$y_s \\in \\{0, 1\\}$ shared by all the subject's epochs"
+          }
         ]
       },
       {
-        "name": "Capa 2: Extractor Espacio-Temporal Clásico",
+        "name": "Layer 2: Classical spatial-temporal backbone",
         "color": "#38bdf8",
-        "desc": "Reducción dimensional parametrizada f_phi que extrae 4 biomarcadores latentes.",
+        "desc": "Convolutional encoder $f_{\\phi}$ bounded by a scaled tanh to the rotation domain (Eq. 1).",
         "nodes": [
-          {"name": "Filtros Temporales", "desc": "Convoluciones 1D sobre el eje de tiempo"},
-          {"name": "Filtros Espaciales", "desc": "Combinaciones lineales de canales (tipo CSP/EEGNet)"},
-          {"name": "Vector Latente x", "desc": "x en [-pi, pi]^4 con Theta, Beta, TBR y coherencia"}
+          {
+            "name": "Encoder f_phi",
+            "desc": "$f_{\\phi}: \\mathbb{R}^{C \\times T} \\to [-\\pi, \\pi]^d$"
+          },
+          {
+            "name": "Feature vector x",
+            "desc": "$x \\in [-\\pi, \\pi]^4$, one feature per qubit"
+          },
+          {
+            "name": "Generic features",
+            "desc": "No physiological meaning imposed; biomarkers are contrasted post hoc"
+          }
         ]
       },
       {
-        "name": "Capa 3: Circuito Cuántico DRU",
+        "name": "Layer 3: Circular DRU quantum circuit",
         "color": "#10b981",
-        "desc": "Unitario U(x, theta) en 4 qubits con reinyectado iterativo de datos a lo largo de L capas.",
+        "desc": "$L$ layers of encoding and variational blocks on $N_q = 4$ qubits (Eqs. 2-5).",
         "nodes": [
-          {"name": "Bloques de Carga S_l(x)", "desc": "Rotaciones R_y(alpha * x + beta)"},
-          {"name": "Capas Variacionales W_l", "desc": "Rotaciones R_z(theta_2) R_y(theta_1)"},
-          {"name": "Entrelazamiento Circular", "desc": "Anillo de CNOTs (1->2, 2->3, 3->4, 4->1)"}
+          {
+            "name": "Encoding S_l",
+            "desc": "$R_y(x_j + \\beta_{l,j})$ at unit scale"
+          },
+          {
+            "name": "Variational W_l",
+            "desc": "$R_z(\\theta^{(2)}_{l,j}) R_y(\\theta^{(1)}_{l,j})$ then $V_{\\text{ent}}$"
+          },
+          {
+            "name": "Circular CNOT ring",
+            "desc": "$\\text{CNOT}_{1,2}, \\dots, \\text{CNOT}_{N_q,1}$"
+          }
         ]
       },
       {
-        "name": "Capa 4: Medición & Clasificación",
+        "name": "Layer 4: Readout and objective",
         "color": "#f59e0b",
-        "desc": "Cálculo de observables de Pauli Z y proyección logística a probabilidad diagnóstica.",
+        "desc": "Pauli-Z expectations, a linear readout with a sigmoid, and a subject-weighted loss (Eqs. 6-8).",
         "nodes": [
-          {"name": "Observables <Z_j>", "desc": "Valores esperados en [-1, 1] para j=1..4"},
-          {"name": "Capa Densa & Sigmoide", "desc": "Combinación lineal w^T <Z> + b -> y_hat en (0, 1)"},
-          {"name": "Función de Costo", "desc": "Binary Cross-Entropy con regularización L2"}
+          {
+            "name": "Expectations <Z_j>",
+            "desc": "$\\langle Z_j \\rangle \\in [-1, 1]$ for $j = 1, \\dots, 4$"
+          },
+          {
+            "name": "Readout",
+            "desc": "$\\hat{y} = \\sigma(\\sum_j w_j \\langle Z_j \\rangle + b)$"
+          },
+          {
+            "name": "Subject-weighted BCE",
+            "desc": "Each subject weighs the same; $\\lambda_w \\|w\\|_2^2$ on the readout, weight decay $\\lambda_{\\phi}$ on the backbone, no penalty on $\\theta$"
+          }
         ]
       },
       {
-        "name": "Capa 5: Interpretabilidad Clínica",
+        "name": "Layer 5: Clinical interpretability",
         "color": "#ec4899",
-        "desc": "Mapeo de gradientes analíticos por parameter-shift rule a nivel de electrodo y tiempo.",
+        "desc": "Channel-time saliency from exact gradients through both stages (Eq. 9).",
         "nodes": [
-          {"name": "Jacobiano Cuántico", "desc": "d<Z_j>/dx_k vía parameter-shift rule"},
-          {"name": "Mapa de Saliencia I(c,t)", "desc": "Gradiente encadenado |dy_hat / dX_{c,t}|"},
-          {"name": "Validación Fisiológica", "desc": "Confirmación de foco fronto-central (TBR)"}
+          {
+            "name": "Quantum gradients",
+            "desc": "$\\partial \\hat{y} / \\partial x_k$ by backpropagation in simulation, parameter shift on hardware"
+          },
+          {
+            "name": "Saliency map",
+            "desc": "$\\mathcal{I}(c, t)$ per electrode and time sample"
+          },
+          {
+            "name": "Biomarker contrast",
+            "desc": "Post-hoc comparison of the learned features with Theta, Beta, TBR and frontal coherence"
+          }
         ]
       }
     ]
