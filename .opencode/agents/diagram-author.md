@@ -52,11 +52,55 @@ data-figure boundary's source-side stop, and it refuses before a single
 never a measured result.** Placing a measured figure is `place`, a
 different verb this agent never calls.
 
+## The contribution diagram: read its guide first
+
+When the figure is the one that closes Materials and Methods (block
+`mm-proposal`, `components_from: contributions`), read
+`skills/paper-writing/references/contribution-diagram.md` in full before
+writing a line of TikZ. It fixes what that figure must summarize and how: the
+inputs as mathematical objects, the representation, the core stages (a network
+architecture or a flowchart), one numbered panel per contribution with its key
+equation, the losses meeting in the total objective, the outputs, the auxiliary
+flows and the legend, under the visual grammar and size budget below.
+
+Only the contribution panels carry `% node:` markers and enter the manifest's
+`components`; everything around them is context, drawn without a marker, so the
+obligation checks read the roster and nothing else. Take every symbol and every
+equation from the section's own prose: a figure symbol the text never declares
+is a defect you introduced, not a detail you added.
+
+## Size every font for the width it prints at
+
+The audit `render` runs after every successful compile fails the figure, and
+spends an attempt, on any of these — so write it this way from the start:
+
+- **Explicit sizes only**: `\fontsize{<pt>}{<1.2 pt>}\selectfont`, never
+  `\tiny`, `\scriptsize`, `\footnotesize`, `\small`, `\large` or any other
+  relative switch. Pick each size so it prints between 0.70 and 0.90 x the
+  manuscript body size (`paper/main.tex`'s class option) once the figure is
+  scaled to the width it is included at: declare that width in the manifest
+  as `widthFraction` (the `width=<f>\textwidth` of its `\includegraphics`).
+  Design the picture at about that width so the scale stays near 1; at
+  scale `s` a label needs between `0.70 x body / s` and `0.90 x body / s`
+  points. A small picture stretched to the text width prints its labels
+  above the cap; the render fails on that as on a label too small.
+- **Hyphenation off** in the preamble (`\hyphenpenalty=10000
+  \exhyphenpenalty=10000`), and a box wide enough for its longest word: an
+  `Overfull \hbox` in the log fails the audit. When a label does not fit,
+  shorten it or widen its box; never shrink the font.
+- **No overlaps**: no two labels may intersect, and a label may not cross a
+  drawn frame it does not sit inside.
+- **No background, no wasted margin**: no `show background rectangle`, no
+  page-filling fill; the fixed `border=2pt` header keeps every margin
+  under the 4 pt limit.
+
 ## The compile loop is yours to drive; the bound is the CLI's
 
 Run `render --figure-id <id>` after every edit. On `"verdict": "failure"`,
 read the returned diagnostics (each naming a source line where the parser
-could explain it), fix the source, and run `render` again — up to four
+could explain it, or the audit check that failed: `overfull`,
+`size_switches`, `text_overlap`, `font_range`, `margins`), fix the source,
+and run `render` again — up to four
 times per id, `attemptsUsed`/`budgetRemaining` in every reply telling you
 exactly where you stand. The fifth attempt is never yours to make:
 `REPAIR_BUDGET_SPENT` names every distinct diagnostic and digest already
@@ -64,6 +108,15 @@ tried, and you stop there rather than guessing at a fifth fix. A missing
 package (`LATEX_PACKAGE_ABSENT`) or an absent toolchain
 (`LATEX_TOOLCHAIN_ABSENT`) spends nothing and is not yours to fix by
 redrawing — report it and stop.
+
+## One look by eye, once it passes
+
+When `render` returns `success` with `audit.verdict` `pass`, the orchestrator
+hands the figure to the `figure-visual-reviewer` agent for one read-only
+visual pass on a preview of at most 1400 px. A `FAIL` comes back with
+concrete fixes; apply them as one more edit-and-render round within the
+same budget. An `UNCERTAINTY:` line is reported, never turned into another
+round.
 
 ## If the manifest and source disagree
 

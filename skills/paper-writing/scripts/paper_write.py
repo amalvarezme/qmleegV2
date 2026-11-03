@@ -29,6 +29,9 @@ import paper_audit  # noqa: E402
 import paper_bindings  # noqa: E402
 import paper_block  # noqa: E402
 import paper_evidence  # noqa: E402
+import paper_language  # noqa: E402
+import paper_latex  # noqa: E402
+import paper_verify  # noqa: E402
 import paper_vocabulary  # noqa: E402
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "_core" / "implementation"))
@@ -130,6 +133,70 @@ def _stage_evidence_audit(contract: BlockContract, draft: dict) -> list:
     return bindings
 
 
+#: Sections whose contracts forbid opening a paragraph or a contribution item
+#: on emphasis: the introduction's contribution list names each component in
+#: plain text, and the set-up introduces each topic with a sentence.
+NO_BOLD_LEAD_IN_SECTIONS = frozenset({"introduction", "experimental-setup"})
+
+
+def own_paragraph_body(block_id: str, body: str) -> str:
+    """The body as written, opened on a blank line when the block must start
+    a paragraph of its own (`paper_verify.OWN_PARAGRAPH_BLOCKS`): its begin
+    marker is a comment, so without the blank line it would run into the
+    paragraph before it."""
+    if block_id in paper_verify.OWN_PARAGRAPH_BLOCKS and not body.startswith("\n"):
+        return "\n" + body
+    return body
+
+
+def check_lead_ins(block_id: str, latex: str) -> None:
+    """Refuse `DRAFT_BOLD_LEAD_IN` for the sections that forbid it; shared by
+    `write` and `humanize --apply`."""
+    section = block_id.split(".", 1)[0] if "." in block_id else ""
+    if section not in NO_BOLD_LEAD_IN_SECTIONS:
+        return
+    hits = paper_language.bold_lead_ins(latex)
+    if hits:
+        lines = ", ".join(f"line {hit['line']}: {hit['text'][:50]!r}" for hit in hits[:5])
+        raise Refused(
+            "DRAFT_BOLD_LEAD_IN",
+            f"the {section} section opens no paragraph or item on bold or a run-in heading ({lines}); "
+            "start the paragraph with a sentence that carries the transition from the previous one, "
+            "and name a contribution item in plain text",
+        )
+
+
+def _stage_language(paper_dir: Path, draft: dict) -> dict:
+    """Spec S4 (`odd/tasks/manuscript-polish-0-54.md`): the manuscript is
+    English unless the paper declares another language, and no draft
+    carries placeholder text. The declaration is read from the paper's own
+    `main.tex` (`paper_language.declared_language`); a block body declares
+    nothing itself. Runs before evidence-audit and before the attempt
+    ledger is read, so a refused draft burns no judge-cycle attempt and
+    leaves `main.tex` byte-identical."""
+    main_tex = Path(paper_dir) / "main.tex"
+    declared = None
+    if main_tex.is_file():
+        declared = paper_language.declared_language(
+            main_tex.read_bytes().decode("utf-8", errors="replace"))
+    report = paper_language.scan(draft["latex"], language=declared or "english")
+    if report["spanish"]:
+        lines = ", ".join(f"line {hit['line']}: {hit['text'][:60]!r}" for hit in report["spanish"][:5])
+        raise Refused(
+            "DRAFT_NOT_ENGLISH",
+            f"the manuscript is written in English and this draft carries Spanish prose ({lines}); "
+            "redraft it in English, or declare the paper's language in main.tex (babel/polyglossia)",
+        )
+    if report["placeholders"]:
+        lines = ", ".join(f"line {hit['line']}: {hit['marker']}" for hit in report["placeholders"][:5])
+        raise Refused(
+            "DRAFT_PLACEHOLDER_TEXT",
+            f"the draft still carries placeholder text ({lines}); write the content or leave the "
+            "block unwritten",
+        )
+    return {"status": "pass", "language": report["language"]}
+
+
 def _stage_contract_audit(contract: BlockContract, draft: dict, audit_account: dict) -> dict:
     return paper_audit.audit(
         contract.contract_prose, draft["latex"], audit_account["verdicts"],
@@ -166,6 +233,8 @@ def write_block(
         raise Refused("DRAFT_UNREADABLE", "draft must be a dict with list 'bindings'")
     if not isinstance(audit_account, dict) or "verdicts" not in audit_account or not isinstance(audit_account["verdicts"], list):
         raise Refused("AUDIT_UNREADABLE", "audit_account must be a dict with list 'verdicts'")
+    language = _stage_language(paper_dir, draft)
+    check_lead_ins(contract.block_id, draft["latex"])
     bindings = _stage_evidence_audit(contract, draft)
 
     key = _attempt_key(contract)
@@ -175,6 +244,13 @@ def write_block(
         attempt = ledger.get("attempts", 0) + 1
 
     audit_result = _stage_contract_audit(contract, draft, audit_account)
+    # Spec S5 (figure-and-table-quality): a table that shrinks to fit is a
+    # warning in both envelopes, never a refusal -- the same standing an
+    # `Overfull` box has in `paper_latex.parse_log`.
+    try:
+        table_lint = paper_latex.table_lint_report(draft["latex"], Path(paper_dir) / "main.tex")
+    except Exception as exc:  # a lint failure never blocks a write
+        table_lint = {"status": "unmeasured", "warning": f"table lint failed: {type(exc).__name__}: {exc}"}
 
     if audit_result["blocks"]:
         fired = [{"bullet": entry["bullet"], "span": entry["span"]} for entry in audit_result["fired"]]
@@ -191,6 +267,7 @@ def write_block(
             "attempt": attempt,
             "fired": fired,
             "verdicts": audit_result["verdicts"],
+            "tableLint": table_lint,
         }
 
     if contract.style_set:
@@ -282,7 +359,8 @@ def write_block(
         )
         source_grounding = paper_grounding.source_grounding_report(subjects, reconciled)
 
-    result = paper_block.substitute(paper_dir, contract.block_id, new_body=draft["latex"].encode("utf-8"))
+    body = own_paragraph_body(contract.block_id, draft["latex"])
+    result = paper_block.substitute(paper_dir, contract.block_id, new_body=body.encode("utf-8"))
 
     # `the-block-asserts-only-what-its-section-carries` skill's own
     # falsifier ("over ten or more recorded real `write` runs...") needs a
@@ -303,7 +381,7 @@ def write_block(
     paper_evidence.append_grounding_run(paper_dir, contract.block_id, source_grounding)
 
     import paper_ai_metrics  # noqa: PLC0415
-    ai_report = paper_ai_metrics.analyze_ai_signatures(draft["latex"])
+    style_quality = paper_ai_metrics.analyze_style(draft["latex"])
 
     return {
         "status": "written",
@@ -312,7 +390,11 @@ def write_block(
         "styleChannel": style_report,
         "sourceFidelity": source_fidelity,
         "sourceGrounding": source_grounding,
-        "aiStylometry": ai_report,
+        "styleQuality": style_quality,
+        # Deprecated alias of `styleQuality`, removed in the next release.
+        "aiStylometry": style_quality,
+        "tableLint": table_lint,
+        "language": language,
         **result,
     }
 

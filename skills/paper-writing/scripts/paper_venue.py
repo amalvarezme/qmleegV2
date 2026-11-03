@@ -871,6 +871,21 @@ _CITE_KEYS_RE = re.compile(r"\\cite[a-zA-Z]*\*?(?:\[[^\]]*\])*\{([^}]*)\}")
 _DOCUMENTCLASS_RE = re.compile(
     r"^[ \t]*\\documentclass(?:\[(?P<options>[^\]]*)\])?\{(?P<name>[^}]+)\}", re.MULTILINE
 )
+
+
+def parse_documentclass(tex: str) -> tuple:
+    """`(class_name, options)` of the first uncommented `\\documentclass`
+    in `tex`, or `(None, [])` when there is none. Options are split on
+    commas and stripped, in source order. Public so other shelves (for
+    example `_core/figure/print_scale.py`) read the class the same way
+    `Manuscript` does instead of re-deriving the pattern."""
+    found = _DOCUMENTCLASS_RE.search(strip_comments(tex))
+    if not found:
+        return None, []
+    options = [item.strip() for item in (found.group("options") or "").split(",") if item.strip()]
+    return found.group("name").strip(), options
+
+
 _BIBSTYLE_RE = re.compile(r"^[ \t]*\\bibliographystyle\{(?P<name>[^}]+)\}", re.MULTILINE)
 _SECTION_COMMAND_RE = re.compile(r"^[ \t]*\\section\*?\{")
 
@@ -912,12 +927,7 @@ class Manuscript:
         outside = paper_block.project(self.data).decode("utf-8")
         self.outside = outside
         preamble = outside.split("\\begin{document}", 1)[0]
-        found = _DOCUMENTCLASS_RE.search(strip_comments(preamble))
-        self.document_class = found.group("name").strip() if found else None
-        self.options = (
-            [item.strip() for item in (found.group("options") or "").split(",") if item.strip()]
-            if found else []
-        )
+        self.document_class, self.options = parse_documentclass(preamble)
         style = _BIBSTYLE_RE.search(strip_comments(outside))
         self.bibliography_style = style.group("name").strip() if style else None
         self.preamble = preamble
@@ -1661,6 +1671,47 @@ def _front_matter(family: str, manuscript: Manuscript, report: dict) -> tuple:
     return "", "".join(parts)
 
 
+#: The back-matter blocks that render after the references; `AI_USE_BLOCK`
+#: is the last declaration, immediately before them.
+APPENDIX_BLOCKS = frozenset({f"{BACK_SECTION}.bm-appendices"})
+AI_USE_BLOCK = f"{BACK_SECTION}.bm-ai-use-declaration"
+#: `build`'s own ordering token for the appendices, emitted after the references.
+APPENDICES_ITEM = "back-matter:appendices"
+_REFERENCES_LINE_RE = re.compile(
+    r"^[ \t]*\\(?:bibliography\{|begin\{thebibliography\}|printbibliography\b)", re.MULTILINE
+)
+
+
+def _back_matter_parts(manuscript: "Manuscript") -> tuple:
+    """`(declarations_text, appendices_text)`: every back-matter block, each
+    once and byte for byte, split into the declarations that precede the
+    references (the AI-use declaration last) and the appendices that follow
+    them. The canonical span between the first and last declaration is kept
+    whole -- glue and inner headings included -- when it already holds them
+    in that order and nothing else (no other block, no reference list);
+    otherwise the blocks are joined a blank line apart."""
+    blocks = sorted(manuscript.section_blocks(BACK_SECTION), key=lambda b: b["begin"]["start"])
+    appendices = [b for b in blocks if b["id"] in APPENDIX_BLOCKS]
+    declarations = [b for b in blocks if b["id"] not in APPENDIX_BLOCKS]
+    wanted = ([b for b in declarations if b["id"] != AI_USE_BLOCK]
+              + [b for b in declarations if b["id"] == AI_USE_BLOCK])
+    declarations_text = ""
+    if declarations:
+        start, stop = declarations[0]["begin"]["start"], declarations[-1]["end"]["end"]
+        span = manuscript.data[start:stop]
+        mine = {b["id"] for b in declarations}
+        clean = (wanted == declarations
+                 and not any(other["id"] not in mine and start <= other["begin"]["start"] < stop
+                             for other in manuscript.blocks)
+                 and not _REFERENCES_LINE_RE.search(span.decode("utf-8")))
+        if clean:
+            declarations_text = span.decode("utf-8")
+        else:
+            declarations_text = "\n".join(manuscript.block_region(b).decode("utf-8") for b in wanted)
+    appendices_text = "\n".join(manuscript.block_region(b).decode("utf-8") for b in appendices)
+    return declarations_text, appendices_text
+
+
 def build(paper_dir: Path, slug: str, clock=_clock) -> dict:
     directory = _require_venue(paper_dir, slug)
     requirements_path = directory / "requirements.json"
@@ -1726,13 +1777,23 @@ def build(paper_dir: Path, slug: str, clock=_clock) -> dict:
             missing.append(sid)
     extra_kept = [s for s in content if s not in emitted]
     # sections the venue does not list sit after its own content sections,
-    # ahead of the bibliography and the declarations
+    # ahead of the back matter and the bibliography
     cut = next((i for i, item in enumerate(ordered) if item[0] in ("references", BACK_SECTION)), len(ordered))
     ordered[cut:cut] = [(s, None) for s in extra_kept]
-    if not any(item[0] == "references" for item in ordered):
-        ordered.append(("references", None))
-    if BACK_SECTION not in emitted and any(b["written"] for b in manuscript.section_blocks(BACK_SECTION)):
-        ordered.append((BACK_SECTION, None))
+    # Back matter renders after the conclusions and before the references,
+    # for every venue; appendices follow the references
+    # (`sections/10-back-matter.md`, "Placement follows the venue") -- the
+    # venue's listed order places only its content sections.
+    references_entry = next((item for item in ordered if item[0] == "references"), ("references", None))
+    back_entry = next((item for item in ordered if item[0] == BACK_SECTION), (BACK_SECTION, None))
+    ordered = [item for item in ordered if item[0] not in ("references", BACK_SECTION)]
+    back_written = any(b["written"] for b in manuscript.section_blocks(BACK_SECTION))
+    declarations_text, appendices_text = _back_matter_parts(manuscript) if back_written else ("", "")
+    if declarations_text:
+        ordered.append(back_entry)
+    ordered.append(references_entry)
+    if appendices_text:
+        ordered.append((APPENDICES_ITEM, None))
 
     style = requirements["reference_style"]
     bst = (style or {}).get("bst") or manuscript.bibliography_style or "plain"
@@ -1741,9 +1802,13 @@ def build(paper_dir: Path, slug: str, clock=_clock) -> dict:
         if sid == "references":
             chunks.append(f"\\bibliographystyle{{{bst}}}\n\\bibliography{{../../refs}}\n")
             continue
+        if sid == APPENDICES_ITEM:
+            chunks.append(appendices_text + "\n")
+            continue
         title = section["title"] if section else None
         heading = _retitle_heading(manuscript.headings.get(sid), title, sid)
-        chunks.append(heading + "\n" + manuscript.region(sid).decode("utf-8") + "\n")
+        region = declarations_text if sid == BACK_SECTION else manuscript.region(sid).decode("utf-8")
+        chunks.append(heading + "\n" + region + "\n")
 
     regions = [manuscript.region_for(kind) for kind in ("declarations", "provenance")]
     region_text = "".join(r.decode("utf-8") for r in regions if r)
@@ -1783,8 +1848,9 @@ def build(paper_dir: Path, slug: str, clock=_clock) -> dict:
         "output_sha256": _sha256_bytes(encoded),
         "document_class": class_name, "family": family,
         "blocks": [{"id": b["id"], "digest": b["digest"]} for b in manuscript.blocks],
-        "sections": {"order": [s for s, _ in ordered if s != "references"], "extra_kept": extra_kept,
-                     "missing": missing},
+        "sections": {"order": [s for s, _ in ordered if s not in ("references", APPENDICES_ITEM)],
+                     "extra_kept": extra_kept, "missing": missing,
+                     "appendices_after_references": bool(appendices_text)},
         "preamble": {"skipped": skipped, "dropped": dropped},
         "front_matter": front_report, "bibliography_style": bst, "notes": notes,
     }
@@ -1881,6 +1947,67 @@ def status(paper_dir: Path, slug: str) -> dict:
     result = _summarise(paper_dir, slug)
     result["verb"] = "status"
     return result
+
+
+#: Publisher families whose back-matter placement `sections/10-back-matter.md`
+#: states; every other publisher (or none recorded) is `neutral`.
+PUBLISHER_FAMILIES = (
+    ("elsevier", ("elsevier", "cell press")),
+    ("mdpi", ("mdpi", "multidisciplinary digital publishing")),
+    ("ieee", ("ieee", "institute of electrical and electronics engineers")),
+)
+
+#: Where the AI-use declaration and the funding statement go, per family --
+#: the placement rules of `sections/10-back-matter.md`, as data. Every
+#: family puts the declarations before the references and the appendices
+#: after them; no family's guidelines say otherwise.
+_ORDER = {"declarations": "before-references", "appendices": "after-references"}
+BACK_MATTER_PLACEMENT = {
+    "elsevier": {
+        "ai_declaration": "own-section-before-references",
+        "ai_declaration_title": ("Declaration of generative AI and AI-assisted technologies "
+                                 "in the manuscript preparation process"),
+        "funding": "inside-acknowledgments", "highlights": True, **_ORDER,
+    },
+    "mdpi": {"ai_declaration": "inside-acknowledgments", "ai_declaration_title": None,
+             "funding": "own-block", "highlights": False, **_ORDER},
+    "ieee": {"ai_declaration": "inside-acknowledgments-naming-sections", "ai_declaration_title": None,
+             "funding": "inside-acknowledgments", "highlights": False, **_ORDER},
+    "neutral": {"ai_declaration": "own-section-before-references",
+                "ai_declaration_title": "Declaration of AI use",
+                "funding": "own-block", "highlights": False, **_ORDER},
+}
+
+
+def publisher_family(publisher) -> str:
+    """`elsevier`, `mdpi`, `ieee`, or `neutral` (unknown or unrecorded)."""
+    lowered = publisher.lower() if isinstance(publisher, str) else ""
+    for family, needles in PUBLISHER_FAMILIES:
+        if any(needle in lowered for needle in needles):
+            return family
+    return "neutral"
+
+
+def back_matter_placement(paper_dir: Path) -> list:
+    """Read-only: every selected venue with its publisher, family and the
+    back-matter placement that family takes. `[]` when no venue exists."""
+    root = paper_dir / "venues"
+    placements = []
+    if not root.is_dir():
+        return placements
+    for entry in sorted(root.iterdir()):
+        record_path = entry / "venue.json"
+        if not (entry.is_dir() and SLUG_RE.match(entry.name) and record_path.is_file()):
+            continue
+        try:
+            journal = (_read_json(record_path) or {}).get("journal") or {}
+        except (OSError, ValueError, AttributeError):
+            continue
+        family = publisher_family(journal.get("publisher"))
+        placements.append({"slug": entry.name, "journal": journal.get("name"),
+                           "publisher": journal.get("publisher"), "family": family,
+                           **BACK_MATTER_PLACEMENT[family]})
+    return placements
 
 
 def list_venues(paper_dir: Path) -> dict:

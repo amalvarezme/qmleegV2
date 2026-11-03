@@ -59,7 +59,7 @@
 ---
 # Title and Keywords
 
-**Extent** title 10–13 words · keywords 4–8
+**Extent** title 10–13 words · keywords 3–5
 **Carries** no number, no percentage, no claim of superiority
 
 The title is the paper's only irrevocable claim: it is what gets cited, indexed and
@@ -111,7 +111,7 @@ Title case, with prepositions and articles in lower case.
 
 ## Keywords
 
-**Four to eight, separated by semicolons.** Lower case by default; acronyms in capitals;
+**Three to five, separated by semicolons.** Lower case by default; acronyms in capitals;
 proper nouns keep their case.
 
 **They are not a restatement of the title.** Roughly a third repeat a term the title
@@ -139,9 +139,9 @@ invented for the search engine.
 The canonical manuscript is presented and typeset in **review format, at one column** (`onecolumn`, e.g., `\documentclass[11pt,onecolumn,a4paper]{article}` with standard review margins and 1.5 line spacing). Two-column or final publisher layouts are reserved for post-acceptance venue adaptation via the `venue` skill.
 
 ### Blinded Author Metadata on Initial Drafts
-In the initial drafting of the manuscript, **no author names, institutional affiliations, or contact emails are included**. All author metadata remains blinded and explicitly set as placeholders (*por definir* / suppressed for peer review):
+In the initial drafting of the manuscript, **no author names, institutional affiliations, or contact emails are included**. All author metadata remains blinded and explicitly set as placeholders (written in English and suppressed for peer review; never a Spanish placeholder):
 ```latex
-\author{Por definir \\ \textit{Afiliaciones y correos por definir}}
+\author{Author names withheld \\ \textit{Affiliations and contact e-mails to be provided}}
 ```
 Only when the entire manuscript has been drafted, compiled, and passes all verifications with the user is the operator prompted to supply author identities, affiliations, and correspondence details.
 
@@ -192,7 +192,7 @@ acronym appears in the abstract and the body.
 - An acronym in the title without a colon, or one the abstract does not expand.
 - A domain or place named when the work is not bound to it.
 - A hyphen where co-equal terms in a series need an en dash.
-- Fewer than 4 or more than 8 keywords, or a count the target journal does not permit.
+- Fewer than 3 or more than 5 keywords, or a count the target journal does not permit.
 - A keyword list that only repeats title terms.
 - A keyword absent from the body.
 - A missing classification line when the target journal requires one.

@@ -1,6 +1,6 @@
 # QMLEEG — Antigravity Rules
 
-Generated from `.claude/` by `papersmith` 0.50.0.
+Generated from `.claude/` by `papersmith` 0.58.1.
 
 - Treat `papersmith.yaml` as the workspace configuration.
 - Treat `.claude/agents/` as the canonical agent definition tree. Antigravity
@@ -18,7 +18,7 @@ Quantum Machine Learning for EEG (QMLEEG)
 
 ## Available agents
 
-- `ai-auditor` — Audits a manuscript draft or block for AI fingerprints, Claudeisms, and low burstiness using `paper_ai_metrics`, and verifies strict adherence to F5 invariants. Never invoked by any code path; `write` and `humanize` reconcile your account against the real draft, they never trust either from you.
+- `ai-auditor` — Audits a manuscript draft or block for writing quality (monotone cadence, overused academic phrasing, lexical diversity, connector use, sentence openings, redundancy) using `paper_ai_metrics`, and verifies strict adherence to F5 invariants. A readability check, never an AI detector. Never invoked by any code path; `write` and `humanize` reconcile your account against the real draft, they never trust either from you.
 - `audit-report` — One stretch: audit a subject that enumerates a closed set — accepted operations, subcommands, error codes, shipped assets — for the gap between what its running code accepts and what its own documentation claims. Derives both halves independently rather than reading either, and arrives at the report. Reports; never repairs.
 - `contract-auditor` — Reads a contract's `## Disqualifiers` bullets verbatim and judges a drafted block against each one, returning fires/clear/undecidable per bullet with a quoted span for every `fires`. Never invoked by any code path; `write` reconciles your account against the real bullets and the real draft, it never trusts either from you.
 - `dataset-curator` — One stretch of the datasets flow, from a dataset need to its arrival: a toy set and a licensed, checked, prepared dataset that the proof of concept and the full experiments both read, published privately only on the operator's consent. Synthesize the seeded toy set, fetch a source whose license is already allowed, measure it with `qc`, write the one official subject-wise preparation with `prepare`, and run `publish` for real only with the operator's own consent tokens. Stages: toy, checked, prepared, published.
@@ -32,6 +32,7 @@ Quantum Machine Learning for EEG (QMLEEG)
 - `experiments-tutor` — One turn of the experiments tutor: begins with the operator's message, a mode and a decision area from the dashboard's experiments panel, ends at one structured turn — one hint grounded in the protocol, approvals, code and results it read, one question, an assessment of the design with quoted evidence, the risks it sees, and any change of decision drafted for /experimental-deliberation. Reads; never writes the workspace.
 - `experiments-walk` — One stretch of experimental-implementation, between two of the operator's gates: from per-step placement decisions already taken to the launch they must authorize. Walk the declared flow act by act in its own order — run the local steps, commit each step's product, refresh the position, generate the job folders a remote step needs and stop at the rehearsal, which no act here performs and the doctrine leaves to a person. Stops at the launch and has no path to submitting a campaign.
 - `figure-auditor` — Audits one standalone TikZ diagram against the prose that describes it: runs `figure audit` for the semantic verdict, runs `figure-review probe` to measure whether the visual half is answerable and bounds it to that skill's checklist only when the probe resolves a link, checks typographic parity, and reports measured findings. Never repairs the figure, never re-derives a verdict by eye, and never invents a visual one.
+- `figure-visual-reviewer` — One visual pass over one rendered diagram whose mechanical audit already passed: reads a preview of at most 1400 px once and judges what no script can -- legibility at print scale, centring and balance, overlaps and crowding, labels and arrows reading correctly. Returns PASS, or FAIL with concrete fixes, and PASS plus an UNCERTAINTY line when unsure. Never edits a file.
 - `implementation-build` — One stretch of proposal-implementation, between two of the operator's gates: from an approved object-to-module map to the findings report they decide on. Materialize the object scaffolding, write one module per mathematical object with its provenance and invariant tests, sweep the declared configurations, rule on each remedy's admissibility BEFORE measuring it, and validate what was admitted. Decides nothing and asks nothing — it ends by reporting what it found and what establishing it cost.
 - `implementation-walk` — One stretch of proposal-implementation, between two of the operator's gates: from per-step placement decisions already taken to the launch they must authorize. Walk the declared flow act by act in its own order — run the local steps, commit each step's product, refresh the position, generate the job folders a remote step needs and stop at the rehearsal, which no act here performs and the doctrine leaves to a person. Stops at the launch and has no path to submitting a campaign.
 - `insumos-observer` — Reads the paper's four declared input sources — proposals/, experiments/, the target implementation repository's code, and its own run outputs — and reports, for each of the five observable facts, whether it is satisfied and by what evidence. Never decides a value and never runs `declare`; its report is what a human reads before running `declare` themselves.
@@ -52,8 +53,12 @@ Quantum Machine Learning for EEG (QMLEEG)
 Reply to the human in the language they write in (Spanish or English).
 Everything else stays English regardless of the conversation language: skills,
 agent definitions, delegations and messages between agents, tool inputs, and
-every generated artifact (code, comments, docs, commit messages, and paper
-internals unless the paper declares another language).
+every generated artifact (code, comments, docs, commit messages, the data files
+the dashboard displays under `.papersmith/` and `sota-pool/`, and paper
+internals unless the paper declares another language). The dashboard's language
+selector translates its own labels, never a workspace file, so a file written in
+Spanish shows Spanish under English; only the conversation with an agent
+follows the human's language.
 
 ## Paper construction flow
 

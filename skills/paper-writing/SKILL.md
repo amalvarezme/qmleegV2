@@ -110,20 +110,21 @@ in favor of an incoming body. The only exit from a hand-edited block is
 The canonical manuscript is presented in **review mode, single column** (`onecolumn`, e.g., `\documentclass[11pt,onecolumn,a4paper]{article}` with standard review margins and line spacing). Multi-column or journal-specific publication styles are deferred to the `venue` adaptation workflow once a journal is selected.
 
 ### Blinded Author Metadata on Initial Drafts
-During the initial drafting and refinement of the manuscript, **no author names, affiliations, or emails are included**. All author metadata remains blinded and marked as placeholders (*Por definir*):
+During the initial drafting and refinement of the manuscript, **no author names, affiliations, or emails are included**. All author metadata remains blinded and marked as English placeholders:
 ```latex
-\author{Por definir \\ \textit{Afiliaciones y correos por definir}}
+\author{Author names withheld \\ \textit{Affiliations and contact e-mails to be provided}}
 ```
 Only when the complete manuscript passes all verification gates with the user is the operator prompted to provide the author identities, affiliations, and correspondence details.
 
 ### Seven-Paragraph Introduction Structure
-The Introduction is strictly structured across seven canonical paragraphs:
+The Introduction has exactly seven paragraphs; the full contract, with the extent of each one, is `sections/06-introduction.md`:
 1. **Paragraph 1 (Application Context):** General context of the application domain and motivating phenomenon.
 2. **Paragraph 2 (AI Context & Problem Statement):** Context of AI techniques in said application, concluding with 2 to 3 sentences explicitly declaring the problem and its causes (drawn from the conceptual map, model panel, and pillars; strictly running text, no bullet items, no bold text, no numbered questions).
-3. **Paragraphs 3 & 4 (State of the Art across 3–5 Families):** Presents the state of the art in two paragraphs, identifying 3 to 5 methodological families or alternatives, detailing their principal methods, strengths, and issues/limitations.
-4. **Paragraph 5 (Proposal & Contributions):** Proposal presentation with its main contributions described in 3 to 4 short items.
-5. **Paragraph 6 (Evaluation, Results & Impact):** Summary of experiments conducted, comparison methods and criteria, most important empirical results obtained, and potential impact.
-6. **Paragraph 7 (Roadmap/Agenda):** Agenda of the paper (`The remainder of this paper is organized as follows: ...`).
+3. **Paragraph 3 (State of the Art, first families):** The first methodological families, with their principal methods, strengths, and issues/limitations.
+4. **Paragraph 4 (State of the Art, remaining families and joint gap):** The remaining families in the same form, closing on the joint gap. Paragraphs 3 and 4 together present 3 to 5 families.
+5. **Paragraph 5 (Proposal & Contributions):** Proposal presentation, introduced once in the paper's one voice (*this work introduces* by default, *we propose* when the paper chose first person), ending in a colon and followed by its main contributions in 3 to 4 short items; the list continues the paragraph. The count is inherited from the methods section: a proposal outside 3 to 4 contributions is fixed there, never by padding or trimming the list.
+6. **Paragraph 6 (Evaluation, Results & Impact):** Summary of experiments conducted, comparison methods and criteria, most important empirical results obtained, and potential impact.
+7. **Paragraph 7 (Roadmap/Agenda):** Agenda of the paper (`The remainder of this paper is organized as follows: ...`).
 
 ### Related Work Structure and Citation Density
 1. **Opening Context Paragraph:** First paragraph establishes the overarching context of problems and methods studied, framing the families introduced in the Introduction.
@@ -131,12 +132,14 @@ The Introduction is strictly structured across seven canonical paragraphs:
 3. **Three-part internal structure (2 to 3 paragraphs per subsection):** Foundations (fundamentos), Main methods (métodos principales), and Main challenges/issues (principales desafíos).
 4. **Citation volume per family:** Each family subsection must cite between 5 to 10 distinct alternative works.
 5. **Reference Horizon:** Between the Introduction and Related Work, the bibliography must collectively cite between 30 and 40 references.
+6. **Synthesis table (Block 5):** 7 to 12 works selected by relevance to the pillars and contributions, every family with at least one row, the proposal as the last row. Columns are the family plus one axis per pillar, contribution or property the proposal declares; an axis every row shares is dropped. The redactor picks the clearest layout (checkmark matrix, compact attribute table, or rows grouped by family) and states why; cells are a symbol or at most three words, the caption decodes every symbol, and the table follows the table rules of contracts 02 and 03. The contract-audit stage counts the works deterministically (`paper_audit.count_table_works`): a `clear` verdict on the row-count disqualifier over a table outside 7–12 is reported `undecidable` with the measured count under `deterministic`, never blocking by itself.
 
 ## When a delegated agent cannot be spawned
 
 Each stretch this skill delegates is defined in full by its own agent file:
 `.claude/agents/contract-auditor.md`, `.claude/agents/diagram-author.md`,
-`.claude/agents/figure-auditor.md`, `.claude/agents/insumos-observer.md`,
+`.claude/agents/figure-auditor.md`, `.claude/agents/figure-visual-reviewer.md`,
+`.claude/agents/insumos-observer.md`,
 `.claude/agents/paper-reviewer.md`, `.claude/agents/redactor.md`, `.claude/agents/section-grounding-auditor.md`,
 `.claude/agents/style-sampler.md`, `.claude/agents/venue-adapter.md`. When an agent cannot be spawned — the
 harness has no sub-agent mechanism, the agent is not registered in this
@@ -149,7 +152,7 @@ workaround. Say in the reply that the stretch ran inline and why the agent
 could not be spawned.
 
 An auditor run inline (`contract-auditor`, `section-grounding-auditor`,
-`figure-auditor`, `paper-reviewer`, `venue-adapter`) is not independent of the session that drafted what it
+`figure-auditor`, `figure-visual-reviewer`, `paper-reviewer`, `venue-adapter`) is not independent of the session that drafted what it
 judges. The verbs still reconcile its account against the real bytes, but say
 in the reply that the audit was not separated from the draft.
 
@@ -285,9 +288,9 @@ sole producer from `introduction.block-4b` to
 **The three closed vocabularies** a header may draw from: ten
 `requires_facts` ids (`formulation`, `contributions`, `problem-statement`,
 `gap`, `dataset`, `experimental-design`, `implementation`, `results`,
-`limitations`, `skeleton`), six `requires_declarations` ids (`author-roles`,
+`limitations`, `skeleton`), seven `requires_declarations` ids (`author-roles`,
 `grant-title`, `grant-code`, `repository-url`, `keyword-bounds`,
-`classification-line`), and three `citations` regimes (`discovery`,
+`classification-line`, `ethics-approval`), and three `citations` regimes (`discovery`,
 `resolution`, `none`). A value outside any of the three refuses
 immediately — this is deliberately closed, not a convention.
 
@@ -416,9 +419,10 @@ readable by Phase 1's block scanner: both markers share the `%% paper-writing
 `MARKER_PREFIX`'s own `startswith` check skips them (proven in
 `tests/test_paper_decisions.py::DisjointGrammarTests`).
 
-`declare` records two kinds of value: a `declaration` (one of the six
+`declare` records two kinds of value: a `declaration` (one of the seven
 operator-input ids — `author-roles`, `grant-title`, `grant-code`,
-`repository-url`, `keyword-bounds`, `classification-line`) or a `fact`
+`repository-url`, `keyword-bounds`, `classification-line`, `ethics-approval`)
+or a `fact`
 resolution (one of the ten fact ids). Recording either fixes it immediately
 — a further `declare` on the same id refuses `DECLARATION_FIXED` until
 `--reopen <id>` clears exactly that entry.
@@ -752,6 +756,48 @@ cached resolved metadata — never appended, never hand-typed:
 | `bib build [--guidance <dir>]` | Rebuilds `refs.bib` from the cached, resolved AND ingested evidence records of the keys `main.tex` cites; a key dropped from the text leaves the bibliography while its records stay in the append-only store; checks both `\cite{}`/entry directions | `ENTRY_UNSOURCED`, `ENTRY_NOT_INGESTED`, `CITE_WITHOUT_ENTRY` |
 | `bib refresh --cite-key <key> --metadata-digest <digest> [--resolver <r>] [--guidance <dir>]` | Relinks the record `bib build` reads for `<key>` to fresher cached metadata of the same work: appends one copy changing only `resolver` and `metadata_digest` | `ENTRY_UNSOURCED`, `ENTRY_NOT_INGESTED` |
 
+**The SOTA atlas follows the citations.** When the workspace holding
+`paper/` also holds `sota-pool/atlas.json`, a `bib build` (or a `bib
+refresh` that leaves both `\cite{}`/entry directions clean), a `verify` whose
+`citations` check passes, and a successful dashboard compile each rebuild
+`sota-pool/atlas.manuscript.json` (`skills/_core/command_center/atlas_manuscript.py`):
+every atlas system marked cited or not, with the blocks and claims that cite it,
+plus the cited papers absent from the pool. `atlas.json` is never modified. The
+result rides in the verb's JSON under `atlas_manuscript`; a builder error is a
+`warning` there and never changes the verb's status or exit code. Without an
+atlas the output is unchanged. On demand: `smith atlas cited`.
+
+**The compiled manuscript gets a visual QA pass.** A successful dashboard
+compile (and `smith paper qa [--json] [<dir>]` on demand) runs
+`skills/_core/figure/manuscript_qa.py` over `paper/main.pdf`: the text block of
+each page is inferred from its body lines (running headers, footers and page
+numbers set apart), and any text span, image, figure or drawn path passing it by
+more than 1 pt is an `overflow` finding; text inside a figure placement or a
+ruled table region printing outside [0.70, 0.90] × body is
+`figure-font`/`table-font`, each naming its `bound` (`floor` or `cap`); each
+`Overfull \hbox` of `main.log` is `overfull`, with its source lines and page. It
+writes `paper/.qa/qa.json` (with the sha256 of the `main.pdf` it measured, so
+staleness is detectable) and 100 dpi page images under `paper/.qa/pages/`; the
+dashboard's PDF preview tab lists the findings with page thumbnails
+(`GET /api/paper/qa`), and `smith audit` prints the stored count and staleness.
+A QA error is a `warning` under `manuscript_qa` and never fails the compile.
+**Why not Playwright:** it renders HTML, not PDFs, so it cannot see where
+pdfTeX placed a glyph; the check reads the PDF itself (pypdfium2 geometry,
+poppler rasters). Playwright stays for the dashboard UI (`ui/e2e`).
+
+**The manuscript summary graph follows the same events.** In a workspace
+(`papersmith.yaml` present) the same `bib build`/`bib refresh`, `verify` and
+compile also rebuild `.papersmith/manuscript_graph.json`
+(`skills/_core/command_center/manuscript_graph.py`): topic, problem and pillars,
+hypotheses, the cited SOTA, the base mathematics
+(`materials-and-methods.mm-borrowed-machinery`) apart from the novelty
+mathematics (`materials-and-methods.mm-proposal`), experiments, findings and the
+first sentence of each `conclusions.concl-block-*`, each node naming its source
+and blocks, and a missing source marked `missing` with the phase that fills it.
+It rides under `manuscript_graph` with the same warning-only rule. So the graph
+reads well, keep each displayed equation `\label`ed and reference the borrowed
+equation the proposal builds on with `\eqref`. On demand: `smith atlas summary`.
+
 **`bib refresh` relinks metadata; it never judges support.** After a
 re-`resolve` caches better metadata (a year, a venue) for a DOI or arXiv id
 already cited, `bib refresh` points the citation at it without re-quoting
@@ -964,6 +1010,26 @@ byte-identical to a packet assembled with no `--paper` at all — the fifth
 key only ever WIDENS what a `transposition`-mode block's packet carries,
 never anything else.
 
+**The AI-use record (`ai_usage`).** The packet of
+`back-matter.bm-ai-use-declaration`, and of
+`experimental-setup.es-training-details` (which holds the Methods sentence),
+carries one more key, `ai_usage`, built read-only by
+`paper_ai_usage.build` when the packet resolves a paper: `pipeline` (per
+phase, from `command_center.ai_history.build_ai_usage`: the agent roles, the
+harnesses whose chat sessions worked on it, and the counts of sessions,
+commands, operator follow-ups, approvals, agent replies, revisions,
+decisions and errors; `model` is always `null`, the operator supplies tool
+versions), `drafted` (every written block, drafted by `redactor` and audited
+by `contract-auditor`, with its write attempts and whether it has an
+evidence ledger), `tools`, `code_or_experiments_by_agents` and
+`methods_sentence_required` (true when the proof-of-concept and experiments
+phase shows agent sessions), and `venues` (each selected venue's publisher
+family and where it places the AI-use declaration and funding:
+`paper_venue.back_matter_placement`). An unreadable source degrades to
+`{"status": "unavailable"}`; the key never refuses, and every other block's
+packet keeps its previous keys. The declaration states what the record shows
+(`sections/10-back-matter.md`, "AI-use declaration").
+
 ### Corpus codes newly reachable from `packet` (`transposition`-mode blocks only)
 
 `packet` assembles a corpus (`paper_graph.assemble_corpus`, read-only,
@@ -1125,6 +1191,9 @@ either command's own `--help`.
 
 | Situation | Action |
 | --- | --- |
+| `write` refuses `DRAFT_NOT_ENGLISH` | The draft carries Spanish prose (the refusal names each line) — redraft it in English; only a paper that declares another main language in `main.tex` (babel/polyglossia) is written in it. No attempt is spent |
+| `write` refuses `DRAFT_BOLD_LEAD_IN` | A draft of the introduction or the experimental set-up opens a paragraph or a list item on bold, a `{\bf …}` group, a run-in `\paragraph{…}` or a description label (`\item[…]`); the refusal names each line. Open the paragraph with a sentence that carries the transition from the previous one, and name a contribution item in plain text. Table cells and in-sentence emphasis are free. No attempt is spent, and `humanize --apply` refuses the same draft |
+| `write` refuses `DRAFT_PLACEHOLDER_TEXT` | The draft still carries `por definir`, `TODO`, `TBD`, `FIXME` or `\todo` — write the content, or leave the block unwritten. No attempt is spent |
 | `write` refuses `SECTION_BINDING_ABSENT` | Run `separate --proposal <path>` naming a whole cut for the missing claim's lineage, then the exact `bind` invocation the settled cut licenses |
 | `separate` refuses `SEPARATION_SECTION_OVERLAP` / `SEPARATION_SECTION_ORPHANED` / `SEPARATION_NOTATION_GAP` | One code by fixed precedence overlap → orphan → gap; the detail names every instance of every class present — fix the cut and resubmit the same proposal file |
 | `separate` refuses `SEPARATION_SECTION_UNCLAIMABLE` | A named title resolves to a real heading outside the claimable set (the document's own title, or a subsection), or the document's claimable set could not be measured at all — `--file`/`contract` the section, or re-check the title against the document's own headings |
@@ -1159,6 +1228,18 @@ never prose. The `style` channel's samples keep whatever language they were
 ingested in: a style reference is evidence about rhythm and register, and
 `STYLE_OVERLAP` already refuses a draft that borrows its words.
 
+**The rule is enforced, not only stated.** `paper_language.py` is the one
+detector: `write` refuses a draft carrying Spanish prose (`DRAFT_NOT_ENGLISH`)
+or placeholder text — `por definir`, `TODO`, `TBD`, `FIXME`, `\todo`
+(`DRAFT_PLACEHOLDER_TEXT`) — before evidence-audit runs, so no attempt is
+spent and `main.tex` stays byte-identical; `verify`'s `language` check and the
+manuscript QA report (`language`/`placeholder` findings) scan the whole
+`main.tex`. Math, comments, markers, citations, the bibliography and
+capitalized accented words (names, institutions) are never read as Spanish.
+A paper that declares another main language in `main.tex` (babel's `main=`
+or last option, polyglossia's `\setmainlanguage`) is exempt from the Spanish
+check, never from the placeholder check.
+
 ## The prose pass: what it may not touch
 
 An already-written block can be edited for **prose** — vocabulary, phrasing,
@@ -1180,17 +1261,48 @@ outside the target block moved — still holds for it. A pass with its own
 file-writing path would sit outside every guarantee this skill makes.
 
 **It runs as a checklist with nothing installed.** The untouchable list above, plus
-the three audits `write` already sequences. An operator-wired humanizer connector
+the three audits `write` already sequences. An operator-wired prose-editing connector
 is an accelerator inside that contract, never a prerequisite for it: a skill that
 stops working because a third-party server is absent has made the operator's
 environment part of its contract.
 
-**Authentic humanization and stylometric audit.** An already-written block can be
-evaluated for burstiness ($CV$) and AI fingerprints (Claudeisms, formulaic patterns)
-via `paper_cli.py ai_audit`, and rephrased under the F5 invariant contract via
-`paper_cli.py humanize`. The audit delegates to the `ai-auditor` agent, which measures
-sentence length variance and cliché density, while ensuring every citation and number
-remains byte-identical.
+**Style audit and style revision.** An already-written block can be measured for
+writing quality — cadence (sentence-length $CV$; a monotone cadence reads flat),
+overused academic phrasing (a closed catalog of words and formulaic patterns), and
+lexical diversity — via `paper_cli.py ai_audit`, which reports a `style_score`
+(0 clear, 1 needs revision) and a `style_verdict` (`clear`, `uneven`,
+`needs_revision`). `paper_cli.py humanize` checks a revised draft of one block:
+it refuses `F5_INVARIANT_VIOLATION` when a citation, number, statistic, or display
+equation changed, and with `--apply` it substitutes the block only when the draft
+meets `--style-target` (default 0.20) unless `--force`, refusing
+`TARGET_SCORE_UNMET` otherwise. The audit delegates to the `ai-auditor` agent.
+
+**Flow and redundancy.** Every style report also carries a `flow` key
+(`flow_score`, `flow_verdict` in the same three bands, and `findings`, each
+naming its sentence, its paragraph and the quoted span; `thresholds` states
+every limit). It measures stock connectors (the same one opening two
+sentences within five, more than a quarter of the sentences opening with
+one, synthesis openers such as *Overall* or *Taken together* repeated),
+sentence openings (consecutive repeats, one dominant opening, *This/These +
+noun* in series), *because*, *where* and *, which* density (the *where*
+that follows an equation and defines its symbols is exempt), repeated
+five-word phrases across paragraphs and near-duplicate sentences, and
+template phrasing (*It is worth noting*, *plays a crucial role*, *In this
+context*, *serves as*, *This highlights*). `ai_audit --all` reports it over
+the whole manuscript, where cross-block repetition shows, and per block.
+`humanize` returns `flow_findings` and `revision_guidance`, and `--apply`
+also refuses `TARGET_SCORE_UNMET` while `flow_verdict` is `needs_revision`
+(unless `--force`). The guidance rebuilds each transition from the logical
+relation (contrast, cause, consequence, elaboration, example) instead of
+swapping one stock connector for another, drops a connector the sentence
+order already carries, and cuts repetition — always under the F5 gate.
+
+These are readability checks, never an AI detector: no step aims to make
+machine-assisted prose pass as human-written, and a passing style score does not
+change the obligation to declare AI use (every report carries that
+`disclosure_notice`). The old keys `composite_score`, `verdict`, `target_score`,
+and `meets_target`, and the `--target-score` flag, remain as deprecated aliases
+for one release.
 
 **It reports what it changed**, block by block, so the operator reads the diff it
 produced instead of being asked to trust it.
@@ -1217,7 +1329,7 @@ anything itself.**
 
 | Verb | What it does | Refuses |
 | --- | --- | --- |
-| `write --section <id> --block <id> --draft <path> --audit <path> [--evidence <path>] [--style <path>] [--guidance <dir>] [--transcript <path>] [--grounding <path>]` | Before any draft/audit byte is read: refuses if this block's own phase wave is not yet writable, then refuses if this block's own section citation folder is not fully ready, then runs packet assembly for this block. Then reconciles the already-drafted, already-audited block against its real contract, evidence set and mode; substitutes on success, reports fired bullets on a first failure, refuses on exhaustion. `--style` records the sampler's account as `R` and runs the eight-token tripwire against the styled draft before `substitute`. For a `transposition`-mode block with at least one resolved bound section, `check_source_section_verbatim` then runs against the same draft, after the style tripwire and before `substitute`. `--grounding` records the section-grounding-auditor's account and reconciles it against every subject sentence, after the verbatim check and before `substitute` | `PHASE_NOT_READY`, `CITATION_FOLDER_ABSENT`, `CITATION_NOT_INGESTED`, `CITATION_FOLDER_UNCLASSIFIED`, `GUIDANCE_MARKDOWN_UNREADABLE`, `MODE_ABSENT`, `EVIDENCE_SET_REQUIRED`, `UNBOUND_SENTENCE`, `BINDING_ORPHANED`, `EVIDENCE_ID_UNKNOWN`, `FACT_NOT_LICENSED`, `STRUCTURAL_CARRIES_CLAIM`, `MODE_VIOLATION`, `DISQUALIFIERS_ABSENT`, `VERDICT_MISSING`, `VERDICT_BULLET_UNKNOWN`, `AUDIT_EXHAUSTED`, `SPAN_NOT_IN_SOURCE`, `STYLE_OVERLAP`, `SOURCE_SECTION_VERBATIM`, `GROUNDING_ACCOUNT_ABSENT`, `GROUNDING_SENTENCE_UNKNOWN`, `GROUNDING_VERDICT_MISSING`, `SECTION_UNSUPPORTED_CLAIM` |
+| `write --section <id> --block <id> --draft <path> --audit <path> [--evidence <path>] [--style <path>] [--guidance <dir>] [--transcript <path>] [--grounding <path>]` | Before any draft/audit byte is read: refuses if this block's own phase wave is not yet writable, then refuses if this block's own section citation folder is not fully ready, then runs packet assembly for this block. Then reconciles the already-drafted, already-audited block against its real contract, evidence set and mode; substitutes on success, reports fired bullets on a first failure, refuses on exhaustion. `--style` records the sampler's account as `R` and runs the eight-token tripwire against the styled draft before `substitute`. For a `transposition`-mode block with at least one resolved bound section, `check_source_section_verbatim` then runs against the same draft, after the style tripwire and before `substitute`. `--grounding` records the section-grounding-auditor's account and reconciles it against every subject sentence, after the verbatim check and before `substitute` | `PHASE_NOT_READY`, `CITATION_FOLDER_ABSENT`, `CITATION_NOT_INGESTED`, `CITATION_FOLDER_UNCLASSIFIED`, `GUIDANCE_MARKDOWN_UNREADABLE`, `MODE_ABSENT`, `DRAFT_NOT_ENGLISH`, `DRAFT_PLACEHOLDER_TEXT`, `DRAFT_BOLD_LEAD_IN`, `EVIDENCE_SET_REQUIRED`, `UNBOUND_SENTENCE`, `BINDING_ORPHANED`, `EVIDENCE_ID_UNKNOWN`, `FACT_NOT_LICENSED`, `STRUCTURAL_CARRIES_CLAIM`, `MODE_VIOLATION`, `DISQUALIFIERS_ABSENT`, `VERDICT_MISSING`, `VERDICT_BULLET_UNKNOWN`, `AUDIT_EXHAUSTED`, `SPAN_NOT_IN_SOURCE`, `STYLE_OVERLAP`, `SOURCE_SECTION_VERBATIM`, `GROUNDING_ACCOUNT_ABSENT`, `GROUNDING_SENTENCE_UNKNOWN`, `GROUNDING_VERDICT_MISSING`, `SECTION_UNSUPPORTED_CLAIM` |
 
 **The phase gate stops the write path, it does not merely report it.**
 Unit 6 wired `PHASE_NOT_READY` onto the read-only `phases` verb alone;
@@ -1248,6 +1360,23 @@ block (`packet`'s own assembly, above) as a gate in its own right: a
 `style-reference` root whose ingested markdown cannot be read refuses
 `GUIDANCE_MARKDOWN_UNREADABLE` here, before the draft/audit stage is ever
 reached.
+
+**A table that shrinks to fit is a warning, never a refusal.** Every `write`
+envelope (`written` and `audit-fired`) carries `tableLint`
+(`paper_latex.table_lint_report`): the body size read from `main.tex`
+(`print_scale.body_font_pt`), the printed range (`minPrintedPt` 0.70 × body,
+`maxPrintedPt` 0.90 × body), and one finding per
+`\resizebox` or `adjustbox` width scaling of a tabular
+(`table-scaled-to-width`), `\scalebox`/`adjustbox scale=` below 0.85
+(`table-scaled-below-floor`), and `\tiny`/`\scriptsize`/`\footnotesize`/`\small`
+(or `\fontsize{<pt>}`) inside a table that prints below the floor
+(`table-font-below-floor`), and a size inside a table that prints above the
+cap, or a table that declares no size and so prints at the body size
+(`table-font-above-cap`, command `\normalsize (default)`). It warns
+for the same reason an `Overfull` box is a non-blocking diagnostic: the source
+cannot prove what prints (the body size may be a fallback), and the compiled
+manuscript's QA measures it. Contracts 02 and 03 carry the rule
+(`## Tables stay inside the text block`).
 
 ### The shuttle procedure — this CLI never invokes an agent
 
@@ -1505,10 +1634,10 @@ existing `substitute` verb's `\includegraphics`; no TikZ byte ever enters
 | `render --figure-id <id> [--paper <dir>]` | Compiles `<id>.tex` standalone via exactly one `latexmk` call, cross-checks the manifest both directions, and scans stop A before ever spawning the compiler | `DIAGRAM_SOURCE_ABSENT`, `MANIFEST_SOURCE_MISMATCH`, `DIAGRAM_PLOTS_DATA`, `LATEX_TOOLCHAIN_ABSENT`, `LATEX_LOG_ABSENT`, `LATEX_OUTCOME_UNEXPLAINED`, `LATEX_PACKAGE_ABSENT`, `REPAIR_BUDGET_SPENT` |
 | `render --figure-id <id> --section <section-id> --block <id> [--sections <dir>] [--paper <dir>]` | The same compile, and then the full obligation suite (components — only when the block declares `components_from`, excludes, caption, mandatory, cross-diagram separation) against the block's own `figure:` declaration | adds `MALFORMED_FIGURE_OBLIGATION`, `COMPONENT_MISMATCH`, `COMPONENTS_FACT_UNRESOLVED`, `COMPONENTS_FACT_NOT_A_LIST`, `EXCLUDED_COMPONENT`, `SHARED_COMPONENT`, `CAPTION_INCOMPLETE`, `MANDATORY_DIAGRAM_ABSENT` |
 | `render --figure-id <id> --acknowledge-reset [--paper <dir>]` | The explicit operator acknowledgement that clears a spent ledger — compiles nothing, never combined with a compile in the same call | (none beyond `render`'s own) |
-| `place --figure-id <id> --pdf <path> --provenance <path> [--paper <dir>]` | Places an already-measured figure's PDF — compiles nothing, requires a provenance record naming the run that produced it | `DIAGRAM_SOURCE_ABSENT` (reused: the named artifact this call needs is absent) |
+| `place --figure-id <id> --pdf <path> --provenance <path> [--paper <dir>]` | Places an already-measured figure's PDF — compiles nothing, requires a provenance record naming the run that produced it, and measures the PDF first (`paper_place.py`, the same rules `figure-review measure` reports): a plot carries a text layer, no full-page background, no margin wider than 4 pt, no in-figure title, and every text span prints between 0.70 and 0.90 x the body at the provenance's `printedWidthFraction` of `\textwidth` (1.0 by default; `figureKind: image` exempts a photograph from the text-layer rule only). No override: the fix is the figure or its declared width | `DIAGRAM_SOURCE_ABSENT` (reused: the named artifact this call needs is absent), `FIGURE_PDF_UNREADABLE`, `FIGURE_PROVENANCE_INVALID`, `FIGURE_MEASUREMENT_UNAVAILABLE`, `FIGURE_NO_TEXT_LAYER`, `FIGURE_FULL_PAGE_BACKGROUND`, `FIGURE_MARGIN_WASTE`, `FIGURE_IN_FIGURE_TITLE`, `FIGURE_TEXT_BELOW_PRINT_FLOOR`, `FIGURE_TEXT_ABOVE_PRINT_CAP` |
 | `figure optimize --figure-id <id> [--in-place \| --output <path>] [--strip-comments] [--no-compile] [--paper <dir>]` | Rewrites one diagram's TikZ source: prunes the libraries it can **prove** unused, adds the ones it detects as missing, factors repeated option lists into one `\tikzset`, then compiles the candidate and commits it only on a `success` verdict. `background=2pt` headers, relative positioning, and `% node:` markers are preserved by construction | `DIAGRAM_SOURCE_ABSENT`, `DIAGRAM_PLOTS_DATA`, `MANIFEST_SOURCE_MISMATCH`, `LATEX_TOOLCHAIN_ABSENT`, `LATEX_PACKAGE_ABSENT`, `LATEX_OUTCOME_UNEXPLAINED` |
 | `figure optimize --file <path.tex> [--strip-comments]` | Dry run: prints the optimized candidate for one source path and writes nothing (no manifest, so no cross-check applies) | `DIAGRAM_SOURCE_ABSENT` |
-| `figure audit --figure-id <id> --section <id> [--block <id>] [--sections <dir>] [--paper <dir>]` | Compares the manifest's declared components — **not** every `\node{}` string — against the section prose, and the `components_from` fact's list against both. Emits `verdict` (`pass`/`fail`/`unmeasured`) plus `unmatched_nodes`, `missing_pipeline_steps`, `label_mismatches`, `warnings`, `remediation`, and writes `figure_audit.json` beside the figure's ledger | `DIAGRAM_SOURCE_ABSENT`, `SECTION_CONTRACTS_UNREADABLE`, `SECTION_UNKNOWN`, `BLOCK_ABSENT` |
+| `figure audit --figure-id <id> --section <id> [--block <id>] [--sections <dir>] [--paper <dir>]` | Compares the manifest's declared components — **not** every `\node{}` string — against the section prose (the contract body plus the section's own `<section>.*` blocks in `paper/main.tex`; an absent or unparseable `main.tex` leaves the contract body alone), and the `components_from` fact's list against both. Emits `verdict` (`pass`/`fail`/`unmeasured`) plus `unmatched_nodes`, `missing_pipeline_steps`, `label_mismatches`, `warnings`, `remediation`, and writes `figure_audit.json` beside the figure's ledger | `DIAGRAM_SOURCE_ABSENT`, `SECTION_CONTRACTS_UNREADABLE`, `SECTION_UNKNOWN`, `BLOCK_ABSENT` |
 | `figure audit --file <path.tex> --manifest <path.json> --section <id> [--block <id>]` | The same audit for a figure outside `paper/Figures/`; `--file` requires `--manifest` | as above |
 
 **`figure optimize`'s two guards run even under `--no-compile`.** The manifest
@@ -1525,6 +1654,27 @@ repairable compile failure as the loop's ordinary cost. `unmeasured` exists so
 "could not check" never reads as "checked and clean": a figure whose contract
 declares no `components_from`, or a call that omits `--block`, reports
 `unmeasured` rather than a vacuous pass.
+
+**Every successful compile is audited at print size.** `render` runs the
+shared diagram audit (`skills/_core/figure/diagram_audit.py`, the same one
+`experiment-diagrams` runs) on the compiled PDF, its log and its source:
+no `Overfull \hbox`/`\vbox` in the log; no relative size switch
+(`\tiny` ... `\Huge`, `\small`, `\footnotesize`) — every size is an
+explicit `\fontsize{<pt>}{<1.2 pt>}\selectfont`; no two text spans
+intersecting and no span crossing a drawn frame it is not inside; every
+span printing between 0.70 and 0.90 x the manuscript body size (`paper/main.tex`'s
+class option, 10 pt without one) once the figure is scaled to its declared
+inclusion width — the manifest's optional `widthFraction` (the
+`width=<f>\textwidth` its `\includegraphics` uses, 1.0 by default) and
+`textWidthPt` (the A4 article width for the body size by default); and no
+background canvas or content margin wider than 4 pt. A failing audit is a
+repairable `failure` like any other: it spends one attempt, returns the
+`audit` and one diagnostic per finding, and leaves the PDF in scratch
+(`preview`) instead of `Figures/<id>.pdf`. Size each font for the width
+the figure prints at (`diagram_audit.role_font_pt(body_pt, scale)` gives
+the sizes per role); when a label does not fit, shorten it or widen its
+box, never shrink the font. `figure optimize` reports a relative switch as
+a warning before a compile is spent.
 
 **A repairable failure is an ordinary outcome, not a refusal.** `render`
 returns `"status": "ok"`, `"verdict": "failure"` with the parsed
@@ -1590,7 +1740,11 @@ carries no diagram obligation at all when the operator's choice leaves no
 It authors the `.tex`/`.diagram.json` pair and drives its own `render`
 loop up to the repair budget, stopping at `REPAIR_BUDGET_SPENT` or an
 unrecoverable refusal for the operator to resolve — it never clears a spent
-ledger itself.
+ledger itself. For the figure that closes Materials and Methods, the agent first
+reads `skills/paper-writing/references/contribution-diagram.md`: the parts that
+figure summarizes (inputs as mathematical objects, representation, core stages,
+numbered contribution panels with their equations, losses and total objective,
+outputs, legend), its visual grammar and its size budget.
 
 **Auditing a diagram against its own prose delegates to the `figure-auditor` agent.**
 It runs `figure audit` and reports that JSON as the authoritative
@@ -1602,6 +1756,21 @@ checklist when the probe resolves a rasterizer link, and reporting them
 checks typographic parity between the figure's preamble and the paper's own
 font setup. It never repairs the figure and never reports a visual verdict it
 did not measure.
+
+**Judging a rendered diagram by eye delegates to the `figure-visual-reviewer` agent.**
+After `render` reports `success` (its audit reads `pass`), one read-only
+pass over a preview of at most 1400 px judges what no script can: legibility
+at print scale, centring and balance, overlaps and crowding a reader would
+see, and whether labels and arrows read correctly. It returns `PASS`, or
+`FAIL` with concrete fixes for `diagram-author`, and adds an `UNCERTAINTY:`
+line instead of failing when it cannot decide. It never edits anything and
+runs once per drawing.
+
+**Measure this before delegating (figure-visual-reviewer):** confirm
+`render`'s last reply for the id reads `"verdict": "success"` with
+`audit.verdict` `pass` and that `paper/Figures/<id>.pdf` exists; a visual
+pass over a figure the mechanical audit already fails spends a model call
+on what the diagnostics already say.
 
 **Measure this before delegating (figure-auditor):** confirm the block's
 `figure:` declaration is readable (`contract --file <path>`) and that the
@@ -1672,7 +1841,7 @@ never repairs anything it finds — `skill-audit`'s own shape, reused here.
 | Verb | What it does | Refuses |
 | --- | --- | --- |
 | `couplings --file <path\|->` | Validates a JSON couplings record's shape and writes it WHOLE, atomically, to `paper/couplings.json` — never merged with what was there before | `COUPLINGS_INPUT_UNREADABLE`, `COUPLINGS_RECORD_MALFORMED` |
-| `verify [--sections <dir>]` | Read-only report: `contribution-list`, `chain`, `gap`, `artefacts`, `future-work`, `citations`, `contract-currency`, `figure-semantics` | `DECLARATION_RECORD_ABSENT` |
+| `verify [--sections <dir>]` | Read-only report: `contribution-list`, `chain`, `gap`, `artefacts`, `future-work`, `citations`, `contract-currency`, `figure-semantics`, `language`; plus, under its own `structure` key, `back-matter-order` (every declaration block above the `\bibliography` line, appendices below it; `unmeasured` `NO_BIBLIOGRAPHY` when there is none), `own-paragraph` (the future-work block and every declaration open a paragraph of their own, never running into the block before them; `write` and `humanize --apply` open those bodies on a blank line) and `appendix-length` (an appendix whose estimated printed extent is one page or less fails, naming `materials-and-methods` or `experimental-setup` as where its content belongs), which `clean` also requires to pass | `DECLARATION_RECORD_ABSENT` |
 
 **Three values, never two.** Every check's own `verdict` is `pass`, `fail`
 or `unmeasured` — `unmeasured` is never folded into `pass`. Two new modules
@@ -1687,8 +1856,9 @@ both hold it, and `paper_coupling_evidence.py`, to writing nothing).
 `paper_verify.py` is held to an import allowlist of exactly `re`, so it can
 neither parse JSON nor reach the auditor. The invocation therefore lives in
 `paper_coupling_evidence.gather()` — the module that already owns every disk
-read — which runs `paper_figure_audit.audit_semantics` over each figure and
-stores the **already-computed report dict** on `Evidence.figure_semantics`.
+read — which runs `paper_figure_audit.audit_semantics` over each figure — against
+the contract bodies plus the `main.tex` blocks of every section whose contract
+declares a `figure:` obligation — and stores the **already-computed report dict** on `Evidence.figure_semantics`.
 `paper_verify.py` maps that dict's verdict into its own closed
 `pass|fail|unmeasured` vocabulary and never touches a `Path`-typed field. No
 figure at all reports `unmeasured`, reason `NO_FIGURE_DECLARED`; a figure the
@@ -1696,6 +1866,14 @@ audit could not compare reports `unmeasured`, reason
 `FIGURE_SEMANTICS_UNMEASURED`. The dependency direction is one-way:
 `paper_coupling_evidence.py` may import `paper_figure_audit.py`; the auditor
 may not import the reader or `paper_verify.py`.
+
+**The ninth check, `language`, reads a scan `cmd_verify` hands in.**
+`cmd_verify` runs `paper_language.scan` over the `main.tex` bytes `gather()`
+already read and passes the result to `paper_verify.run(..., language=)`,
+the same way it resolves `optional_block_ids`. A Spanish prose line or a
+placeholder marker (`por definir`, `TODO`, `TBD`, `FIXME`, `\todo`) fails
+the check and names its line; a `run()` handed no scan reports
+`unmeasured`, reason `LANGUAGE_NOT_SCANNED`, never a silent pass.
 
 **`verify` reads its own declaration record, `paper/couplings.json` —
 read-only, untracked like `main.tex` itself.** `couplings` is its producer:
@@ -1848,7 +2026,7 @@ exits 2 having written nothing.
 | `diff --slug <s> [--sections <dir>]` | Writes `audit.json`: smith's section contracts (`paper_contract.parse`: ids, `position`, the `**Extent**` prose read best-effort) and the written `main.tex` (blocks, declarations, keyword count, abstract/title/main-text word counts, figures, tables, cited references, the class and bibliography-style lines) against `requirements.json`. Findings: `missing-section`, `extra-section`, `out-of-order`, `over-limit`, `under-limit`, `missing-declaration`, `class-mismatch`, `reference-style-mismatch`, `missing-extra`, `undecidable`; each with a `severity` (`blocker`, `major`, `minor`), the smith side, the venue side with its quote and url, the affected block ids, and `resolved_by` (`build`, `text-change`, `operator-decision`). The audit records the sha256 of `main.tex` and of `requirements.json` it was computed from | `VENUE_ABSENT`, `REQUIREMENTS_ABSENT`, `TEMPLATE_ABSENT`, `PAPER_ABSENT`, `SECTION_CONTRACTS_UNREADABLE`, `MALFORMED_HEADER` and the marker codes |
 | `plan --slug <s> --file <md>` | Stores the agent's plan as `plan.md` and returns its sha256. The plan must cite at least one finding id from the audit; storing it **resets any earlier approval** | `AUDIT_ABSENT`, `PLAN_UNREADABLE`, `PLAN_REFERENCES_NO_FINDING` |
 | `approve --slug <s> --statement "<words>" --plan-sha256 <hex>` | Records `approval.json` with the operator's statement verbatim, bound to the current plan's hash (the dashboard button writes the same record with `via: dashboard`) | `STATEMENT_EMPTY`, `PLAN_ABSENT`, `PLAN_HASH_MISMATCH` |
-| `build --slug <s>` | Assembles `paper/venues/<slug>/main.tex`: the venue's class line, the canonical preamble minus the packages the class owns (reported as `preamble.skipped`), front matter mapped from the title, abstract and keyword blocks for `elsarticle`/`IEEEtran`/`llncs` (any other class keeps the canonical title block and `\maketitle`), every canonical block copied **verbatim with its markers** in the venue's section order, `\bibliographystyle` from the requirements and `\bibliography{../../refs}`. Sections the venue does not list are kept after its own; sections smith lacks are reported, never invented. Writes `build.json` | `PLAN_NOT_APPROVED`, `AUDIT_STALE`, `AUDIT_ABSENT`, `TEMPLATE_ABSENT`, `REQUIREMENTS_ABSENT`, `BLOCK_HAND_EDITED` |
+| `build --slug <s>` | Assembles `paper/venues/<slug>/main.tex`: the venue's class line, the canonical preamble minus the packages the class owns (reported as `preamble.skipped`), front matter mapped from the title, abstract and keyword blocks for `elsarticle`/`IEEEtran`/`llncs` (any other class keeps the canonical title block and `\maketitle`), every canonical block copied **verbatim with its markers** in the venue's section order, `\bibliographystyle` from the requirements and `\bibliography{../../refs}`. Sections the venue does not list are kept after its own; sections smith lacks are reported, never invented. The back matter always renders after the content sections and before the bibliography, the AI-use declaration last, and `bm-appendices` after the bibliography, whatever order the venue lists or the canonical file holds (`sections.appendices_after_references`). Writes `build.json` | `PLAN_NOT_APPROVED`, `AUDIT_STALE`, `AUDIT_ABSENT`, `TEMPLATE_ABSENT`, `REQUIREMENTS_ABSENT`, `BLOCK_HAND_EDITED` |
 | `status --slug <s>`, `list` | Read-only: the state, the step flags, the finding counts, whether the audit is stale, and the next action | `VENUE_ABSENT`, `VENUE_SLUG_INVALID` |
 
 **The approval gate.** `build` refuses `PLAN_NOT_APPROVED` while the audit holds

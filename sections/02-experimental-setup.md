@@ -14,7 +14,8 @@
       "id": "es-preamble",
       "requires_facts": [],
       "requires_declarations": [],
-      "citations": "none"
+      "citations": "none",
+      "optional": true
     },
     {
       "id": "es-dataset",
@@ -115,8 +116,8 @@
 ---
 # Experimental Set-Up
 
-**Extent** 1020–4140 words · a preamble and two subsections
-**Carries** the metric definitions, the compared methods, and one closing diagram
+**Extent** 800–3500 words · an optional preamble and two subsections
+**Carries** the whole evaluation protocol — data as used, metrics, compared methods, statistical test, ablation and sensitivity design, interpretability measures — and one closing diagram
 **Does not carry** any result
 
 This section answers *would I get your numbers if I ran this myself*. It turns the
@@ -125,6 +126,23 @@ exactly what conditions. Every number in the results section must trace to somet
 declared here.
 
 The methods section says what the model **is**. This one says what was **done** to it. Nothing here is discovered: every condition this section states was already fixed when the experiments ran.
+
+## The evaluation lives here, all of it
+
+**Every element of the evaluation is declared in this section and nowhere else**: the
+scenarios and data as used, the partition, the metrics, the compared methods, the
+statistical test, the ablation variants, the sensitivity sweeps, and the measures that
+evaluate an interpretability contribution. The methods section defines the proposal
+and never evaluates it; the results section reads what was declared here and never
+introduces a protocol element of its own. Across the group's measured papers, the
+test, the ablation and even the baselines often surfaced for the first time in the
+results — the defect this rule removes.
+
+**Each block applies when the paper has what it covers, and only then.** A method
+with no learned parameters has no hyperparameter search; a single-component proposal
+has nothing to ablate; a paper that claims no interpretability declares no
+interpretability measure. The contract fixes where each element goes and how it is
+written, never that every paper must carry all of them.
 
 ## The two subsections split design from execution
 
@@ -138,14 +156,22 @@ section, they are the first block of Assessment rather than a third subsection.
 
 ## Preamble
 
-One paragraph of 33–41 words, no citations. It names the blocks the section
-specifies, in order.
+Optional: four of the group's ten measured setups have none. When written, one
+paragraph of 30–80 words, no citations: the purpose of the protocol, then the blocks
+the section specifies, in order. It may point to the closing diagram.
 
 ## Subsection 1 — Assessment and Method Comparison
 
-Seven blocks. The first and the last two are conditional.
+Nine blocks. Each one is conditional on the paper having what it covers, except the
+metrics.
 
-**1. The datasets** — only when the methods section does not own them. First.
+**1. The datasets** — only when the methods section does not own them. First. When
+there are several scenarios, the controlled ones come first — synthetic, then
+semi-synthetic, then real — and **each scenario is named after the property of the
+problem it stresses** (a noise level, a sparsity level, a domain shift), so the reader
+knows which part of the problem each one tests. A corruption or simulation applied to
+the data — simulated annotators, injected noise, masked inputs — is defined here, with
+its equation.
 
 **2. The announcement of the split** — when the framework has two dissimilar halves.
 Each half then makes its own pass through the blocks that follow.
@@ -171,9 +197,27 @@ the chain that runs from the problem to the evidence.
 techniques that support the claims no metric measures, each with its citation. These
 are what answer the properties a contribution promised and a metric cannot reach.
 
+**When interpretability is a contribution, it is evaluated twice**: by the
+qualitative reading named here, and by a measure of faithfulness — a deletion,
+perturbation, or recovery-of-known-structure score — against the attribution or
+explanation methods it competes with, each cited. The methods section defined the
+mechanism; this block names how its explanations are judged.
+
 **7. The purpose-built evaluation corpus** — only when no standard reference measures
 what is claimed. Describe it here: its size, its composition, and a table of
 examples. Without it the metric for that half means nothing.
+
+**8. The statistical test** — whenever the proposal is compared with anything. The
+test, the post hoc procedure and the multiple-comparison correction, the significance
+level, and **the unit the test runs over** (folds, seeds, subjects, datasets). The
+results apply it; they do not choose it.
+
+**9. The ablation and sensitivity design** — when the proposal has components that
+can be removed or knobs that can be swept. **One ablation variant per contribution**,
+in the methods section's order, each removing that contribution or replacing it with
+the borrowed piece it modifies, under the same protocol. Then the sensitivity sweeps:
+each knob the methods section exposes that is varied, with its range. Each variant and
+each sweep is named here so the results can only read it.
 
 ### What is cited here
 
@@ -194,7 +238,9 @@ why. State what was thrown away before stating what was kept.
 **2. The partition protocol.** The splits, the cross-validation strategy, the
 stratification.
 
-**3. The optimizer and the schedule.**
+**3. The optimizer and the schedule.** When the method is not trained — an analytic
+estimator, a simulation, a solver — this slot and the next carry its numerical
+settings instead: tolerances, iterations, discretization, sampling budget.
 
 **4. The hyperparameter search.** The tool, the sampler, **the seed**, the objective
 being minimized, and the search range per model. Naming the seed and the pruner's
@@ -217,6 +263,29 @@ the methods section.
 **The full parameter table may go to an appendix**, keeping in the body only the
 values that were reasoned about. That is the correct use of an appendix: the body
 carries what has a reason, the appendix carries what must be consultable.
+
+## Paragraphs open on a sentence, never on a label
+
+The numbered blocks above are this contract's names, never the paper's. Each block
+becomes one or more paragraphs that open on a sentence, **never as a bold label**
+(`\textbf{Partition.}`), a run-in heading (`\paragraph{Metrics}`) or a bold list item.
+A paragraph's first sentence introduces its topic and carries the transition from
+the paragraph before it, through the relation between the two: the scenarios lead to
+how their data are split, the split to what is compared on it, the comparison to how
+it is scored and tested.
+
+- *The real data were split by subject, so that no subject contributed samples to
+  both the training and the test folds.* — opens the partition by what it guarantees.
+- *Three published methods were trained on those same folds, each formalized by the
+  objective it minimizes.* — opens the competing methods on the protocol they share.
+- *Every comparison was scored per subject, the unit the application decides on.* —
+  opens the metrics on the unit the previous paragraph fixed.
+
+Let the sentence's own content carry the relation, as the house style asks: a stock
+connector at the head of every paragraph (*Moreover*, *Furthermore*, *In addition*)
+is the same outline in other words. The competing methods may still form a list; its
+items open on each method's name in plain text. `write` refuses a draft of this
+section that opens a paragraph or an item on emphasis (`DRAFT_BOLD_LEAD_IN`).
 
 ## Every artefact is referenced before it appears
 
@@ -261,14 +330,40 @@ one shows the experiment. The test: **no dataset and no baseline appears in the
 methods diagram, and no internal component of the proposal appears in this one.** A
 box appearing in both means one of them is wrong.
 
+## Tables stay inside the text block
+
+A table prints inside `\textwidth` at a legible size, by the same rule as a figure
+(labels, ticks, legends and annotations included): **every text in a table or a
+figure prints between 0.70 and 0.90 times the body font size** (7 to 9 pt in a 10 pt
+document): never smaller, and never at the body size.
+
+- **Rules are `booktabs`** — `\toprule`, `\midrule`, `\bottomrule` — with no vertical
+  rules; a column of prose is a `tabularx` `X` column, so the table takes the text width
+  instead of running past it.
+- **The table runs below the body size, inside the range.** `\footnotesize` fits it
+  at 10, 11 and 12 pt; `\small` only with a 10 pt body (above 0.90 at 11 and 12 pt);
+  never `\normalsize`, the default when the table declares no size; `\scriptsize`
+  and `\tiny` never when they fall below the floor (`\scriptsize` meets it only at
+  10 pt).
+- **A table is never scaled to fit.** No `\resizebox`, `\scalebox` or `adjustbox`
+  below a factor of 0.85, and no `width=\textwidth` scaling of a `tabular`: scaling
+  shrinks the text with the box.
+- **A table wider than `\textwidth` is split, transposed, or moved** to a `table*` or
+  a landscape page when the venue allows either — never shrunk below the floor.
+- **The caption goes above the table.**
+
 ## LIA house style
 
-Measured on the group's ten Q1 method papers of 2025–2026 (SJR 2025): items A003, A006, A007, A009, A012, A013, A021, A022, A023 and A026 of the lab's bank of articles. Ranges are minimum–median–maximum across the papers that have the section; a typeset line is about 12 words in a single-column layout. The ranges describe how the group writes; the extent at the top of this contract stays the target.
+Measured on the group's ten Q1 method papers of 2025–2026 (SJR 2025), Elsevier first and MDPI after: items A008, A017, A018, A003, A006, A007, A009, A021, A022 and A026 of the lab's bank of articles. Ranges are minimum–median–maximum across the papers that have the section; a typeset line is about 12 words in a single-column layout. The ranges describe how the group writes; the extent at the top of this contract stays the target.
 
-**Measured size.** 7–10–16 paragraphs; 767–985–1318 words, about 67–86–119 lines;
-72–103–140 words per paragraph; 0–3–5 subsections; 0–0–7 displayed equations, only
-for a metric the reader cannot be assumed to know; 1–4–10 citations; 0–1–3 figures and
-0–1–2 tables.
+**Measured size.** 7–10–24 paragraphs; about 810–1190–3480 words, the maximum an
+outlier with its own simulation protocol; 0–3–4 subsections; 0–2–8 displayed
+equations; 4–9–17 citations; 0–1–3 figures and 0–1–2 tables.
+
+**Measured placement.** Eight of ten have a set-up of their own after the methods; six
+open with a purpose-and-roadmap paragraph. Only three define their metrics by
+equation, only two declare the statistical test here, and only one declares its
+ablation here — the rest surface them in the results, which this contract forbids.
 
 **What the group's setups state, in this order:**
 
@@ -288,7 +383,8 @@ for a metric the reader cannot be assumed to know; 1–4–10 citations; 0–1�
 
 - **Sentences average 21–27 words.** Long enough to carry one claim and its qualifier, never a chain of three clauses.
 - **One voice for the whole paper.** First person plural (*we propose*) or impersonal (*this work introduces*), chosen once; procedures that were run go in the passive past (*was evaluated using*).
-- **Connectives the group uses** to move between claims: *However*, *Specifically*, *In particular*, *Moreover*, *Notably*, *Overall*. Each opens a sentence and does one job: contrast, narrowing, addition, emphasis, synthesis.
+- **Transitions come from the relation between claims, not from a list.** Name the relation first (contrast, cause, consequence, elaboration, example) and carry it with the sentence's own content: a clause (*yet*, *so*, *although*), a subject that points back (*that gap*, *this cost*), or no connector at all when the order of the sentences already says it. A stock connector (*However*, *Moreover*, *Notably*, *Specifically*, *In particular*, *Overall*, *Taken together*) is the exception: never the same one twice within five sentences, never most of a paragraph's openings, and a synthesis opener (*Overall*, *Taken together*) at most once per section.
+- ***because* and *where* keep their jobs.** *because* states a cause the method or the data establish, at most once every few sentences and never stacked (*because …, and because …*); *where* opens the clause after an equation that defines its symbols, and nowhere else in prose (use *in which*, *when*, or two sentences). An evaluation is its own sentence, not a trailing *, which indicates …*.
 - **The method has one name.** Expanded with its acronym at first use in each of the abstract and the body, then *the proposed* followed by the acronym.
 - **What ran is in the past tense; what a table holds is in the present.** *Each model
   was trained for*; *Table 3 lists the search ranges*.
@@ -352,9 +448,22 @@ for a metric the reader cannot be assumed to know; 1–4–10 citations; 0–1�
 - Hardware omitted while timing is reported.
 - No leakage-control statement.
 - A result, a measured comparison, or a performance figure.
+- A comparison with competing methods and no statistical test declared, or a test
+  declared without the unit it runs over.
+- A contribution that can be removed with no ablation variant declared, or a knob
+  swept in the results with no sweep declared here.
+- An interpretability contribution with no qualitative instrument or no faithfulness
+  measure declared here.
+- A scenario that does not say which property of the problem it stresses.
+- A paragraph or list item that opens on a bold label or a run-in heading.
 - The closing diagram missing.
 - A results table or figure that cannot be located in the closing diagram.
 - A box shared between the closing diagram and the methods diagram.
 - Any element of execution in the closing diagram other than the repetition unit.
 - The full parameter table in the body when only some values were reasoned about, or
   an appendix table contradicting the body.
+- A table that runs past `\textwidth`, or whose text prints below 0.70 or above 0.90
+  times the body font size (a table left at the body size included).
+- A table scaled with `\resizebox`, `\scalebox` or `adjustbox` below 0.85, or scaled
+  to `\textwidth`.
+- A table with vertical rules, or a table whose caption sits below it.

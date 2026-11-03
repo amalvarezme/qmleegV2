@@ -40,7 +40,7 @@ from typing import Any, AsyncIterator, Callable
 from fastapi import FastAPI, Request
 from fastapi.responses import HTMLResponse, JSONResponse, Response, StreamingResponse
 
-from . import agents_view, ai_history, banco_suggest, ai_transcripts, atlas, atlas_build, decisions, experiments_tutor, experiments_view, math_view, phase_actions, terminal, tutor, history, paper_preview, novelty_graph, model_spec
+from . import agents_view, ai_history, banco_suggest, ai_transcripts, atlas, atlas_build, atlas_manuscript, decisions, experiments_tutor, experiments_view, math_view, phase_actions, terminal, tutor, history, paper_preview, novelty_graph, model_spec, manuscript_graph
 from . import doctor_view, localize, toolchain
 from .health_inspector import get_wiring_health
 from .state_extractor import get_workspace_state, memo_by_file
@@ -317,14 +317,45 @@ def _block_count(root: Path) -> int:
     return len(re.findall(r"%% paper-writing block [\w.-]+ begin", text))
 
 
-def _candidate_count(root: Path) -> int:
+def candidate_pool(root: Path) -> dict[str, Any]:
+    """``sota-pool/candidates.json`` in one shape, whichever the file holds.
+
+    `/plausibility` writes an object (``candidates`` beside the pool's
+    ``families``, ``excluded``, ``plausibility_note``, ``owed`` and
+    ``retrieved``); a bare list of candidates is the older shape. Both are what
+    ``check_atlas.py --pool`` accepts. A missing or unreadable file is an empty
+    pool; ``error`` says which, and no candidate is ever invented.
+    """
+    pool: dict[str, Any] = {"candidates": [], "families": [], "excluded": 0,
+                            "plausibility_note": "", "owed": [], "retrieved": "", "error": ""}
+    path = root / "sota-pool" / "candidates.json"
+    if not path.is_file():
+        return pool
     try:
-        data = json.loads((root / "sota-pool" / "candidates.json").read_text(encoding="utf-8"))
-    except (OSError, ValueError):
-        return 0
-    if isinstance(data, dict):
-        data = data.get("candidates", [])
-    return len(data) if isinstance(data, list) else 0
+        data = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, ValueError) as exc:
+        pool["error"] = f"sota-pool/candidates.json cannot be read ({exc})"
+        return pool
+    meta = data if isinstance(data, dict) else {}
+    listed = meta.get("candidates") if isinstance(data, dict) else data
+    if not isinstance(listed, list):
+        pool["error"] = "sota-pool/candidates.json holds no list of candidates"
+        return pool
+    candidates = [c for c in listed if isinstance(c, dict)]
+    pool["candidates"] = candidates
+    pool["families"] = sorted({str(c["family"]) for c in candidates if c.get("family")})
+    excluded = meta.get("excluded")
+    pool["excluded"] = len(excluded) if isinstance(excluded, list) else 0
+    for key in ("plausibility_note", "retrieved"):
+        if isinstance(meta.get(key), str):
+            pool[key] = meta[key]
+    owed = meta.get("owed")
+    pool["owed"] = [str(item) for item in owed] if isinstance(owed, list) else []
+    return pool
+
+
+def _candidate_count(root: Path) -> int:
+    return len(candidate_pool(root)["candidates"])
 
 
 AUDIT_TIMEOUT_SECONDS = 120
@@ -587,7 +618,35 @@ def _compile_tex(root: Path, workdir: Path, pdf: Path,
 def _compile_paper(root: Path) -> tuple[dict[str, Any], int]:
     """The canonical paper/main.tex. Blocking: the caller runs it off the
     event loop, holding _PAPER_LOCK."""
-    return _compile_tex(root, root / "paper", root / "paper" / "main.pdf")
+    body, status = _compile_tex(root, root / "paper", root / "paper" / "main.pdf")
+    if body.get("ok"):
+        # A compiled manuscript refreshes the atlas manuscript layer. Never fails
+        # the compile: a builder error rides along as a warning.
+        layer = atlas_manuscript.refresh(root)
+        if layer is not None:
+            body = {**body, "atlas_manuscript": layer}
+        # ...and the manuscript summary graph, under the same rule.
+        graph = manuscript_graph.refresh(root)
+        if graph is not None:
+            body = {**body, "manuscript_graph": graph}
+        # ...and the visual QA of the compiled PDF (spec S6), under the same
+        # rule: an error is a warning, never a failed compile.
+        qa = _manuscript_qa_refresh(root)
+        if qa is not None:
+            body = {**body, "manuscript_qa": qa}
+    return body, status
+
+
+def _manuscript_qa_refresh(root: Path) -> dict[str, Any] | None:
+    """`manuscript_qa.refresh`, or a warning when the module itself cannot
+    load (pypdfium2 missing): never raises."""
+    if not (root / "papersmith.yaml").is_file() or not (root / "paper" / "main.pdf").is_file():
+        return None
+    try:
+        return _manuscript_qa_module().refresh(root)
+    except Exception as exc:  # noqa: BLE001 - a trigger never fails its command
+        return {"ok": False, "status": "error", "path": "paper/.qa/qa.json",
+                "warning": f"manuscript QA not run: {type(exc).__name__}: {exc}"[:300]}
 
 
 #: The only variables a venue's `compile_env` may set: where TeX looks for a
@@ -643,8 +702,13 @@ _SKILLS = Path(__file__).resolve().parents[2]
 JOURNAL_CLI = _SKILLS / "journal-finder" / "scripts" / "journal_cli.py"
 #: The venue verbs, imported by file path so `approve` can record `via=dashboard`.
 PAPER_VENUE = _SKILLS / "paper-writing" / "scripts" / "paper_venue.py"
-#: The stylometric and AI-risk quantification metrics module.
+#: The writing-quality style metrics module (cadence, overused phrasing, lexical diversity).
 PAPER_AI_METRICS = _SKILLS / "paper-writing" / "scripts" / "paper_ai_metrics.py"
+#: The visual QA of the compiled manuscript (pypdfium2 geometry, pdftoppm pages).
+MANUSCRIPT_QA = _SKILLS / "_core" / "figure" / "manuscript_qa.py"
+#: `paper/.qa/pages/page-<n>.png`, as pdftoppm names them (zero-padded
+#: when the document has ten pages or more).
+_QA_PAGE_RE = re.compile(r"^page-0*(\d+)\.png$")
 SJR_DOWNLOAD_URL = "https://www.scimagojr.com/journalrank.php"
 #: The CLI's own search deadline is 300 s; the child is killed shortly after.
 JOURNAL_SEARCH_TIMEOUT_SECONDS = 330.0
@@ -690,6 +754,25 @@ def _venue_module():
         spec = importlib.util.spec_from_file_location(name, PAPER_VENUE)
         if spec is None or spec.loader is None:
             raise ImportError(f"cannot load {PAPER_VENUE}")
+        module = importlib.util.module_from_spec(spec)
+        sys.modules[name] = module
+        try:
+            spec.loader.exec_module(module)
+        except BaseException:
+            sys.modules.pop(name, None)
+            raise
+    return module
+
+
+def _manuscript_qa_module():
+    """manuscript_qa, loaded once from its file (it imports pypdfium2, so
+    only a compile or a QA read pays for it)."""
+    name = "papersmith_manuscript_qa"
+    module = sys.modules.get(name)
+    if module is None:
+        spec = importlib.util.spec_from_file_location(name, MANUSCRIPT_QA)
+        if spec is None or spec.loader is None:
+            raise ImportError(f"cannot load {MANUSCRIPT_QA}")
         module = importlib.util.module_from_spec(spec)
         sys.modules[name] = module
         try:
@@ -2029,6 +2112,43 @@ def create_app(root: Path | str, *, debounce_ms: int = 300,
         return JSONResponse(paper_preview.build_preview(root_path),
                             headers=dict(_PAPER_HEADERS))
 
+    @app.get("/api/paper/qa")
+    def api_paper_qa() -> JSONResponse:
+        # Read-only: the last manuscript QA report and whether main.pdf has
+        # changed since it was measured (stdlib JSON read, no pypdfium2).
+        qa_json = root_path / "paper" / ".qa" / "qa.json"
+        if not qa_json.is_file():
+            return JSONResponse({"status": "absent", "stale": None, "report": None},
+                                headers=dict(_PAPER_HEADERS))
+        try:
+            report = json.loads(qa_json.read_text(encoding="utf-8"))
+            if not isinstance(report, dict):
+                raise ValueError("not an object")
+        except (OSError, ValueError):
+            return JSONResponse({"status": "invalid", "stale": None, "report": None},
+                                headers=dict(_PAPER_HEADERS))
+        pdf = root_path / "paper" / "main.pdf"
+        try:
+            stale = hashlib.sha256(pdf.read_bytes()).hexdigest() != report.get("pdf_sha256")
+        except OSError:
+            stale = True
+        return JSONResponse({"status": "ok", "stale": stale, "report": report},
+                            headers=dict(_PAPER_HEADERS))
+
+    @app.get("/api/paper/qa/page")
+    def api_paper_qa_page(n: int = 0) -> Response:
+        # One rendered page of the last QA pass, by page number only: the
+        # name is matched against the directory listing, never joined from
+        # the request.
+        pages = root_path / "paper" / ".qa" / "pages"
+        if n >= 1 and pages.is_dir():
+            for path in pages.iterdir():
+                match = _QA_PAGE_RE.match(path.name)
+                if match and int(match.group(1)) == n and path.is_file() and not path.is_symlink():
+                    return Response(path.read_bytes(), media_type="image/png",
+                                    headers=dict(_PAPER_HEADERS))
+        return JSONResponse({"detail": "page image not found"}, status_code=404)
+
     @app.get("/api/model/math")
     def api_model_math() -> JSONResponse:
         # The math panel: the paper's own LaTeX and its novelty card (read-only).
@@ -2062,9 +2182,11 @@ def create_app(root: Path | str, *, debounce_ms: int = 300,
             payload = None
         if not isinstance(payload, dict):
             return JSONResponse({"ok": False, "error": "expected {repo, name, kind}"}, status_code=422)
+        override = payload.get("auditOverride")
         status, body = experiments_view.validate_diagram(
             root_path, str(payload.get("repo", "")), str(payload.get("name", "")),
-            str(payload.get("kind", "")))
+            str(payload.get("kind", "")),
+            audit_override=override if isinstance(override, str) else None)
         return JSONResponse(body, status_code=status)
 
     @app.get("/api/model")
@@ -2212,6 +2334,9 @@ def create_app(root: Path | str, *, debounce_ms: int = 300,
                         "ok": True,
                         "scope": "manuscript",
                         "blocks_analyzed": 0,
+                        "style_score": 0.0,
+                        "style_verdict": "clear",
+                        # Deprecated aliases, removed in the next release.
                         "composite_score": 0.0,
                         "risk": "low",
                         "blocks": {},
@@ -2228,11 +2353,14 @@ def create_app(root: Path | str, *, debounce_ms: int = 300,
                     b_id = match.group("id")
                     b_text = match.group("body").strip()
                     if b_text:
-                        b_res = mod.analyze_ai_signatures(b_text)
+                        b_res = mod.analyze_style(b_text)
                         blocks_data[b_id] = {
-                            "composite_score": b_res["composite_score"],
+                            "style_score": b_res["style_score"],
+                            "style_verdict": b_res["style_verdict"],
+                            "cliches": b_res.get("overused_phrasing", {}).get("total_count", 0),
+                            # Deprecated aliases, removed in the next release.
+                            "composite_score": b_res["style_score"],
                             "risk": b_res.get("verdict", "low"),
-                            "cliches": b_res.get("cliches", {}).get("total_count", 0),
                         }
                         all_blocks_text.append(b_text)
 
@@ -2242,16 +2370,23 @@ def create_app(root: Path | str, *, debounce_ms: int = 300,
                         "ok": True,
                         "scope": "manuscript",
                         "blocks_analyzed": 0,
+                        "style_score": 0.0,
+                        "style_verdict": "clear",
+                        # Deprecated aliases, removed in the next release.
                         "composite_score": 0.0,
                         "risk": "low",
                         "blocks": {},
                     })
-                manuscript_res = mod.analyze_ai_signatures(full_text)
+                manuscript_res = mod.analyze_style(full_text)
                 return JSONResponse({
                     "ok": True,
                     "scope": "manuscript",
                     "blocks_analyzed": len(blocks_data),
-                    "composite_score": manuscript_res["composite_score"],
+                    "style_score": manuscript_res["style_score"],
+                    "style_verdict": manuscript_res["style_verdict"],
+                    "disclosure_notice": manuscript_res.get("disclosure_notice"),
+                    # Deprecated aliases, removed in the next release.
+                    "composite_score": manuscript_res["style_score"],
                     "risk": manuscript_res.get("verdict", "low"),
                     "burstiness": manuscript_res.get("burstiness"),
                     "cliches": manuscript_res.get("cliches"),
@@ -2264,7 +2399,7 @@ def create_app(root: Path | str, *, debounce_ms: int = 300,
 
         try:
             mod = _ai_metrics_module()
-            results = mod.analyze_ai_signatures(text)
+            results = mod.analyze_style(text)
             return JSONResponse({"ok": True, **results})
         except Exception as exc:
             return JSONResponse({"ok": False, "error": str(exc)}, status_code=500)
@@ -2439,22 +2574,58 @@ def create_app(root: Path | str, *, debounce_ms: int = 300,
         # fixed path (workspace Python runs in this process; see atlas.py).
         return JSONResponse(atlas.build_atlas(root_path), headers=dict(_PAPER_HEADERS))
 
+    @app.get("/api/atlas/manuscript")
+    def api_atlas_manuscript() -> JSONResponse:
+        # Read-only: the manuscript layer (sota-pool/atlas.manuscript.json) and
+        # whether its inputs changed since it was written. Written by `bib build`,
+        # `verify`, a successful compile, or `smith atlas cited`.
+        return JSONResponse(atlas_manuscript.read_layer(root_path), headers=dict(_PAPER_HEADERS))
+
+    @app.post("/api/atlas/manuscript/build")
+    def api_atlas_manuscript_build(request: Request) -> JSONResponse:
+        # Writes only sota-pool/atlas.manuscript.json (never atlas.json).
+        if not origin_is_same(request):
+            return JSONResponse({"ok": False, "status": "origin",
+                                 "detail": "cross-origin request rejected"},
+                                status_code=403, headers=dict(_PAPER_HEADERS))
+        try:
+            result = atlas_manuscript.write_layer(root_path)
+        except Exception as exc:  # noqa: BLE001 - reported to the panel
+            result = {"ok": False, "status": "error", "detail": f"{type(exc).__name__}: {exc}"[:300]}
+        code = 200 if result["ok"] else (404 if result["status"] == "absent" else 422)
+        return JSONResponse(result, status_code=code, headers=dict(_PAPER_HEADERS))
+
+    @app.get("/api/atlas/manuscript-graph")
+    def api_atlas_manuscript_graph() -> JSONResponse:
+        # Read-only: .papersmith/manuscript_graph.json and whether its inputs
+        # changed since it was written. Written by `bib build`, `verify`, a
+        # successful compile, `smith atlas summary` or the build route below.
+        return JSONResponse(manuscript_graph.read_graph(root_path), headers=dict(_PAPER_HEADERS))
+
+    @app.get("/api/atlas/manuscript-graph/view")
+    def api_atlas_manuscript_graph_view(lang: str = "en") -> Response:
+        # Offline HTML (no CDN): the stored graph, else a live reading.
+        html = manuscript_graph.view_html(root_path, lang)
+        return Response(html, media_type="text/html; charset=utf-8", headers=dict(_PAPER_HEADERS))
+
+    @app.post("/api/atlas/manuscript-graph/build")
+    def api_atlas_manuscript_graph_build(request: Request) -> JSONResponse:
+        # Writes only .papersmith/manuscript_graph.json.
+        if not origin_is_same(request):
+            return JSONResponse({"ok": False, "status": "origin",
+                                 "detail": "cross-origin request rejected"},
+                                status_code=403, headers=dict(_PAPER_HEADERS))
+        try:
+            result = manuscript_graph.write_graph(root_path)
+        except Exception as exc:  # noqa: BLE001 - reported to the panel
+            result = {"ok": False, "status": "error", "detail": f"{type(exc).__name__}: {exc}"[:300]}
+        return JSONResponse(result, status_code=200 if result["ok"] else 422,
+                            headers=dict(_PAPER_HEADERS))
+
     @app.get("/api/candidates")
     def api_candidates() -> JSONResponse:
-        cand_file = root_path / "sota-pool" / "candidates.json"
-        if not cand_file.is_file():
-            return JSONResponse({"count": 0, "candidates": [], "families": []}, headers=dict(_PAPER_HEADERS))
-        try:
-            with open(cand_file, "r", encoding="utf-8") as f:
-                candidates = json.load(f)
-            families = sorted(list({c.get("family", "general") for c in candidates if c.get("family")}))
-            return JSONResponse({
-                "count": len(candidates),
-                "candidates": candidates,
-                "families": families
-            }, headers=dict(_PAPER_HEADERS))
-        except Exception as exc:
-            return JSONResponse({"error": str(exc), "count": 0, "candidates": [], "families": []}, status_code=500)
+        pool = candidate_pool(root_path)
+        return JSONResponse({"count": len(pool["candidates"]), **pool}, headers=dict(_PAPER_HEADERS))
 
     @app.get("/api/atlas/candidates/view")
     def api_atlas_candidates_view(lang: str = "en") -> Response:
@@ -2466,16 +2637,8 @@ def create_app(root: Path | str, *, debounce_ms: int = 300,
         def J(text: str) -> str:
             return json.dumps(localize.translate(text, lang), ensure_ascii=False).replace("<", "\\u003c")
 
-        cand_file = root_path / "sota-pool" / "candidates.json"
-        candidates = []
-        families = []
-        if cand_file.is_file():
-            try:
-                with open(cand_file, "r", encoding="utf-8") as f:
-                    candidates = json.load(f)
-                families = sorted(list({c.get("family", "general") for c in candidates if c.get("family")}))
-            except Exception:
-                pass
+        pool = candidate_pool(root_path)
+        candidates, families = pool["candidates"], pool["families"]
         
         # Candidates come from scouted literature (titles, abstracts, URLs), so
         # nothing from them reaches the page unescaped: the JSON cannot close

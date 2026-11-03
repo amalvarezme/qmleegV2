@@ -9,7 +9,8 @@ a side can be derived, publish the provenance of every side that cannot,
 report, never repair.
 
 `CHECKS` is one closed roster (contribution-list, chain, gap, artefacts,
-future-work, citations, contract-currency, figure-semantics); `run()` is
+future-work, citations, contract-currency, figure-semantics, language);
+`language` reads a scan the caller hands in (`run(..., language=)`); `run()` is
 held to producing
 exactly one report object per member, in both directions
 (`ReportShapeTests`). `UNMEASURED_REASONS` is a second closed roster; every
@@ -37,8 +38,12 @@ Public surface:
                              `check_gap`'s own front extraction and
                              `paper_cli._resolve_expected_components`'s
                              produced-fact route)
+    STRUCTURE_CHECKS     -> structural checks reported apart, under `structure`
+    check_back_matter_order(evidence) -> dict -- declarations before the
+                             references, appendices after them
     run(evidence) -> dict  {"checks": [...], "clean": bool,
-                             "holds": int, "fails": int, "unmeasured": int}
+                             "holds": int, "fails": int, "unmeasured": int,
+                             "structure": [...]}
 """
 from __future__ import annotations
 
@@ -53,6 +58,7 @@ CHECKS: tuple[str, ...] = (
     "citations",
     "contract-currency",
     "figure-semantics",
+    "language",
 )
 
 #: Every reason a check's `unmeasured_reason` may carry. Closed: a check
@@ -80,7 +86,19 @@ UNMEASURED_REASONS: tuple[str, ...] = (
     "NO_FIGURE_DECLARED",
     "FIGURE_SEMANTICS_UNMEASURED",
     "OPTIONAL_BLOCK_ABSENT",
+    # `back-matter-order`'s own reason: `main.tex` carries no bibliography
+    # command yet, so there is no reference list to place the back matter
+    # against -- reported, never read as a correct order.
+    "NO_BIBLIOGRAPHY",
+    # `language`'s own reason: the caller handed `run()` no language scan
+    # (`cmd_verify` always does; a direct `run(evidence)` does not).
+    "LANGUAGE_NOT_SCANNED",
 )
+
+#: The structural checks `run()` reports under its own `structure` key,
+#: apart from the closed `CHECKS` roster of couplings (whose count and
+#: arithmetic stay exactly what `ReportShapeTests` pins).
+STRUCTURE_CHECKS: tuple[str, ...] = ("back-matter-order", "own-paragraph", "appendix-length")
 
 _VERDICTS = ("pass", "fail", "unmeasured")
 
@@ -627,6 +645,214 @@ def check_figure_semantics(evidence, *, optional_block_ids: frozenset = frozense
     )
 
 
+_BACK_MATTER_BEGIN_RE = re.compile(
+    rb"^%% paper-writing block (back-matter\.[A-Za-z0-9._-]+) begin\b", re.MULTILINE
+)
+#: Where the reference list is typeset: a BibTeX `\bibliography{...}`, a
+#: hand-written `thebibliography` environment, or biblatex's
+#: `\printbibliography`. Anchored at the line start (after indentation), so
+#: a commented-out command never counts.
+_REFERENCES_RE = re.compile(
+    rb"^[ \t]*\\(?:bibliography\{|begin\{thebibliography\}|printbibliography\b)", re.MULTILINE
+)
+#: The back-matter blocks that follow the references; every other
+#: back-matter block is a declaration and precedes them
+#: (`sections/10-back-matter.md`, "Placement follows the venue").
+APPENDIX_BLOCKS: frozenset = frozenset({"back-matter.bm-appendices"})
+
+
+def check_back_matter_order(evidence, *, optional_block_ids: frozenset = frozenset()) -> dict:
+    """`back-matter-order` (`odd/tasks/manuscript-polish-0-54.md`, S3): back
+    matter renders after the conclusions and BEFORE the references, and
+    appendices AFTER them. Both sides are derived from `main.tex` itself:
+    the begin marker of every `back-matter.*` block, and the first line that
+    typesets the references. A declaration block beginning after that line
+    fails, and so does an appendix block beginning before it. No
+    bibliography at all is `unmeasured`, `NO_BIBLIOGRAPHY` -- never `pass`.
+
+    Reports; never repairs: the canonical file is reordered by moving the
+    blocks, and `venue build` always emits this order whatever the
+    canonical file holds.
+
+    `optional_block_ids` is accepted, unused, only for call-uniformity."""
+    data = evidence.main_tex_bytes
+    blocks = [(m.group(1).decode("ascii"), m.start()) for m in _BACK_MATTER_BEGIN_RE.finditer(data)]
+    references = _REFERENCES_RE.search(data)
+    if references is None:
+        return _unmeasured("back-matter-order", "mechanical", "NO_BIBLIOGRAPHY",
+                           evidence={"back_matter_blocks": [block_id for block_id, _ in blocks]})
+    at = references.start()
+    late = [block_id for block_id, start in blocks if block_id not in APPENDIX_BLOCKS and start > at]
+    early = [block_id for block_id, start in blocks if block_id in APPENDIX_BLOCKS and start < at]
+    return _entry(
+        "back-matter-order", classification="mechanical",
+        verdict="fail" if late or early else "pass",
+        sides=[
+            {"name": "back-matter block begin markers", "source": "derived", "origin": "main.tex"},
+            {"name": "reference list", "source": "derived",
+             "origin": "main.tex \\bibliography / thebibliography / \\printbibliography"},
+        ],
+        evidence={
+            "references_line": data.count(b"\n", 0, at) + 1,
+            "declarations_after_references": late,
+            "appendices_before_references": early,
+        },
+        limits=[], unmeasured_reason=None,
+    )
+
+
+def check_language(evidence, *, optional_block_ids: frozenset = frozenset(),
+                   language: dict | None = None) -> dict:
+    """Check D (spec S4 of `odd/tasks/manuscript-polish-0-54.md`): the
+    manuscript is English unless the paper declares another language, and
+    carries no placeholder text.
+
+    `language` is `paper_language.scan` over `evidence.main_tex_bytes`,
+    resolved one level up in `cmd_verify` -- this module imports nothing
+    beyond `re` (`ReadOnlyTests`' allowlist), the same reason
+    `optional_block_ids` is resolved there. Absent, the check reports
+    `unmeasured`/`LANGUAGE_NOT_SCANNED`, never a silent pass. A Spanish
+    line or a placeholder marker fails; a paper declaring a non-English
+    main language is judged on placeholders only.
+
+    `optional_block_ids` is accepted, unused, only for call-uniformity.
+    """
+    if language is None:
+        return _unmeasured("language", "mechanical", "LANGUAGE_NOT_SCANNED")
+    spanish = list(language.get("spanish", []))
+    placeholders = list(language.get("placeholders", []))
+    return _entry(
+        "language", classification="mechanical",
+        verdict="fail" if spanish or placeholders else "pass",
+        sides=[
+            {"name": "main.tex prose", "source": "derived",
+             "origin": "main.tex outside math, comments, markers and non-prose environments"},
+            {"name": "manuscript language", "source": "derived",
+             "origin": "babel/polyglossia main language, English when undeclared"},
+        ],
+        evidence={"language": language.get("language", "english"),
+                  "spanish": spanish, "placeholders": placeholders},
+        limits=[], unmeasured_reason=None,
+    )
+
+
+#: Blocks that open a paragraph of their own: the future-work block closes the
+#: conclusions as their last paragraph, and every declaration is a paragraph.
+#: Their markers are comments, so a block that follows another with no blank
+#: line in between would run into its last paragraph.
+OWN_PARAGRAPH_BLOCKS: frozenset = frozenset({
+    "conclusions.concl-block-4",
+    "back-matter.bm-author-contributions", "back-matter.bm-funding",
+    "back-matter.bm-data-availability", "back-matter.bm-code-availability",
+    "back-matter.bm-ethics-statement", "back-matter.bm-informed-consent",
+    "back-matter.bm-conflicts-of-interest", "back-matter.bm-acknowledgments",
+})
+_ANY_BEGIN_RE = re.compile(rb"^%% paper-writing block ([\w.-]+) begin[^\n]*\n", re.M)
+_SECTIONING_LINE_RE = re.compile(rb"^\s*\\(?:part|chapter|section|subsection|subsubsection)\*?\s*[\[{]")
+
+
+def _opens_paragraph(data: bytes, begin: int, body_start: int) -> bool:
+    """Whether the body starting at `body_start` opens a paragraph: its own
+    first line is blank, or the last non-comment line before the begin marker
+    is blank, a sectioning command, or the start of the file."""
+    if data[body_start:body_start + 1] == b"\n":
+        return True
+    before = data[:begin].split(b"\n")[:-1]
+    for line in reversed(before):
+        stripped = line.strip()
+        if stripped.startswith(b"%"):
+            continue
+        return not stripped or bool(_SECTIONING_LINE_RE.match(line))
+    return True
+
+
+def check_own_paragraph(evidence, *, optional_block_ids: frozenset = frozenset()) -> dict:
+    """`own-paragraph`: every block in `OWN_PARAGRAPH_BLOCKS` present in
+    `main.tex` opens a paragraph of its own. Reports the blocks that run into
+    the paragraph before them; never repairs (`write` and `humanize --apply`
+    open those bodies on a blank line).
+
+    `optional_block_ids` is accepted, unused, only for call-uniformity."""
+    data = evidence.main_tex_bytes
+    checked, run_on = [], []
+    for match in _ANY_BEGIN_RE.finditer(data):
+        block_id = match.group(1).decode("ascii")
+        if block_id not in OWN_PARAGRAPH_BLOCKS:
+            continue
+        checked.append(block_id)
+        if not _opens_paragraph(data, match.start(), match.end()):
+            run_on.append(block_id)
+    return _entry(
+        "own-paragraph", classification="mechanical",
+        verdict="fail" if run_on else "pass",
+        sides=[{"name": "own-paragraph block begin markers", "source": "derived", "origin": "main.tex"}],
+        evidence={"checked": checked, "run_on": run_on},
+        limits=[], unmeasured_reason=None,
+    )
+
+
+#: One printed page of the body, in words of prose; a display equation counts
+#: as `_EQUATION_WORDS` and a table row as `_ROW_WORDS`. An appendix at or
+#: under one page belongs in the body section that needs it.
+PAGE_WORDS = 550
+_EQUATION_WORDS = 40
+_ROW_WORDS = 15
+_APPENDIX_BLOCK = b"back-matter.bm-appendices"
+#: One whole display: an equation-like environment, `\[ … \]` or `$$ … $$`,
+#: so each counts once whatever its delimiters.
+_DISPLAY_RE = re.compile(rb"\\begin\{(equation|align|gather|multline|eqnarray)\*?\}.*?\\end\{\1\*?\}"
+                         rb"|\\\[.*?\\\]|\$\$.*?\$\$", re.S)
+_TABULAR_RE = re.compile(rb"\\begin\{(?:tabular|tabularx|longtable)\*?\}(.*?)\\end\{(?:tabular|tabularx|longtable)\*?\}", re.S)
+_MATH_RE = re.compile(rb"\\begin\{(equation|align|gather|multline|eqnarray)\*?\}.*?\\end\{\1\*?\}|\\\[.*?\\\]|\$\$.*?\$\$|\$[^$]*\$", re.S)
+_WORD_RE = re.compile(rb"[A-Za-z][A-Za-z'-]+")
+_COMMAND_RE = re.compile(rb"\\[A-Za-z@]+\*?")
+
+
+def check_appendix_length(evidence, *, optional_block_ids: frozenset = frozenset()) -> dict:
+    """`appendix-length`: an appendix that prints in one page or less is not an
+    appendix -- its content goes into the body section that needs it,
+    Materials and Methods for a derivation or a formal detail, the
+    experimental set-up for a table of settings. The extent is estimated
+    from the source: prose words, plus `_EQUATION_WORDS` per display
+    equation and `_ROW_WORDS` per table row, against `PAGE_WORDS`. No
+    appendix, or an empty one, passes.
+
+    `optional_block_ids` is accepted, unused, only for call-uniformity."""
+    data = evidence.main_tex_bytes
+    begin = re.search(rb"^%% paper-writing block " + re.escape(_APPENDIX_BLOCK) + rb" begin[^\n]*\n", data, re.M)
+    end = re.search(rb"^%% paper-writing block " + re.escape(_APPENDIX_BLOCK) + rb" end", data, re.M)
+    body = data[begin.end():end.start()] if begin and end and end.start() > begin.end() else b""
+    body = b"\n".join(line for line in body.split(b"\n") if not line.strip().startswith(b"%"))
+    tables = _TABULAR_RE.findall(body)
+    rows = sum(table.count(b"\\\\") for table in tables)
+    equations = len(_DISPLAY_RE.findall(body))
+    prose = _COMMAND_RE.sub(b" ", _TABULAR_RE.sub(b" ", _MATH_RE.sub(b" ", body)))
+    words = len(_WORD_RE.findall(prose))
+    extent = words + _EQUATION_WORDS * equations + _ROW_WORDS * rows
+    present = bool(words or equations or rows)
+    short = present and extent <= PAGE_WORDS
+    move_to = None
+    if short:
+        move_to = "experimental-setup" if rows and not equations else "materials-and-methods"
+    return _entry(
+        "appendix-length", classification="mechanical",
+        verdict="fail" if short else "pass",
+        sides=[{"name": "appendix block body", "source": "derived", "origin": "main.tex"},
+               {"name": "one printed page", "source": "derived", "origin": f"{PAGE_WORDS} words"}],
+        evidence={"present": present, "words": words, "display_equations": equations,
+                  "table_rows": rows, "estimated_words": extent, "page_words": PAGE_WORDS,
+                  "move_to": move_to},
+        limits=["the extent is estimated from the source; the compiled PDF is the final measure"],
+        unmeasured_reason=None,
+    )
+
+
+_STRUCTURE_FUNCTIONS = {"back-matter-order": check_back_matter_order,
+                        "own-paragraph": check_own_paragraph,
+                        "appendix-length": check_appendix_length}
+assert set(_STRUCTURE_FUNCTIONS) == set(STRUCTURE_CHECKS), "every STRUCTURE_CHECKS member needs one function"
+
+
 _CHECK_FUNCTIONS = {
     "contribution-list": check_contribution_list,
     "chain": check_chain,
@@ -636,11 +862,12 @@ _CHECK_FUNCTIONS = {
     "citations": check_citations,
     "contract-currency": check_contract_currency,
     "figure-semantics": check_figure_semantics,
+    "language": check_language,
 }
 assert set(_CHECK_FUNCTIONS) == set(CHECKS), "every CHECKS member needs exactly one function, and the reverse"
 
 
-def run(evidence, *, optional_block_ids: frozenset = frozenset()) -> dict:
+def run(evidence, *, optional_block_ids: frozenset = frozenset(), language: dict | None = None) -> dict:
     """Assemble the full report: one object per `CHECKS` member, in both
     directions (`ReportShapeTests`). `holds + fails + unmeasured ==
     len(CHECKS)` always; `unmeasured` is never counted in `holds` — held by
@@ -655,13 +882,27 @@ def run(evidence, *, optional_block_ids: frozenset = frozenset()) -> dict:
     corpus read; this module touches disk never, by its own AST lock), so
     behaviour is byte-identical to before this parameter existed until a
     caller passes real values.
+
+    `language`: `paper_language.scan` over `main.tex`, handed only to
+    `check_language` (spec S4); `None` reports that check `unmeasured`.
     """
-    entries = [_CHECK_FUNCTIONS[check](evidence, optional_block_ids=optional_block_ids) for check in CHECKS]
+    entries = [
+        check_language(evidence, optional_block_ids=optional_block_ids, language=language)
+        if check == "language"
+        else _CHECK_FUNCTIONS[check](evidence, optional_block_ids=optional_block_ids)
+        for check in CHECKS
+    ]
     holds = sum(1 for entry in entries if entry["verdict"] == "pass")
     fails = sum(1 for entry in entries if entry["verdict"] == "fail")
     unmeasured = sum(1 for entry in entries if entry["verdict"] == "unmeasured")
     assert holds + fails + unmeasured == len(CHECKS)
+    # Structural checks sit apart from the coupling roster and its counts;
+    # a manuscript is clean only when every one of them passes as well.
+    structure = [_STRUCTURE_FUNCTIONS[check](evidence, optional_block_ids=optional_block_ids)
+                 for check in STRUCTURE_CHECKS]
+    structure_clean = all(entry["verdict"] == "pass" for entry in structure)
     return {
-        "checks": entries, "clean": (fails == 0 and unmeasured == 0),
+        "checks": entries, "clean": (fails == 0 and unmeasured == 0 and structure_clean),
         "holds": holds, "fails": fails, "unmeasured": unmeasured,
+        "structure": structure,
     }

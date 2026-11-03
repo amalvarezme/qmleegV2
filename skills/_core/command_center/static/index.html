@@ -13,23 +13,26 @@
   <link rel="stylesheet" href="./vendor/xterm.css">
   <script src="./vendor/xterm.js"></script>
   <script src="./vendor/xterm-addon-fit.js"></script>
-  <script src="./i18n/en.js?v=0.50.0"></script>
-  <script src="./i18n/es.js?v=0.50.0"></script>
-  <script src="./i18n.js?v=0.50.0"></script>
-  <script src="./cli-console.js?v=0.50.0"></script>
+  <script src="./i18n/en.js?v=0.58.1"></script>
+  <script src="./i18n/es.js?v=0.58.1"></script>
+  <script src="./i18n.js?v=0.58.1"></script>
+  <script src="./cli-console.js?v=0.58.1"></script>
   <link rel="stylesheet" href="./vendor/katex/katex.min.css">
   <script src="./vendor/katex/katex.min.js"></script>
-  <script src="./math-panel.js?v=0.50.0"></script>
-  <script src="./model-panel.js?v=0.50.0"></script>
-  <script src="./experiments-panel.js?v=0.50.0"></script>
-  <script src="./experiments-tutor.js?v=0.50.0"></script>
-  <script src="./novelty-panel.js?v=0.50.0"></script>
-  <script src="./agents-panel.js?v=0.50.0"></script>
-  <script src="./doctor-panel.js?v=0.50.0"></script>
-  <script src="./journals-panel.js?v=0.50.0"></script>
-  <script src="./ai-history-panel.js?v=0.50.0"></script>
-  <script src="./phase-console.js?v=0.50.0"></script>
-  <script src="./phase-run.js?v=0.50.0"></script>
+  <script src="./math-panel.js?v=0.58.1"></script>
+  <script src="./model-panel.js?v=0.58.1"></script>
+  <script src="./experiments-panel.js?v=0.58.1"></script>
+  <script src="./experiments-tutor.js?v=0.58.1"></script>
+  <script src="./novelty-panel.js?v=0.58.1"></script>
+  <script src="./agents-panel.js?v=0.58.1"></script>
+  <script src="./doctor-panel.js?v=0.58.1"></script>
+  <script src="./journals-panel.js?v=0.58.1"></script>
+  <script src="./ai-history-panel.js?v=0.58.1"></script>
+  <script src="./phase-console.js?v=0.58.1"></script>
+  <script src="./phase-run.js?v=0.58.1"></script>
+  <script src="./atlas-manuscript-panel.js?v=0.58.1"></script>
+  <script src="./manuscript-graph-panel.js?v=0.58.1"></script>
+  <script src="./manuscript-qa-panel.js?v=0.58.1"></script>
   <style>
     :root {
       --bg: #0b0f19;
@@ -2095,6 +2098,31 @@
     /* =========================================================
        CONCEPT MAP AND MATHEMATICAL MODEL
        ========================================================= */
+    .candidate-pool-note {
+      margin: 0 0 0.75rem;
+      padding: 0.6rem 0.9rem;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      line-height: 1.45;
+    }
+    .candidate-pool-note[hidden] { display: none; }
+    .candidate-pool-note ul { margin: 0.25rem 0 0.4rem 1.1rem; }
+    .candidate-pool-note__badges { display: flex; gap: 0.4rem; flex-wrap: wrap; margin-bottom: 0.4rem; }
+    .candidate-pool-note summary { cursor: pointer; font-weight: 600; color: var(--text); }
+    .model-language-notice {
+      margin-top: 0.75rem;
+      padding: 0.6rem 0.9rem;
+      border: 1px solid var(--warn);
+      border-left: 4px solid var(--warn);
+      border-radius: var(--radius);
+      background: rgba(245, 158, 11, 0.08);
+      font-size: 0.8rem;
+      color: var(--text);
+      line-height: 1.45;
+    }
+    .model-language-notice[hidden] { display: none; }
     .model-header-banner {
       background: linear-gradient(135deg, rgba(17, 24, 39, 0.95), rgba(31, 41, 55, 0.85));
       border: 1px solid rgba(56, 189, 248, 0.25);
@@ -2765,6 +2793,16 @@
     .journals-details { margin-bottom: 0.65rem; border: 1px solid var(--border); border-radius: var(--radius-lg);
       background: var(--surface); padding: 0.5rem 0.85rem; }
     .journals-details > summary { cursor: pointer; font-weight: 600; font-size: 0.85rem; }
+    #manuscriptQaDetails { min-width: 0; overflow-wrap: anywhere; }
+    .qa-sub, .qa-status__meta, .qa-warning { font-size: 0.76rem; color: var(--text-muted); }
+    .qa-page { border-top: 1px solid var(--border); padding: 0.5rem 0; min-width: 0; }
+    .qa-page__head { display: flex; gap: 0.5rem; align-items: center; margin-bottom: 0.35rem; }
+    .qa-page__body { display: flex; gap: 0.75rem; align-items: flex-start; min-width: 0; }
+    .qa-page__thumb { width: 120px; max-width: 30%; height: auto; flex: none;
+      border: 1px solid var(--border); border-radius: var(--radius-sm); background: #fff; }
+    .qa-page__list { margin: 0; padding-left: 1rem; font-size: 0.78rem; min-width: 0; flex: 1; }
+    .qa-finding { margin-bottom: 0.25rem; }
+    .qa-finding__snippet { display: block; white-space: pre-wrap; overflow-wrap: anywhere; font-size: 0.72rem; }
     .journals-form { display: flex; flex-wrap: wrap; gap: 0.6rem; align-items: flex-end; margin: 0.5rem 0; }
     .journals-form label, .journals-sjr label, .journals-approve label { display: flex; flex-direction: column;
       gap: 0.2rem; font-size: 0.72rem; color: var(--text-muted); }
@@ -2965,6 +3003,7 @@
           <span>👤 <strong data-i18n="model.authors">Authors:</strong> <span id="modelAuthorsVal" data-i18n="model.noAuthor">No author assigned</span></span>
           <span id="modelMetaExtra">⚡ <strong data-i18n="model.status">Status:</strong> <span data-i18n="model.statusValue">Deliberation and formal scaffolding</span></span>
         </div>
+        <div id="modelLanguageNotice" class="model-language-notice" role="status" hidden></div>
       </div>
 
       <!-- Sub-navigation Filter Bar -->
@@ -3216,12 +3255,16 @@
             <button id="btnGraphAtlas" class="btn btn--primary" onclick="switchGraph('atlas')" data-i18n="atlas.btn.atlas">🌌 3D Constellation (Solar Atlas)</button>
             <button id="btnGraphNovelty" class="btn" onclick="switchGraph('novelty')" data-i18n="atlas.btn.novelty">🕸️ 3D Novelty Graph of the Manuscript</button>
             <button id="btnGraphPapers" class="btn" onclick="switchGraph('papers')" data-i18n="atlas.btn.papers">📊 Candidate Matrix</button>
+            <button id="btnGraphSummary" class="btn" onclick="switchGraph('summary')" title="Topic, problem and pillars, hypotheses, cited SOTA, base and novelty math, experiments, findings and conclusions (.papersmith/manuscript_graph.json)" data-i18n-attr="title:atlas.btn.summaryTitle" data-i18n="atlas.btn.summary">🧭 Manuscript summary</button>
             <button id="btnBuildGraph" class="btn" onclick="triggerBuildAtlas()" title="Regenerates the SOTA constellation from sota-pool/atlas.json (checker + renderer; also: smith atlas build)" data-i18n-attr="title:atlas.buildTitle" data-i18n="atlas.build">⚡ Regenerate graph</button>
             <button id="btnGroupLayout" class="btn" onclick="toggleAtlasGroupLayout()" title="Rearranges the systems by cluster (family); press it again to return to the original layout" data-i18n-attr="title:atlas.groupTitle" data-i18n="atlas.group">🧩 Group layout</button>
+            <button id="btnAtlasManuscript" class="btn" onclick="toggleAtlasManuscript()" title="Shows which SOTA systems the manuscript cites (sota-pool/atlas.manuscript.json)" data-i18n-attr="title:atlas.manuscript.btnTitle" data-i18n="atlas.manuscript.btn">📚 Cited in manuscript</button>
             <a id="linkOpenGraph" href="/api/atlas/view" target="_blank" class="btn" data-i18n="common.openInNewTab">Open in a new tab ↗</a>
           </div>
         </div>
         <div id="graphBuildBadge" style="display: none; padding: 0.35rem 0.8rem; font-size: 0.76rem; border-bottom: 1px solid var(--border-subtle);"></div>
+        <!-- Manuscript layer: atlas systems the paper cites (atlas-manuscript-panel.js) -->
+        <div id="atlasManuscriptPanel" style="display: none; padding: 0.5rem 0.8rem; font-size: 0.78rem; border-bottom: 1px solid var(--border-subtle); max-height: 40vh; overflow: auto;"></div>
 
         <!-- Graph selection: links the node to the PDF and to its artifact -->
         <div id="atlasSelectionCard" style="display: none; padding: 0.5rem 0.8rem; background: var(--surface-2); border-bottom: 1px solid var(--border-subtle); font-size: 0.8rem; gap: 0.6rem; align-items: center; flex-wrap: wrap;">
@@ -3250,7 +3293,7 @@
           <div class="matrix-stats-grid">
             <div class="matrix-stat-card">
               <span class="matrix-stat-val" id="candStatTotal">0</span>
-              <span class="matrix-stat-lbl" data-i18n="candidates.stat.total">Q1/Q2 Candidate Articles</span>
+              <span class="matrix-stat-lbl" data-i18n="candidates.stat.total">Candidate articles</span>
             </div>
             <div class="matrix-stat-card">
               <span class="matrix-stat-val" id="candStatFamilies">0</span>
@@ -3258,11 +3301,11 @@
             </div>
             <div class="matrix-stat-card">
               <span class="matrix-stat-val" id="candStatWindow">—</span>
-              <span class="matrix-stat-lbl" data-i18n="candidates.stat.window">SOTA Time Window</span>
+              <span class="matrix-stat-lbl" data-i18n="candidates.stat.window">Publication years</span>
             </div>
             <div class="matrix-stat-card">
               <span class="matrix-stat-val" id="candStatPlausible">—</span>
-              <span class="matrix-stat-lbl" data-i18n="candidates.stat.plausible">Validated Plausibility</span>
+              <span class="matrix-stat-lbl" data-i18n="candidates.stat.plausible">Anchor articles</span>
             </div>
           </div>
 
@@ -3292,7 +3335,8 @@
           </div>
 
           <!-- Friendly candidates table -->
-          <div class="table-responsive" style="max-height: 680px; overflow-y: auto; border: 1px solid var(--border); border-radius: var(--radius);">
+          <div id="candidatePoolNote" class="candidate-pool-note" hidden></div>
+            <div class="table-responsive" style="max-height: 680px; overflow-y: auto; border: 1px solid var(--border); border-radius: var(--radius);">
             <table class="table matrix-table">
               <thead>
                 <tr>
@@ -3301,7 +3345,7 @@
                   <th style="min-width: 320px;" data-i18n="candidates.col.article">Article &amp; Authors</th>
                   <th style="width: 170px;" data-i18n="candidates.col.venue">Journal / Venue</th>
                   <th style="width: 160px;" data-i18n="candidates.col.family">Family / Cluster</th>
-                  <th style="min-width: 260px;" data-i18n="candidates.col.contribution">Contribution &amp; Plausibility</th>
+                  <th style="min-width: 260px;" data-i18n="candidates.col.contribution">Role in the pool</th>
                   <th style="width: 110px; text-align: center;">Abstract</th>
                 </tr>
               </thead>
@@ -3330,6 +3374,12 @@
           <details id="journalsDetails" class="journals-details" ontoggle="if (this.open) window.refreshJournalsPanel?.()">
             <summary data-i18n="journals.title">Suggested journals</summary>
             <div id="journalsPanel"></div>
+          </details>
+
+          <details id="manuscriptQaDetails" class="journals-details" ontoggle="if (this.open) window.refreshManuscriptQa?.()">
+            <summary data-i18n="qa.title">Visual QA of the manuscript</summary>
+            <p class="qa-sub" data-i18n="qa.sub">Measured on the compiled PDF after every compile: text past the text block, figure and table text below 0.70 times the body size, and Overfull boxes.</p>
+            <div id="manuscriptQaPanel"></div>
           </details>
 
           <div class="pdf-viewer-topbar">
@@ -3390,7 +3440,7 @@
                 </div>
               </div>
 
-              <button class="btn btn--sm" id="btnAuditAi" onclick="auditManuscriptAi()" title="Audit manuscript for AI markers and stylometric burstiness" data-i18n-attr="title:pdf.auditAiTitle" data-i18n="pdf.auditAi">🤖 AI Audit</button>
+              <button class="btn btn--sm" id="btnAuditAi" onclick="auditManuscriptAi()" title="Audit the writing style: sentence cadence, overused phrasing and lexical diversity" data-i18n-attr="title:pdf.auditAiTitle" data-i18n="pdf.auditAi">✍️ Style audit</button>
               <button class="btn btn--sm" onclick="toggleNativeViewer()" id="btnToggleNative" title="Switch between PDF.js and the browser's native viewer" data-i18n-attr="title:pdf.toggleViewerTitle">Native Viewer</button>
               <a href="/api/pdf" download class="btn btn--sm" title="Download the compiled main.pdf" data-i18n-attr="title:pdf.downloadTitle" data-i18n="pdf.download">⬇ Download</a>
             </div>
@@ -3469,7 +3519,7 @@
                   <button class="btn btn--xs btn--comment" onclick="triggerAddComment()" data-i18n="changes.quick.comment">💬 Comment</button>
                   <button class="btn btn--xs btn--strikethrough" onclick="triggerStrikethrough()" data-i18n="annot.card.strike">✂️ Strike through</button>
                   <button class="btn btn--xs btn--humanize" onclick="triggerHumanize()" data-i18n="annot.card.humanize">✨ Humanize</button>
-                  <button class="btn btn--xs btn--info" id="btnAuditSelectionAi" onclick="auditCurrentSelectionAi()" title="Audit manuscript for AI markers and stylometric burstiness" data-i18n-attr="title:pdf.auditAiTitle" data-i18n="pdf.auditAi">🤖 AI Audit</button>
+                  <button class="btn btn--xs btn--info" id="btnAuditSelectionAi" onclick="auditCurrentSelectionAi()" title="Audit the writing style: sentence cadence, overused phrasing and lexical diversity" data-i18n-attr="title:pdf.auditAiTitle" data-i18n="pdf.auditAi">✍️ Style audit</button>
                 </div>
               </div>
             </div>
@@ -3900,6 +3950,7 @@
 
     let candidatesData = [];
     let candidatesFamilies = [];
+    let candidatesPool = null;
     let candidatesLoaded = false;
 
     // ---- Graph toolbar: regenerate, cluster layout and node selection ----
@@ -3953,6 +4004,10 @@
       btn.textContent = t('atlas.regenerating');
       const stamp = () => new Date().toLocaleTimeString();
       try {
+        if (currentGraphKind === 'summary') {
+          await rebuildManuscriptGraph();
+          return;
+        }
         if (currentGraphKind === 'novelty') {
           // The novelty graph is built on every request: a reload regenerates it.
           iframe.src = apiUrl(`/api/atlas/novelty/view?v=${Date.now()}`);
@@ -4054,6 +4109,7 @@
       const btnAtlas = document.getElementById('btnGraphAtlas');
       const btnNovelty = document.getElementById('btnGraphNovelty');
       const btnPapers = document.getElementById('btnGraphPapers');
+      const btnSummary = document.getElementById('btnGraphSummary');
       const atlas3d = document.getElementById('atlas3dContainer');
       const matrixCont = document.getElementById('candidatesMatrixContainer');
       const titleEl = document.getElementById('atlasPanelTitle');
@@ -4063,6 +4119,8 @@
       if (btnAtlas) btnAtlas.className = kind === 'atlas' ? 'btn btn--primary' : 'btn';
       if (btnNovelty) btnNovelty.className = kind === 'novelty' ? 'btn btn--primary' : 'btn';
       if (btnPapers) btnPapers.className = kind === 'papers' ? 'btn btn--primary' : 'btn';
+      if (btnSummary) btnSummary.className = kind === 'summary' ? 'btn btn--primary' : 'btn';
+      if (kind !== 'summary' && typeof hideManuscriptGraph === 'function') hideManuscriptGraph();
 
       if (kind === 'atlas') {
         if (atlas3d) atlas3d.style.display = 'block';
@@ -4081,6 +4139,13 @@
         }
         if (titleEl) titleEl.textContent = t('atlas.title.novelty');
         if (openLink) openLink.href = apiUrl('/api/atlas/novelty/view');
+      } else if (kind === 'summary') {
+        // Offline layered view of .papersmith/manuscript_graph.json (manuscript-graph-panel.js).
+        if (atlas3d) atlas3d.style.display = 'block';
+        if (matrixCont) matrixCont.style.display = 'none';
+        if (titleEl) titleEl.textContent = t('atlas.title.summary');
+        if (openLink) openLink.href = apiUrl('/api/atlas/manuscript-graph/view');
+        if (typeof showManuscriptGraph === 'function') showManuscriptGraph();
       } else {
         if (atlas3d) atlas3d.style.display = 'none';
         if (matrixCont) matrixCont.style.display = 'block';
@@ -4112,6 +4177,7 @@
         const json = await res.json();
         candidatesData = json.candidates || [];
         candidatesFamilies = json.families || [];
+        candidatesPool = json;
         candidatesLoaded = true;
 
         // Populate family filter dropdown
@@ -4131,11 +4197,40 @@
         if (statTotal) statTotal.textContent = candidatesData.length;
         const statFam = document.getElementById('candStatFamilies');
         if (statFam) statFam.textContent = candidatesFamilies.length;
+        // The window and the anchors come from the pool itself, never a default.
+        const years = candidatesData.map((c) => Number(c.year)).filter((y) => Number.isFinite(y) && y > 0);
+        const statWindow = document.getElementById('candStatWindow');
+        if (statWindow) {
+          const lo = years.length ? Math.min(...years) : null;
+          const hi = years.length ? Math.max(...years) : null;
+          statWindow.textContent = lo === null ? '—' : (lo === hi ? String(lo) : `${lo}–${hi}`);
+        }
+        const statAnchors = document.getElementById('candStatPlausible');
+        if (statAnchors) statAnchors.textContent = candidatesData.filter((c) => c.anchor === true).length;
+        renderCandidatePoolNote();
 
         filterCandidatesMatrix();
       } catch (err) {
         tbody.innerHTML = `<tr><td colspan="7" style="text-align: center; padding: 2rem; color: var(--bad);">${escapeHtml(t('candidates.loadError', { error: err.message }))}</td></tr>`;
       }
+    }
+
+    // What the pool says of itself: its note, what it still owes, what it left out.
+    function renderCandidatePoolNote() {
+      const box = document.getElementById('candidatePoolNote');
+      if (!box) return;
+      const pool = candidatesPool || {};
+      const parts = [];
+      if (pool.retrieved) parts.push(`<span class="badge">${escapeHtml(t('candidates.retrievedOn', { date: pool.retrieved }))}</span>`);
+      if (pool.excluded) parts.push(`<span class="badge badge--warn">${escapeHtml(t('candidates.excluded', { n: pool.excluded }))}</span>`);
+      const owed = (pool.owed || []).map((item) => `<li>${escapeHtml(item)}</li>`).join('');
+      let html = parts.length ? `<div class="candidate-pool-note__badges">${parts.join(' ')}</div>` : '';
+      if (owed) html += `<div><strong>${escapeHtml(t('candidates.owed'))}</strong><ul>${owed}</ul></div>`;
+      if (pool.plausibility_note) {
+        html += `<details><summary>${escapeHtml(t('candidates.poolNote'))}</summary><p>${escapeHtml(pool.plausibility_note)}</p></details>`;
+      }
+      box.innerHTML = html;
+      box.hidden = !html;
     }
 
     function filterCandidatesMatrix() {
@@ -4155,8 +4250,7 @@
           c.venue,
           c.identifier,
           c.family,
-          c.abstract,
-          c.plausibility_note
+          c.abstract
         ].join(' ').toLowerCase();
         return hay.includes(query);
       });
@@ -4195,11 +4289,13 @@
               ${c.identifier ? `<a href="${doiUrl}" target="_blank" class="badge badge--info" style="text-transform: none; font-size: 0.7rem;" title="${escapeHtml(t('candidates.openDoi'))}">🔗 ${escapeHtml(c.identifier)} ↗</a>` : ''}
             </div>
           </td>
-          <td><span style="font-style: italic; color: var(--text-dim); font-size: 0.8rem;">${escapeHtml(c.venue || t('candidates.defaultVenue'))}</span></td>
+          <td><span style="font-style: italic; color: var(--text-dim); font-size: 0.8rem;">${escapeHtml(c.venue || '—')}</span></td>
           <td><span class="badge ${getFamilyBadgeClass(c.family)}">${escapeHtml(c.family || 'general')}</span></td>
           <td>
-            <div style="font-size: 0.78rem; color: var(--text); background: rgba(56, 189, 248, 0.05); padding: 0.45rem 0.65rem; border-radius: 4px; border-left: 2px solid var(--accent); line-height: 1.4;">
-              ${escapeHtml(c.plausibility_note || t('candidates.defaultPlausibility'))}
+            <div style="font-size: 0.78rem; color: var(--text); display: flex; gap: 0.4rem; flex-wrap: wrap; align-items: center;">
+              ${c.anchor === true ? `<span class="badge badge--ok">${escapeHtml(t('candidates.anchor'))}</span>` : ''}
+              ${c.family_provenance ? `<span class="badge">${escapeHtml(t('candidates.provenance', { provenance: c.family_provenance }))}</span>` : ''}
+              ${c.anchor !== true && !c.family_provenance ? '—' : ''}
             </div>
           </td>
           <td style="text-align: center;">
@@ -4221,7 +4317,7 @@
               <strong style="color: var(--accent); font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.04em;">${t('candidates.fullAbstract')}</strong>
               <div style="display: flex; gap: 0.5rem;">
                 ${doiUrl ? `<a href="${doiUrl}" target="_blank" class="btn btn--sm" style="font-size: 0.72rem;">${t('candidates.openPublication')}</a>` : ''}
-                <button class="btn btn--sm" style="font-size: 0.72rem;" onclick="copyCandidateBibtex(${JSON.stringify(c.title).replace(/"/g, '&quot;')}, ${c.year || 2022}, ${JSON.stringify(c.venue || '').replace(/"/g, '&quot;')}, ${JSON.stringify(c.identifier || '').replace(/"/g, '&quot;')}, this)">${t('candidates.copyCitation')}</button>
+                <button class="btn btn--sm" style="font-size: 0.72rem;" onclick="copyCandidateBibtex(${JSON.stringify(c.title).replace(/"/g, '&quot;')}, ${JSON.stringify(c.year || '').replace(/"/g, '&quot;')}, ${JSON.stringify(c.venue || '').replace(/"/g, '&quot;')}, ${JSON.stringify(doiUrl || '').replace(/"/g, '&quot;')}, this)">${t('candidates.copyCitation')}</button>
               </div>
             </div>
             <div class="candidate-abstract-box">
@@ -4230,8 +4326,8 @@
             <div style="font-size: 0.75rem; color: var(--text-dim); display: flex; gap: 1.5rem; flex-wrap: wrap; padding-top: 0.25rem;">
               <span><strong>${t('candidates.allAuthors')}</strong> ${escapeHtml(authorsList.join(', '))}</span>
               <span><strong>${t('candidates.cluster')}</strong> <code>${escapeHtml(c.family || 'general')}</code></span>
-              <span><strong>${t('candidates.retrieved')}</strong> ${c.retrieval_date || '2026-10-14'}</span>
-              <span><strong>${t('candidates.resolver')}</strong> ${c.resolver || 'OpenAlex'}</span>
+              <span><strong>${t('candidates.retrieved')}</strong> ${escapeHtml(c.retrieved || c.retrieval_date || '—')}</span>
+              <span><strong>${t('candidates.resolver')}</strong> ${escapeHtml(c.resolver || '—')}</span>
             </div>
           </td>
         `;
@@ -4260,8 +4356,8 @@
       filterCandidatesMatrix();
     }
 
-    function copyCandidateBibtex(title, year, venue, doi, btnEl) {
-      const text = `${title}. (${year}). ${venue}. DOI: https://doi.org/${doi}`;
+    function copyCandidateBibtex(title, year, venue, url, btnEl) {
+      const text = [title, year ? `(${year})` : '', venue, url].filter(Boolean).join('. ');
       navigator.clipboard.writeText(text).then(() => {
         const orig = btnEl.textContent;
         btnEl.textContent = t('common.copied');
@@ -5923,17 +6019,17 @@
         });
         const data = await res.json();
         if (data.ok && badge) {
-          const score = (data.composite_score * 100).toFixed(0);
+          const score = (data.style_score * 100).toFixed(0);
           badge.style.display = 'inline-block';
-          if (data.verdict === 'ai_flagged') {
+          if (data.style_verdict === 'needs_revision') {
             badge.className = 'badge badge--bad';
-            badge.textContent = `${t('pdf.aiRiskHigh')} (${score}%)`;
-          } else if (data.verdict === 'mixed') {
+            badge.textContent = `${t('pdf.styleNeedsRevision')} (${score}%)`;
+          } else if (data.style_verdict === 'uneven') {
             badge.className = 'badge badge--warn';
-            badge.textContent = `${t('pdf.aiRiskMixed')} (${score}%)`;
+            badge.textContent = `${t('pdf.styleUneven')} (${score}%)`;
           } else {
             badge.className = 'badge badge--ok';
-            badge.textContent = `${t('pdf.aiRiskLow')} (${score}%)`;
+            badge.textContent = `${t('pdf.styleClear')} (${score}%)`;
           }
           if (clichesEl && data.cliches && data.cliches.findings && data.cliches.findings.length) {
             clichesEl.style.display = 'block';
@@ -5941,7 +6037,7 @@
           }
         }
       } catch (err) {
-        console.error('AI audit error:', err);
+        console.error('Style audit error:', err);
       } finally {
         if (btn) btn.disabled = false;
       }
@@ -5959,16 +6055,16 @@
         });
         const data = await res.json();
         if (data.ok) {
-          const score = (data.composite_score * 100).toFixed(0);
-          const verdictLabel = data.risk === 'ai_flagged' ? t('pdf.aiRiskHigh') : (data.risk === 'mixed' ? t('pdf.aiRiskMixed') : t('pdf.aiRiskLow'));
+          const score = (data.style_score * 100).toFixed(0);
+          const verdictLabel = data.style_verdict === 'needs_revision' ? t('pdf.styleNeedsRevision') : (data.style_verdict === 'uneven' ? t('pdf.styleUneven') : t('pdf.styleClear'));
           const msg = `${t('pdf.auditManuscriptResult')}: ${verdictLabel} (${score}%, ${data.blocks_analyzed} blocks)`;
           showToast(msg);
-          alert(`${msg}\n\n• Burstiness CV: ${data.burstiness && data.burstiness.cv != null ? data.burstiness.cv.toFixed(2) : 'N/A'}\n• Cliches: ${data.cliches ? data.cliches.total_count : 0}\n• Lexical diversity (TTR): ${data.lexical_diversity && data.lexical_diversity.ttr != null ? data.lexical_diversity.ttr.toFixed(2) : 'N/A'}`);
+          alert(`${msg}\n\n• Burstiness CV: ${data.burstiness && data.burstiness.cv != null ? data.burstiness.cv.toFixed(2) : 'N/A'}\n• Overused phrasing: ${data.cliches ? data.cliches.total_count : 0}\n• Lexical diversity (TTR): ${data.lexical_diversity && data.lexical_diversity.ttr != null ? data.lexical_diversity.ttr.toFixed(2) : 'N/A'}`);
         } else {
-          showToast(`AI audit error: ${data.error || 'unknown'}`);
+          showToast(`Style audit error: ${data.error || 'unknown'}`);
         }
       } catch (err) {
-        showToast(`AI audit failed: ${err.message}`);
+        showToast(`Style audit failed: ${err.message}`);
       } finally {
         if (btn) btn.disabled = false;
       }
@@ -6600,6 +6696,8 @@
       const titleEl = document.getElementById('atlasPanelTitle');
       if (titleEl && titleKey) titleEl.textContent = t(titleKey);
       if (candidatesLoaded) filterCandidatesMatrix();
+      // The server localizes the neutral model spec's labels: fetch it again.
+      if (modelDataCache) refreshModelData();
       // The novelty view and the candidate link are drawn by the server: reload them.
       if (currentGraphKind === 'novelty' && graphFramePath() === '/api/atlas/novelty/view') {
         document.getElementById('graphIframe').src = apiUrl('/api/atlas/novelty/view');

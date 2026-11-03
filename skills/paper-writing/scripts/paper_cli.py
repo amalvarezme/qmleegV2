@@ -110,11 +110,14 @@ import paper_figure_audit  # noqa: E402,F401 -- a-diagram-that-compiles-or-says-
 import paper_coupling_evidence  # noqa: E402 -- the-couplings-hold-or-they-do-not: every disk read `verify` needs (named to avoid colliding with `paper_evidence.py`, WU1's own claim<->source module)
 import paper_verify  # noqa: E402 -- the-couplings-hold-or-they-do-not: the seven pure coupling checks and the report they assemble; raises no `Refused` of its own (every refusal a `verify` run can report is `DECLARATION_RECORD_ABSENT`, from `paper_coupling_evidence.py`)
 import paper_couplings  # noqa: E402 -- the-skill-stops-trusting-memory, item 4: the producer `paper/couplings.json` never had; `couplings` verb
+import paper_ai_usage  # noqa: E402 -- closing-sections T1: the pipeline's read-only AI-usage record, attached by `packet` to the AI-use declaration block and the set-up block holding the Methods sentence
 import paper_full_text  # noqa: E402 -- the-pdf-arrives-or-the-operator-is-told: fills the full-text role; `full_text` verb
 import paper_lifecycle  # noqa: E402 -- a-leftover-paper-is-offered-before-it-is-lost: the reuse and exhaustion reports over the ingested-papers lifecycle; `reuse`/`exhaustion` verbs; raises no `Refused` of its own
 import paper_venue  # noqa: E402 -- journal-finder, S9-S11: the `venue` verb group (select, requirements, acquire, diff, plan, approve, build, status, list)
 import paper_separation  # noqa: E402 -- the-whole-cut-is-argued-before-any-section-is-claimed, U1: the pure claimable-section/score-cut core; wired to the `separate` verb in U2 (`compute_separation`/`cmd_separate` below); raises no `Refused` of its own
-import paper_ai_metrics  # noqa: E402 -- ai-stylometry-and-humanization: deterministic stylometry, burstiness, Claude fingerprints, and F5 invariant checks
+import paper_ai_metrics  # noqa: E402 -- closing-sections-and-manuscript-graphs S4: writing-quality metrics (cadence, overused phrasing, lexical diversity) and F5 invariant checks; never an AI-detection score
+import paper_language  # noqa: E402 -- manuscript-polish-0-54 S4: the English-only manuscript scan `write` refuses on and `verify`'s `language` check reports; raises no `Refused` of its own
+import paper_place  # noqa: E402 -- figure-and-table-quality T2 (S2-S4): the print-quality gate `place` runs before copying a measured figure (text layer, background, margins, in-figure title, printed font floor)
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "_core" / "implementation"))
 from impl_refusals import Refused  # noqa: E402
@@ -410,6 +413,10 @@ REFUSAL_CLASSIFICATION: dict[str, str] = {
     "AUDIT_EXHAUSTED": WORK_STATE,
     "DRAFT_UNREADABLE": INVOCATION_DEFECT,
     "AUDIT_UNREADABLE": INVOCATION_DEFECT,
+    # manuscript-polish-0-54 S4: `paper_write._stage_language`
+    "DRAFT_NOT_ENGLISH": WORK_STATE,
+    "DRAFT_PLACEHOLDER_TEXT": WORK_STATE,
+    "DRAFT_BOLD_LEAD_IN": WORK_STATE,
     # --- the eight-token tripwire (paper_leak.py; WU2) ---------------------
     "STYLE_OVERLAP": WORK_STATE,
     # --- a-diagram-that-compiles-or-says-why: `render`/`place`, the sole
@@ -422,6 +429,19 @@ REFUSAL_CLASSIFICATION: dict[str, str] = {
     # own design introduces for behaviour the spec described without
     # naming a code (`LATEX_LOG_ABSENT`, `LATEX_OUTCOME_UNEXPLAINED`) -----
     "DIAGRAM_SOURCE_ABSENT": WORK_STATE,
+    # --- figure-and-table-quality T2: `place`'s print-quality gate
+    # (paper_place.py, S2-S4). The figure itself must change, so each is
+    # work state; an out-of-domain provenance field is the caller's -----
+    "FIGURE_PDF_UNREADABLE": WORK_STATE,
+    "FIGURE_NO_TEXT_LAYER": WORK_STATE,
+    "FIGURE_FULL_PAGE_BACKGROUND": WORK_STATE,
+    "FIGURE_MARGIN_WASTE": WORK_STATE,
+    "FIGURE_IN_FIGURE_TITLE": WORK_STATE,
+    "FIGURE_TEXT_BELOW_PRINT_FLOOR": WORK_STATE,
+    # manuscript-polish-0-54 S2: the printed size is a range, 0.70-0.90 x body
+    "FIGURE_TEXT_ABOVE_PRINT_CAP": WORK_STATE,
+    "FIGURE_MEASUREMENT_UNAVAILABLE": WORK_STATE,
+    "FIGURE_PROVENANCE_INVALID": INVOCATION_DEFECT,
     "LATEX_TOOLCHAIN_ABSENT": WORK_STATE,
     "LATEX_PACKAGE_ABSENT": WORK_STATE,
     "REPAIR_BUDGET_SPENT": WORK_STATE,
@@ -609,7 +629,7 @@ REFUSAL_CLASSIFICATION: dict[str, str] = {
     "PLAN_HASH_MISMATCH": INVOCATION_DEFECT,
     "STATEMENT_EMPTY": INVOCATION_DEFECT,
     "PLAN_NOT_APPROVED": WORK_STATE,
-    # --- ai stylometry and humanization (ai_audit, humanize) --------------
+    # --- writing-quality audit and style revision (ai_audit, humanize) ----
     "TARGET_REQUIRED": INVOCATION_DEFECT,
     "TARGET_UNREADABLE": INVOCATION_DEFECT,
     "BLOCK_REQUIRED": INVOCATION_DEFECT,
@@ -1564,14 +1584,81 @@ def cmd_full_text(args: argparse.Namespace) -> dict:
     )
 
 
+#: The command center's manuscript-layer builder (closing-sections-and-
+#: manuscript-graphs S5), loaded by path: it derives
+#: `sota-pool/atlas.manuscript.json` and never touches `atlas.json`.
+ATLAS_MANUSCRIPT = Path(__file__).resolve().parents[2] / "_core" / "command_center" / "atlas_manuscript.py"
+
+
+def _refresh_atlas_manuscript(paper_dir: Path, result: dict) -> dict:
+    """Rebuild the atlas manuscript layer after a clean `bib build`/`refresh`
+    or a `verify` whose citation check passed. The layer lives in the
+    workspace holding `paper/` (`<paper_dir>/../sota-pool/`); a workspace
+    with no atlas gets nothing and `result` comes back unchanged. Never
+    refuses: a builder error rides along as `atlas_manuscript.warning`."""
+    root = Path(paper_dir).resolve().parent
+    result = _refresh_manuscript_graph(root, paper_dir, result)
+    if not (root / "sota-pool" / "atlas.json").is_file() or not ATLAS_MANUSCRIPT.is_file():
+        return result
+    try:
+        import importlib.util  # noqa: PLC0415
+
+        spec = importlib.util.spec_from_file_location("papersmith_atlas_manuscript", ATLAS_MANUSCRIPT)
+        module = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(module)
+        layer = module.refresh(root, paper_dir=paper_dir)
+        if hasattr(module, "sync_constellation_citations"):
+            module.sync_constellation_citations(root, paper_dir=paper_dir)
+    except Exception as exc:  # noqa: BLE001 - a trigger never fails the verb
+        layer = {"ok": False, "status": "error",
+                 "warning": f"atlas manuscript layer not rebuilt: {type(exc).__name__}: {exc}"[:300]}
+    return result if layer is None else {**result, "atlas_manuscript": layer}
+
+
+#: The command center's manuscript summary graph (S6). It imports its sibling
+#: readers as a package, so it is loaded as `skills._core.command_center`
+#: from the kit root that holds this script.
+MANUSCRIPT_GRAPH = ATLAS_MANUSCRIPT.with_name("manuscript_graph.py")
+
+
+def _refresh_manuscript_graph(root: Path, paper_dir: Path, result: dict) -> dict:
+    """Rebuild `.papersmith/manuscript_graph.json` next to the atlas layer, in
+    a workspace (`papersmith.yaml` present); otherwise `result` is unchanged.
+    Never refuses: a builder error rides along as `manuscript_graph.warning`."""
+    if not (root / "papersmith.yaml").is_file() or not MANUSCRIPT_GRAPH.is_file():
+        return result
+    try:
+        import importlib  # noqa: PLC0415
+
+        kit_root = str(MANUSCRIPT_GRAPH.parents[3])
+        if kit_root not in sys.path:
+            sys.path.insert(0, kit_root)
+        module = importlib.import_module("skills._core.command_center.manuscript_graph")
+        graph = module.refresh(root, paper_dir=paper_dir)
+    except Exception as exc:  # noqa: BLE001 - a trigger never fails the verb
+        graph = {"ok": False, "status": "error",
+                 "warning": f"manuscript graph not rebuilt: {type(exc).__name__}: {exc}"[:300]}
+    return result if graph is None else {**result, "manuscript_graph": graph}
+
+
 def cmd_bib(args: argparse.Namespace) -> dict:
     paper_dir = paper_scaffold.resolve_paper_dir(args.paper)
     guidance_dir = paper_guidance.resolve_guidance_dir(args.guidance)
     if args.bib_command == "refresh":
-        return paper_bib.refresh_metadata(
+        refreshed = paper_bib.refresh_metadata(
             paper_dir, args.cite_key, args.metadata_digest, guidance_dir=guidance_dir,
             resolver=args.resolver,
         )
+        if not refreshed.get("refreshed"):
+            return refreshed
+        refs_path, tex_path = paper_dir / "refs.bib", paper_dir / "main.tex"
+        if not (refs_path.is_file() and tex_path.is_file()):
+            return refreshed
+        try:
+            paper_bib.check_reciprocal(tex_path.read_bytes(), refs_path.read_bytes())
+        except Refused:
+            return refreshed  # the layer waits for a clean bibliography
+        return _refresh_atlas_manuscript(paper_dir, refreshed)
     # The evidence store is append-only, so a citation dropped from the text
     # keeps its records. The bibliography follows the text: only cited keys
     # are written, each still required to carry sourced, ingested evidence.
@@ -1583,7 +1670,7 @@ def cmd_bib(args: argparse.Namespace) -> dict:
     reciprocal = paper_bib.check_reciprocal(
         tex_bytes, (paper_dir / "refs.bib").read_bytes(),
     )
-    return {**result, "reciprocal": reciprocal}
+    return _refresh_atlas_manuscript(paper_dir, {**result, "reciprocal": reciprocal})
 
 
 def _round_for_new_record(existing_records: list[dict]) -> int:
@@ -1699,9 +1786,13 @@ def cmd_validate(args: argparse.Namespace) -> dict:
         explicit_min_sources if explicit_min_sources is not None
         else paper_validate.DEFAULT_MIN_SOURCES_PER_CLAIM
     )
-    return paper_validate.finalize_block(
+    res = paper_validate.finalize_block(
         paper_dir, args.block, claims, records, body, min_sources=min_sources,
     )
+    block_id_str = str(args.block or "").lower()
+    if any(prefix in block_id_str for prefix in ("introduction", "related-work", "materials-and-methods")):
+        return _refresh_atlas_manuscript(paper_dir, res)
+    return res
 
 
 def _compute_provenance_report(
@@ -2400,7 +2491,7 @@ def assemble_packet(
         sections_dir, header, block, qualified_id, corpus=corpus, paper_dir=paper_dir,
     )
 
-    return {
+    packet = {
         "block": block_id,
         "section": section,
         "contract": body.decode("utf-8"),
@@ -2408,6 +2499,11 @@ def assemble_packet(
         "source_sections": source_sections,
         "source_sections_state": source_sections_state,
     }
+    # The AI-use declaration states what the pipeline record shows; only the
+    # blocks that declare AI use carry it, so every other packet is unchanged.
+    if qualified_id in paper_ai_usage.AI_USAGE_BLOCKS and paper_dir is not None:
+        packet["ai_usage"] = paper_ai_usage.build(paper_dir)
+    return packet
 
 
 def cmd_packet(args: argparse.Namespace) -> dict:
@@ -2639,9 +2735,16 @@ def cmd_write(args: argparse.Namespace) -> dict:
         style_set=style_set,
         source_sections=paper_source_span.resolve_bound_sections(corpus, qualified_id),
     )
-    return paper_write.write_block(
+    res = paper_write.write_block(
         paper_dir, contract, draft, audit_account, grounding_account=grounding_account,
     )
+    sec_name = str(getattr(args, "section", "") or "").lower()
+    block_name = str(getattr(args, "block", "") or "").lower()
+    if sec_name in ("introduction", "related-work", "materials-and-methods") or any(
+        p in block_name for p in ("introduction", "related-work", "materials-and-methods")
+    ):
+        return _refresh_atlas_manuscript(paper_dir, res)
+    return res
 
 
 def cmd_render(args: argparse.Namespace) -> dict:
@@ -2878,13 +2981,22 @@ def cmd_couplings(args: argparse.Namespace) -> dict:
     return paper_couplings.write_couplings(paper_dir, record)
 
 
+def _scan_manuscript_language(main_tex_bytes: bytes) -> dict:
+    """Spec S4: `verify`'s `language` check, resolved here because
+    `paper_verify.py` imports nothing beyond `re` (the same reason
+    `_resolve_optional_block_ids` lives here). Pure over bytes already read."""
+    return paper_language.scan(main_tex_bytes.decode("utf-8", errors="replace"))
+
+
 def cmd_verify(args: argparse.Namespace) -> dict:
     """`verify`: a pure, read-only report over the five cross-section
     couplings, citation integrity, and contract currency
     (`coupling-verification`/`citation-integrity`/`contract-currency`
-    specs). Never writes a byte, under any input, including a refusal
-    (`block-substitution` spec, `Requirement: verify Verb Is Registered
-    And Read-Only`) -- `paper_coupling_evidence.gather` performs every
+    specs). Never writes a byte under `paper/`, under any input, including
+    a refusal (`block-substitution` spec, `Requirement: verify Verb Is
+    Registered And Read-Only`); the one write outside it is the derived
+    `sota-pool/atlas.manuscript.json`, rebuilt only when the citation
+    check passes and the workspace has an atlas (`_refresh_atlas_manuscript`) -- `paper_coupling_evidence.gather` performs every
     disk read this needs; `paper_verify.run` is pure over the result.
 
     `optional_block_ids` (`_resolve_optional_block_ids`, tasks.md Work Unit
@@ -2897,7 +3009,12 @@ def cmd_verify(args: argparse.Namespace) -> dict:
     sections_dir = paper_contract.resolve_sections_dir(args.sections)
     evidence = paper_coupling_evidence.gather(paper_dir, sections_dir)
     optional_block_ids = _resolve_optional_block_ids(sections_dir)
-    return paper_verify.run(evidence, optional_block_ids=optional_block_ids)
+    report = paper_verify.run(evidence, optional_block_ids=optional_block_ids,
+                              language=_scan_manuscript_language(evidence.main_tex_bytes))
+    citations =next((c for c in report["checks"] if c.get("check") == "citations"), None)
+    if citations is not None and citations.get("verdict") == "pass":
+        return _refresh_atlas_manuscript(paper_dir, report)
+    return report
 
 
 def cmd_reuse(args: argparse.Namespace) -> dict:
@@ -2973,8 +3090,12 @@ def cmd_venue(args: argparse.Namespace) -> dict:
 def cmd_place(args: argparse.Namespace) -> dict:
     """`place`: places an already-measured figure's PDF — compiles nothing,
     requires provenance naming the run (`authored-diagram` spec,
-    `Requirement: Data-Figure Boundary`)."""
+    `Requirement: Data-Figure Boundary`). Before the copy,
+    `paper_place.gate` refuses a figure that would print badly (S2-S4 of
+    `odd/tasks/figure-and-table-quality.md`); a compliant figure places
+    exactly as before."""
     paper_dir = paper_scaffold.resolve_paper_dir(args.paper)
+    paper_place.gate(paper_dir, Path(args.pdf), Path(args.provenance))
     return paper_figure.place_figure(
         paper_dir, args.figure_id, Path(args.pdf), Path(args.provenance),
     )
@@ -3120,10 +3241,26 @@ def _cmd_figure_audit(args: argparse.Namespace) -> dict:
                 f"{visual_report_path} is not a readable visual report",
             )
 
+    # The contract body is the section's plan, never its prose: a paper-
+    # specific component is named in the manuscript blocks that realise the
+    # section, so those join the union. `--file` mode never needed a paper
+    # directory before, so an unresolvable one (no `main.tex`, or `--paper`
+    # outside the repository) adds no refusal here: the audit simply keeps
+    # the contract text alone, as it did before this read existed.
+    section_text = body.decode("utf-8", errors="replace")
+    try:
+        manuscript = paper_coupling_evidence.manuscript_prose(
+            paper_dir or paper_scaffold.resolve_paper_dir(args.paper), [header.section],
+        )
+    except Refused:
+        manuscript = ""
+    if manuscript:
+        section_text = section_text + "\n" + manuscript
+
     report = paper_figure_audit.audit_semantics(
         tex=tex_text,
         manifest=manifest,
-        section_text=body.decode("utf-8", errors="replace"),
+        section_text=section_text,
         contract_figure=contract_figure,
         expected_components=expected_components,
         visual=visual,
@@ -3144,14 +3281,14 @@ def cmd_ai_audit(args: argparse.Namespace) -> dict:
         if not path.is_file():
             raise Refused("TARGET_UNREADABLE", f"{args.file}: file not found")
         text = path.read_text(encoding="utf-8")
-        results = paper_ai_metrics.analyze_ai_signatures(text)
+        results = paper_ai_metrics.analyze_style(text)
         return {"target": str(path), **results}
     elif args.draft:
         path = _resolve_repo_path(args.draft)
         if not path.is_file():
             raise Refused("DRAFT_UNREADABLE", f"{args.draft}: draft not found")
         text = path.read_text(encoding="utf-8")
-        results = paper_ai_metrics.analyze_ai_signatures(text)
+        results = paper_ai_metrics.analyze_style(text)
         return {"target": str(path), **results}
     elif args.block:
         paper_dir = paper_scaffold.resolve_paper_dir(args.paper)
@@ -3163,7 +3300,7 @@ def cmd_ai_audit(args: argparse.Namespace) -> dict:
         begin, end = doc.pairs[args.block]
         body_bytes = data[begin["end"]:end["start"]]
         text = body_bytes.decode("utf-8", errors="replace")
-        results = paper_ai_metrics.analyze_ai_signatures(text)
+        results = paper_ai_metrics.analyze_style(text)
         return {"target": f"block:{args.block}", **results}
     elif args.all:
         # Full manuscript audit across all blocks in main.tex
@@ -3176,11 +3313,18 @@ def cmd_ai_audit(args: argparse.Namespace) -> dict:
         for blk_id, (begin, end) in sorted(doc.pairs.items()):
             blk_text = data[begin["end"]:end["start"]].decode("utf-8", errors="replace").strip()
             if blk_text:
-                m = paper_ai_metrics.analyze_ai_signatures(blk_text)
+                m = paper_ai_metrics.analyze_style(blk_text)
                 block_metrics[blk_id] = {
+                    "style_score": m["style_score"],
+                    "style_verdict": m["style_verdict"],
+                    "overused_phrasing_count": m["overused_phrasing"]["total_count"],
+                    "flow_score": m["flow"]["flow_score"],
+                    "flow_verdict": m["flow"]["flow_verdict"],
+                    "flow_findings_count": len(m["flow"]["findings"]),
+                    # Deprecated aliases, removed in the next release.
                     "composite_score": m["composite_score"],
-                    "verdict": m.get("verdict", "low"),
-                    "cliches_count": m.get("cliches", {}).get("total_count", 0),
+                    "verdict": m["verdict"],
+                    "cliches_count": m["overused_phrasing"]["total_count"],
                 }
                 all_texts.append(blk_text)
         full_text = "\n\n".join(all_texts)
@@ -3188,19 +3332,32 @@ def cmd_ai_audit(args: argparse.Namespace) -> dict:
             return {
                 "target": "manuscript:main.tex",
                 "blocks_analyzed": 0,
+                "style_score": 0.0,
+                "style_verdict": "clear",
+                "disclosure_notice": paper_ai_metrics.DISCLOSURE_NOTICE,
                 "composite_score": 0.0,
                 "verdict": "human_like",
+                "deprecated_keys": list(paper_ai_metrics.DEPRECATED_KEYS),
                 "blocks": {},
             }
-        results = paper_ai_metrics.analyze_ai_signatures(full_text)
+        results = paper_ai_metrics.analyze_style(full_text)
         return {
             "target": "manuscript:main.tex",
             "blocks_analyzed": len(block_metrics),
-            "composite_score": results["composite_score"],
-            "verdict": results.get("verdict", "low"),
+            "style_score": results["style_score"],
+            "style_verdict": results["style_verdict"],
+            "monotone_cadence": results["monotone_cadence"],
+            "overused_phrasing": results["overused_phrasing"],
             "burstiness": results.get("burstiness"),
             "cliches": results.get("cliches"),
             "lexical_diversity": results.get("lexical_diversity"),
+            # Across blocks: the redundancy findings (repeated phrases,
+            # near-duplicate sentences) are only visible on the whole text.
+            "flow": results["flow"],
+            "disclosure_notice": results["disclosure_notice"],
+            "composite_score": results["composite_score"],
+            "verdict": results["verdict"],
+            "deprecated_keys": results["deprecated_keys"],
             "blocks": block_metrics,
         }
     else:
@@ -3208,6 +3365,9 @@ def cmd_ai_audit(args: argparse.Namespace) -> dict:
 
 
 def cmd_humanize(args: argparse.Namespace) -> dict:
+    """Style revision of one block: the draft must keep every F5 invariant and,
+    to be applied, reach the style target. It improves readability only; it
+    never aims at AI detectability and never changes the AI-use declaration."""
     if not args.block:
         raise Refused("BLOCK_REQUIRED", "--block <id> is required for humanize")
     draft_body = ""
@@ -3236,28 +3396,54 @@ def cmd_humanize(args: argparse.Namespace) -> dict:
     if not passed_f5:
         raise Refused("F5_INVARIANT_VIOLATION", "; ".join(violations))
 
-    metrics_report = paper_ai_metrics.analyze_ai_signatures(draft_body)
-    target_score = args.target_score if args.target_score is not None else 0.20
-    meets_target = metrics_report["composite_score"] <= target_score
+    metrics_report = paper_ai_metrics.analyze_style(draft_body)
+    style_target = args.style_target if args.style_target is not None else 0.20
+    meets_target = metrics_report["style_score"] <= style_target
+    # Flow and redundancy: a draft whose transitions, openings or repetition
+    # still need revision is not applied either (the same refusal, the same
+    # --force override); the findings and their rewrite guidance travel with
+    # the report so the next draft can address them.
+    flow = metrics_report["flow"]
+    meets_flow_target = flow["flow_verdict"] != "needs_revision"
 
     applied = False
     if args.apply:
         if not meets_target and not args.force:
             raise Refused(
                 "TARGET_SCORE_UNMET",
-                f"Draft composite AI score {metrics_report['composite_score']} exceeds target {target_score}. Use --force to override.",
+                f"Draft style score {metrics_report['style_score']} exceeds the style target "
+                f"{style_target}; revise the overused phrasing or cadence, or use --force to override.",
             )
+        if not meets_flow_target and not args.force:
+            categories = sorted({f["category"] for f in flow["findings"]})
+            raise Refused(
+                "TARGET_SCORE_UNMET",
+                f"Draft flow score {flow['flow_score']} needs revision ({', '.join(categories)}); "
+                "rebuild the transitions and cut the repetition the findings locate, or use --force to override.",
+            )
+        paper_write.check_lead_ins(args.block, draft_body)
         contract = Path(args.contract) if args.contract else None
-        paper_block.substitute(paper_dir, args.block, new_body=draft_body.encode("utf-8"), contract=contract)
+        body = paper_write.own_paragraph_body(args.block, draft_body)
+        paper_block.substitute(paper_dir, args.block, new_body=body.encode("utf-8"), contract=contract)
         applied = True
 
     return {
         "block": args.block,
         "f5_invariants_preserved": True,
-        "target_score": target_score,
-        "meets_target": meets_target,
+        "style_target": style_target,
+        "meets_style_target": meets_target,
         "applied": applied,
         "metrics": metrics_report,
+        "flow_score": flow["flow_score"],
+        "flow_verdict": flow["flow_verdict"],
+        "meets_flow_target": meets_flow_target,
+        "flow_findings": flow["findings"],
+        "revision_guidance": flow["guidance"],
+        "disclosure_notice": paper_ai_metrics.DISCLOSURE_NOTICE,
+        # Deprecated aliases, removed in the next release.
+        "target_score": style_target,
+        "meets_target": meets_target,
+        "deprecated_keys": ["target_score", "meets_target"],
     }
 
 
@@ -4022,7 +4208,9 @@ def build_parser() -> argparse.ArgumentParser:
 
     p_ai_audit = sub.add_parser(
         "ai_audit",
-        help="quantify AI signatures, burstiness, and clichés in a text, draft, or block",
+        help="measure writing style (cadence, overused academic phrasing, lexical diversity, "
+             "connector use, sentence openings, redundancy) "
+             "of a text, draft, block, or the manuscript; a style check, not an AI detector",
     )
     p_ai_audit.add_argument("--file", default=None, help="path to a text or LaTeX file")
     p_ai_audit.add_argument("--draft", default=None, help="path to a draft file")
@@ -4032,12 +4220,14 @@ def build_parser() -> argparse.ArgumentParser:
 
     p_humanize = sub.add_parser(
         "humanize",
-        help="verify F5 invariants and stylometric quality of a humanized block draft",
+        help="style revision of one block: verify F5 invariants, the style score and the flow findings of a revised draft "
+             "(readability only; the AI-use declaration still applies)",
     )
-    p_humanize.add_argument("--block", required=True, help="the block id being humanized")
-    p_humanize.add_argument("--draft", default=None, help="path to the humanized draft")
+    p_humanize.add_argument("--block", required=True, help="the block id being revised")
+    p_humanize.add_argument("--draft", default=None, help="path to the style-revised draft")
     p_humanize.add_argument("--replacement", default=None, help="inline replacement text (alternative to --draft)")
-    p_humanize.add_argument("--target-score", type=float, default=0.20, dest="target_score", help="maximum allowable composite AI score (default 0.20)")
+    p_humanize.add_argument("--style-target", "--target-score", type=float, default=0.20, dest="style_target",
+                            help="maximum allowable style score (default 0.20); --target-score is a deprecated alias")
     p_humanize.add_argument("--apply", action="store_true", default=False, help="substitute into paper/main.tex if verified")
     p_humanize.add_argument("--inplace", action="store_true", default=False, dest="apply", help="substitute into paper/main.tex if verified (alias for --apply)")
     p_humanize.add_argument("--force", action="store_true", default=False, help="apply even if target score is not met")

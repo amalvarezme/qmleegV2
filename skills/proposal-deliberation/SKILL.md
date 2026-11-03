@@ -126,6 +126,20 @@ system, the proposal, plus its links into the constellation:
   `shares-family-with` — the last one only between the two systems' own
   `family` planets). `from_system` is deliberately absent: every overlay link
   starts at the proposal, and the merger writes it.
+- `pillars`, the pillars the problem decomposes into, each `{id, label, detail,
+  contribution}` where `contribution` names one of this overlay's `contribution`
+  planets; and `hypotheses`, the testable prediction each pillar makes, each
+  `{id, statement, pillar, experiments}` where `pillar` names a pillar id and
+  `experiments` lists the protocol's `[exp:<id>]` ids once the protocol exists
+  (empty until then). Write both for every revision the deliberation accepts,
+  from the pillars and hypotheses discussed with the operator, verbatim; never
+  invent one the revision does not argue. They stay in the overlay (the merged
+  atlas never carries them); the merger refuses a malformed list by name
+  (`PILLAR_MALFORMED`, `PILLAR_ID_DUPLICATED`, `PILLAR_CONTRIBUTION_UNKNOWN`,
+  `HYPOTHESIS_MALFORMED`, `HYPOTHESIS_PILLAR_UNKNOWN`, `HYPOTHESIS_ID_DUPLICATED`,
+  `HYPOTHESIS_EXPERIMENTS_MALFORMED`, `HYPOTHESES_WITHOUT_PILLARS`). An older
+  overlay without them still merges; the manuscript summary graph
+  (`smith atlas summary`) then shows the pillars as missing.
 
 The checker runs on the merged file because it is the only authority on the
 constellation's shape; the merger refuses only what makes the merge incoherent
@@ -153,6 +167,61 @@ the rendered path and the checker's verdict. That agent has no `Write` and no
 it invents — every planet and link in that file is a claim about which SOTA
 papers this proposal takes from and why, and that claim belongs to the
 deliberation, not to the stretch that publishes it.
+
+## The concept map: `.papersmith/model_spec.json`
+
+The dashboard's Concept Map & Model tab, the math panel's novelty card and the
+manuscript summary graph read `.papersmith/model_spec.json`. This skill owns
+that file: after the operator accepts a revision, write it (you, not the
+publish stretch, which has no `Write`) from that revision and the pillars and
+hypotheses discussed, and name the revision in `trl`. Without the file the tab
+shows a neutral placeholder built from `papersmith.yaml`.
+
+**It is written in English**, like every artifact, whatever language the
+deliberation was held in. The dashboard shows the file as written; its language
+selector translates the dashboard's own labels, never this file. A file whose
+prose reads as Spanish is still shown, under a notice that names its fields
+and asks for this rewrite.
+
+```json
+{
+  "title": "<paper title>",
+  "target_journal": "<venue>",
+  "authors": "<names>",
+  "trl": "Phase 4 complete (proposal r02)",
+  "executive_summary": "<two or three sentences>",
+  "novelty": {
+    "problem_statement": "<the problem and the gap>",
+    "pillars": [{"id": "pillar-1", "name": "...", "badge": "...", "color": "#38bdf8",
+                 "summary": "...", "details": "..."}],
+    "hypotheses": [{"id": "H1", "title": "...", "statement": "...",
+                     "status": "...", "evidence": "..."}]
+  },
+  "conceptual_map": {
+    "layers": [{"name": "Layer 1: ...", "color": "#38bdf8", "tag": "...",
+                 "description": "...", "nodes": [{"name": "...", "desc": "..."}]}]
+  }
+}
+```
+
+Every prose field may carry `$…$` math. Take each pillar, hypothesis and layer
+from the accepted revision and the deliberation, verbatim in meaning; never
+invent one the revision does not argue.
+
+### The novelty graph: `.papersmith/novelty_graph.json`
+
+The graph panel's 3D novelty view draws `.papersmith/novelty_graph.json`, one
+solar system per node. This skill owns it too, under the same rules: refresh it
+after each accepted revision, name that revision where a node cites it, and
+write it in English whatever language the deliberation was held in. A graph
+whose prose reads as Spanish is drawn as written under a notice naming its
+fields. Its shape: `title`, `project`, `target_journal`, `authors`, `summary`,
+`nodes` and `links`. Each node has `id`, `group` (`core`, `problem`, `novelty`
+or `sota`), `label`, `category`, `badge`, `desc`, `rhetorical_question`,
+`paragraph_text`, `metrics`, `novelty_claim`, `thesis_ref`, `section_ref` and
+`paper_blocks`; each link has `source`, `target` and `relation`. A `metrics`
+field only quotes what a source already reports, and a `novelty` node states
+what the accepted revision argues, never a stronger claim.
 
 ## You are the tutor
 

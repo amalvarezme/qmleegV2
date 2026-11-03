@@ -191,7 +191,7 @@ overlap, and the page draws nothing while it is hidden.
 Drag orbits the sky and the wheel zooms. Clicking a planet shows its detail
 and abstract quote; a family filter dims what does not belong; hovering a
 planet highlights its links across systems; double-clicking flies to it.
-The "Disposición de grupos" button regroups the sky live — each whole system
+The "Group layout" button regroups the sky live — each whole system
 slides so a family's systems cluster together on a flat grid — and pressing it
 again restores the precomputed sky; it is presentation only and never changes
 `atlas.json` or the data island. Framed by the dashboard, the page accepts its
@@ -203,6 +203,19 @@ the only planets two systems may share by name, so the curve draws what
 the data already says. Exit 1 on a
 red atlas — the renderer never draws what the checker refused; exit 2 is usage,
 unreadable input or a missing viewer bundle.
+
+**The manuscript layer.** `atlas.json` stays the phase-2 record. Once the paper
+cites sources, `sota-pool/atlas.manuscript.json` is derived beside it, never
+written into it: each system `cited` or not, its `cite_keys`, the `blocks` and
+`claims` (with verdicts) citing it, and `extra_systems` for cited papers the pool
+does not hold. The join is planet `evidence.origin` → candidate `identifier`/
+`source_url`/`url` → evidence record `identifier` (DOIs and arXiv ids normalized
+by `paper_bib.source_identity`). `generated_from` holds the SHA-256 of
+`atlas.json`, `candidates.json`, `main.tex`, `refs.bib` and the evidence stores,
+so `GET /api/atlas/manuscript` reports `stale`. It is rebuilt by `bib build`,
+`verify` and a compile (see `skills/paper-writing/SKILL.md`), or with
+`smith atlas cited`; the dashboard's atlas tab lists it under **📚 Cited in
+manuscript**.
 
 `--title <text>` names the page in both the tab title and the heading, because a
 caller who names it means both places it is read. Stage 3 is that caller: it
