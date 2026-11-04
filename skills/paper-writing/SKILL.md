@@ -116,6 +116,23 @@ During the initial drafting and refinement of the manuscript, **no author names,
 ```
 Only when the complete manuscript passes all verification gates with the user is the operator prompted to provide the author identities, affiliations, and correspondence details.
 
+### Revealed Author Metadata
+When the operator lifts the blinding, the `title-and-keywords.title` block replaces the placeholder with this template, and only this one:
+```latex
+\author{%
+\begin{minipage}[t]{\dimexpr\textwidth-2\tabcolsep\relax}
+\centering
+First Author$^{1}$, Second Author$^{1,2}$, and Third Author$^{3,*}$\\[1ex]
+\small
+$^{1}$Departamento de Sistemas e Inform\'{a}tica, Universidad de Caldas, Manizales 170004, Colombia\\
+$^{2}$Departamento de Electr\'{o}nica y Automatizaci\'{o}n, Universidad Aut\'{o}noma de Manizales, Manizales 170001, Colombia\\
+$^{3}$AI-Lab, Signal Processing and Recognition Group, Universidad Nacional de Colombia, Sede Manizales, Manizales 170003, Colombia\\[1ex]
+E-mails: \texttt{first.author@ucaldas.edu.co}, \texttt{second.author@ucaldas.edu.co}, \texttt{third.author@unal.edu.co}\\
+$^{*}$Corresponding author: \texttt{third.author@unal.edu.co}
+\end{minipage}}
+```
+`article` sets `\author` in a centred `c` column that never wraps, so an affiliation or e-mail list written as a bare `\\` line wider than the text block runs into the margin (an `Overfull \hbox` in `main.log`). The `minipage` of width `\textwidth-2\tabcolsep` turns the header back into wrapping text. Keep one author line with superscript affiliation indices, one affiliation per line in `\small`, then the e-mails and the corresponding author. Separate lines with `\\`, never `\par` or a blank line: `\author` is not a long command, and a paragraph break inside it aborts the preamble. Verify that `main.log` has no `Overfull \hbox` at the `\maketitle` line before reporting the header done.
+
 ### Seven-Paragraph Introduction Structure
 The Introduction has exactly seven paragraphs; the full contract, with the extent of each one, is `sections/06-introduction.md`:
 1. **Paragraph 1 (Application Context):** General context of the application domain and motivating phenomenon.
@@ -137,7 +154,7 @@ The Introduction has exactly seven paragraphs; the full contract, with the exten
 ## When a delegated agent cannot be spawned
 
 Each stretch this skill delegates is defined in full by its own agent file:
-`.claude/agents/contract-auditor.md`, `.claude/agents/diagram-author.md`,
+`.claude/agents/ai-auditor.md`, `.claude/agents/contract-auditor.md`, `.claude/agents/diagram-author.md`,
 `.claude/agents/figure-auditor.md`, `.claude/agents/figure-visual-reviewer.md`,
 `.claude/agents/insumos-observer.md`,
 `.claude/agents/paper-reviewer.md`, `.claude/agents/redactor.md`, `.claude/agents/section-grounding-auditor.md`,
@@ -151,7 +168,7 @@ stretch: an act that would need a tool outside that list is a stop, not a
 workaround. Say in the reply that the stretch ran inline and why the agent
 could not be spawned.
 
-An auditor run inline (`contract-auditor`, `section-grounding-auditor`,
+An auditor run inline (`ai-auditor`, `contract-auditor`, `section-grounding-auditor`,
 `figure-auditor`, `figure-visual-reviewer`, `paper-reviewer`, `venue-adapter`) is not independent of the session that drafted what it
 judges. The verbs still reconcile its account against the real bytes, but say
 in the reply that the audit was not separated from the draft.
@@ -1666,7 +1683,8 @@ span printing between 0.70 and 0.90 x the manuscript body size (`paper/main.tex`
 class option, 10 pt without one) once the figure is scaled to its declared
 inclusion width — the manifest's optional `widthFraction` (the
 `width=<f>\textwidth` its `\includegraphics` uses, 1.0 by default) and
-`textWidthPt` (the A4 article width for the body size by default); and no
+`textWidthPt` (by default the width `paper/main.tex`'s `geometry` margins
+leave, else the A4 article width for the body size); and no
 background canvas or content margin wider than 4 pt. A failing audit is a
 repairable `failure` like any other: it spends one attempt, returns the
 `audit` and one diagnostic per finding, and leaves the PDF in scratch

@@ -13,26 +13,26 @@
   <link rel="stylesheet" href="./vendor/xterm.css">
   <script src="./vendor/xterm.js"></script>
   <script src="./vendor/xterm-addon-fit.js"></script>
-  <script src="./i18n/en.js?v=0.58.1"></script>
-  <script src="./i18n/es.js?v=0.58.1"></script>
-  <script src="./i18n.js?v=0.58.1"></script>
-  <script src="./cli-console.js?v=0.58.1"></script>
+  <script src="./i18n/en.js?v=0.60.0"></script>
+  <script src="./i18n/es.js?v=0.60.0"></script>
+  <script src="./i18n.js?v=0.60.0"></script>
+  <script src="./cli-console.js?v=0.60.0"></script>
   <link rel="stylesheet" href="./vendor/katex/katex.min.css">
   <script src="./vendor/katex/katex.min.js"></script>
-  <script src="./math-panel.js?v=0.58.1"></script>
-  <script src="./model-panel.js?v=0.58.1"></script>
-  <script src="./experiments-panel.js?v=0.58.1"></script>
-  <script src="./experiments-tutor.js?v=0.58.1"></script>
-  <script src="./novelty-panel.js?v=0.58.1"></script>
-  <script src="./agents-panel.js?v=0.58.1"></script>
-  <script src="./doctor-panel.js?v=0.58.1"></script>
-  <script src="./journals-panel.js?v=0.58.1"></script>
-  <script src="./ai-history-panel.js?v=0.58.1"></script>
-  <script src="./phase-console.js?v=0.58.1"></script>
-  <script src="./phase-run.js?v=0.58.1"></script>
-  <script src="./atlas-manuscript-panel.js?v=0.58.1"></script>
-  <script src="./manuscript-graph-panel.js?v=0.58.1"></script>
-  <script src="./manuscript-qa-panel.js?v=0.58.1"></script>
+  <script src="./math-panel.js?v=0.60.0"></script>
+  <script src="./model-panel.js?v=0.60.0"></script>
+  <script src="./experiments-panel.js?v=0.60.0"></script>
+  <script src="./experiments-tutor.js?v=0.60.0"></script>
+  <script src="./novelty-panel.js?v=0.60.0"></script>
+  <script src="./agents-panel.js?v=0.60.0"></script>
+  <script src="./doctor-panel.js?v=0.60.0"></script>
+  <script src="./journals-panel.js?v=0.60.0"></script>
+  <script src="./ai-history-panel.js?v=0.60.0"></script>
+  <script src="./phase-console.js?v=0.60.0"></script>
+  <script src="./phase-run.js?v=0.60.0"></script>
+  <script src="./atlas-manuscript-panel.js?v=0.60.0"></script>
+  <script src="./manuscript-graph-panel.js?v=0.60.0"></script>
+  <script src="./manuscript-qa-panel.js?v=0.60.0"></script>
   <style>
     :root {
       --bg: #0b0f19;
@@ -3040,6 +3040,9 @@
             <h4 style="font-size: 0.78rem; text-transform: uppercase; color: var(--text-dim); letter-spacing: 0.04em; margin-bottom: 0.6rem;" data-i18n="model.hypothesesTitle">🔬 Scientific Hypotheses</h4>
             <div id="modelHypothesisGrid" class="model-hypothesis-grid"></div>
           </div>
+
+          <!-- NeurIPS contribution type of the proposal, from paper-reviewer (model-panel.js) -->
+          <div id="modelContributionType" class="contribution-type" style="margin-top: 1.25rem;"></div>
         </div>
       </div>
 
@@ -3163,7 +3166,10 @@
       <div class="panel">
         <div class="panel__header">
           <div class="panel__title" data-i18n="sections.title">Canonical Section Structure of the Manuscript</div>
-          <span class="panel__meta" id="sectionsMetaCount">—</span>
+          <div style="display: flex; align-items: center; gap: 0.6rem;">
+            <button class="btn btn--sm" id="writingTemplateButton" type="button" onclick="openWritingTemplate()" data-i18n="sections.templateButton">General template</button>
+            <span class="panel__meta" id="sectionsMetaCount">—</span>
+          </div>
         </div>
         <div class="table-responsive">
           <table class="table">
@@ -3440,7 +3446,7 @@
                 </div>
               </div>
 
-              <button class="btn btn--sm" id="btnAuditAi" onclick="auditManuscriptAi()" title="Audit the writing style: sentence cadence, overused phrasing and lexical diversity" data-i18n-attr="title:pdf.auditAiTitle" data-i18n="pdf.auditAi">✍️ Style audit</button>
+              <button class="btn btn--sm" id="btnAuditAi" onclick="openStyleRedundancyPanel()" title="Score the writing style and redundancy of the manuscript, 0 to 100, by section" data-i18n-attr="title:pdf.auditAiTitle" data-i18n="pdf.auditAi">✍️ Style &amp; redundancy</button>
               <button class="btn btn--sm" onclick="toggleNativeViewer()" id="btnToggleNative" title="Switch between PDF.js and the browser's native viewer" data-i18n-attr="title:pdf.toggleViewerTitle">Native Viewer</button>
               <a href="/api/pdf" download class="btn btn--sm" title="Download the compiled main.pdf" data-i18n-attr="title:pdf.downloadTitle" data-i18n="pdf.download">⬇ Download</a>
             </div>
@@ -3519,7 +3525,7 @@
                   <button class="btn btn--xs btn--comment" onclick="triggerAddComment()" data-i18n="changes.quick.comment">💬 Comment</button>
                   <button class="btn btn--xs btn--strikethrough" onclick="triggerStrikethrough()" data-i18n="annot.card.strike">✂️ Strike through</button>
                   <button class="btn btn--xs btn--humanize" onclick="triggerHumanize()" data-i18n="annot.card.humanize">✨ Humanize</button>
-                  <button class="btn btn--xs btn--info" id="btnAuditSelectionAi" onclick="auditCurrentSelectionAi()" title="Audit the writing style: sentence cadence, overused phrasing and lexical diversity" data-i18n-attr="title:pdf.auditAiTitle" data-i18n="pdf.auditAi">✍️ Style audit</button>
+                  <button class="btn btn--xs btn--info" id="btnAuditSelectionAi" onclick="auditCurrentSelectionAi()" title="Audit the writing style: sentence cadence, overused phrasing and lexical diversity" data-i18n-attr="title:pdf.auditSelectionAiTitle" data-i18n="pdf.auditSelectionAi">✍️ Style audit</button>
                 </div>
               </div>
             </div>
@@ -4053,10 +4059,14 @@
     }
 
     // Plain-text search over the compiled PDF's text layer; first page wins.
-    async function findTextInPdf(needles) {
+    async function findTextInPdf(needles, options = {}) {
       await ensurePdfLoaded();
       if (!pdfDoc) return null;
-      const norm = (value) => String(value || '').toLowerCase().replace(/\s+/g, ' ').trim();
+      // `loose` ignores punctuation and joins words hyphenated across lines,
+      // for passages taken from the LaTeX source rather than the PDF.
+      const norm = options.loose
+        ? (value) => String(value || '').toLowerCase().replace(/-\s+/g, '').replace(/[^\p{L}\p{N}]+/gu, ' ').trim()
+        : (value) => String(value || '').toLowerCase().replace(/\s+/g, ' ').trim();
       const wanted = needles.map(norm).filter((n) => n.length >= 4);
       for (let p = 1; p <= pdfTotalPages; p++) {
         let content = pdfTextContentCache.get(p);
@@ -4471,6 +4481,7 @@
     }
 
     function openDrawer(phaseIndex) {
+      writingTemplateOpen = false;
       const phases = (currentStatus && currentStatus.fases && currentStatus.fases.length > 0) ? currentStatus.fases : fallbackPhases();
       const p = phases[phaseIndex];
       if (!p) return;
@@ -4653,6 +4664,7 @@
     }
 
     function openSectionDrawer(secId) {
+      writingTemplateOpen = false;
       const sections = currentStatus?.sections || [];
       const s = sections.find(item => item.id === secId || item.id.startsWith(secId));
       if (!s) return;
@@ -4802,6 +4814,62 @@
 
     function closeDrawer(e) {
       document.getElementById('drawerOverlay').classList.remove('active');
+      writingTemplateOpen = false;
+    }
+
+    /* General writing template: a per-language summary of every section's
+       structure and basic rules, served from static/writing-template/. */
+    let writingTemplateOpen = false;
+    const writingTemplateCache = new Map();
+
+    function renderWritingTemplate(data) {
+      const list = (items) => items.map(text => `<li>${escapeHtml(text)}</li>`).join('');
+      const sections = data.sections.map((s, index) => `
+        <section class="writing-template__section" data-section="${escapeHtml(s.id)}">
+          <h4 style="margin: 0 0 0.25rem; font-size: 0.95rem; color: var(--accent);">${index + 1}. ${escapeHtml(s.name)}</h4>
+          <div style="font-size: 0.75rem; color: var(--text-dim); margin-bottom: 0.4rem;">
+            <strong>${t('writingTemplate.extent')}</strong> ${escapeHtml(s.extent)} · ${t('writingTemplate.contract')} <code>${escapeHtml(s.contract)}</code>
+          </div>
+          <div style="font-size: 0.78rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em;">${t('writingTemplate.structure')}</div>
+          <ol style="margin: 0.25rem 0 0.5rem 1.2rem; font-size: 0.85rem;">
+            ${s.structure.map(step => `<li><strong>${escapeHtml(step.label)}:</strong> ${escapeHtml(step.text)}</li>`).join('')}
+          </ol>
+          <div style="font-size: 0.78rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em;">${t('writingTemplate.rules')}</div>
+          <ul style="margin: 0.25rem 0 0 1.2rem; font-size: 0.85rem;">${list(s.rules)}</ul>
+        </section>`).join('<hr style="border: none; border-top: 1px solid var(--border-subtle); margin: 0.8rem 0;">');
+      return `
+        <p style="font-size: 0.85rem; color: var(--text-secondary); margin-top: 0;">${escapeHtml(data.intro)}</p>
+        ${sections}
+        <hr style="border: none; border-top: 1px solid var(--border); margin: 1rem 0 0.8rem;">
+        <section class="writing-template__section" data-section="general">
+          <h4 style="margin: 0 0 0.25rem; font-size: 0.95rem; color: var(--accent);">${escapeHtml(data.general.heading)}</h4>
+          <ul style="margin: 0.25rem 0 0 1.2rem; font-size: 0.85rem;">${list(data.general.rules)}</ul>
+        </section>`;
+    }
+
+    async function openWritingTemplate() {
+      const lang = (window.i18n && window.i18n.getLanguage()) === 'es' ? 'es' : 'en';
+      const title = document.getElementById('drawerTitle');
+      const body = document.getElementById('drawerBody');
+      writingTemplateOpen = true;
+      title.textContent = t('writingTemplate.title');
+      body.innerHTML = `<p class="exp-empty">${t('writingTemplate.loading')}</p>`;
+      document.getElementById('drawerOverlay').classList.add('active');
+      try {
+        let data = writingTemplateCache.get(lang);
+        if (!data) {
+          const res = await fetch(`./writing-template/${lang}.json`, { cache: 'no-cache' });
+          if (!res.ok) throw new Error(`HTTP ${res.status}`);
+          data = await res.json();
+          writingTemplateCache.set(lang, data);
+        }
+        if (!writingTemplateOpen) return;
+        title.textContent = data.title;
+        body.innerHTML = renderWritingTemplate(data);
+      } catch (err) {
+        if (!writingTemplateOpen) return;
+        body.innerHTML = `<p class="exp-empty">${t('writingTemplate.loadFailed', { error: escapeHtml(err.message) })}</p>`;
+      }
     }
 
 
@@ -6043,10 +6111,74 @@
       }
     }
 
-    async function auditManuscriptAi() {
+    /* Style-and-redundancy panel: the whole-manuscript writing-quality
+       reading of POST /api/pdf/ai-audit, drawn in the shared drawer. */
+    function styleBand(score) {
+      if (score <= 20) return { key: 'styleRedundancy.verdictClear', color: 'var(--success, #3fb950)' };
+      if (score <= 45) return { key: 'styleRedundancy.verdictUneven', color: 'var(--warning, #d29922)' };
+      return { key: 'styleRedundancy.verdictNeedsRevision', color: 'var(--danger, #f85149)' };
+    }
+
+    function styleBar(score) {
+      const band = styleBand(score);
+      return `<div style="background: var(--border-subtle); border-radius: 4px; height: 8px; overflow: hidden;">
+        <div style="width: ${Math.max(2, Math.min(100, score))}%; height: 100%; background: ${band.color};"></div></div>`;
+    }
+
+    function renderStyleRedundancy(data) {
+      const band = styleBand(data.score);
+      const sections = (data.sections || []).map(s => `
+        <li style="margin-bottom: 0.55rem;">
+          <div style="display: flex; justify-content: space-between; font-size: 0.85rem;">
+            <span>${escapeHtml(s.section)}</span><strong>${s.score}</strong>
+          </div>
+          ${styleBar(s.score)}
+        </li>`).join('');
+      const findings = (data.findings || []).map((f, i) => `
+        <li style="margin-bottom: 0.5rem; font-size: 0.83rem;">
+          <button class="btn btn--sm" data-style-finding="${i}" title="${escapeHtml(t('styleRedundancy.findInPdf'))}">↗</button>
+          <code>${escapeHtml(f.category.replace(/_/g, ' '))}</code> · ${escapeHtml(f.section || f.block)}
+          <div style="margin-top: 0.2rem;"><strong>“${escapeHtml(f.span)}”</strong></div>
+          ${f.sentence && f.sentence !== f.span ? `<div style="color: var(--text-secondary); margin-top: 0.15rem;">${escapeHtml(f.sentence.length > 220 ? f.sentence.slice(0, 220) + '…' : f.sentence)}</div>` : ''}
+        </li>`).join('');
+      return `
+        <div style="display: flex; align-items: baseline; gap: 0.75rem;">
+          <span style="font-size: 2.4rem; font-weight: 700; color: ${band.color};">${data.score}</span>
+          <span style="font-size: 0.9rem;">/ 100 · ${t(band.key)}</span>
+        </div>
+        ${styleBar(data.score)}
+        <p style="font-size: 0.78rem; color: var(--text-dim);">${t('styleRedundancy.scale')}</p>
+        <p style="font-size: 0.8rem; color: var(--text-secondary);">${t('styleRedundancy.summary', { blocks: data.blocks_analyzed, redundancy: data.redundancy_count })}</p>
+        <h4 style="margin: 0.8rem 0 0.4rem; font-size: 0.9rem; color: var(--accent);">${t('styleRedundancy.sections')}</h4>
+        <ul style="list-style: none; padding: 0; margin: 0;">${sections || `<li class="exp-empty">${t('styleRedundancy.noSections')}</li>`}</ul>
+        <h4 style="margin: 0.8rem 0 0.4rem; font-size: 0.9rem; color: var(--accent);">${t('styleRedundancy.findings')}</h4>
+        <ul style="list-style: none; padding: 0; margin: 0;">${findings || `<li class="exp-empty">${t('styleRedundancy.noFindings')}</li>`}</ul>
+        <p style="font-size: 0.75rem; color: var(--text-dim); margin-top: 1rem;">${t('styleRedundancy.note')}</p>`;
+    }
+
+    /* The page a finding sits on: its sentence's opening words first, then a
+       span of three or more words; each needle is tried across the whole PDF
+       before the next, so a weak needle never wins on an earlier page. */
+    async function locateStyleFinding(finding) {
+      const words = (finding.sentence || '').split(/\s+/).filter(Boolean);
+      const needles = [words.slice(0, 7).join(' '), words.slice(-7).join(' ')];
+      if (String(finding.span || '').trim().split(/\s+/).length >= 3) needles.push(finding.span);
+      for (const needle of needles) {
+        const hit = await findTextInPdf([needle], { loose: true });
+        if (hit) return hit;
+      }
+      return null;
+    }
+
+    async function openStyleRedundancyPanel() {
       const btn = document.getElementById('btnAuditAi');
+      const title = document.getElementById('drawerTitle');
+      const body = document.getElementById('drawerBody');
+      writingTemplateOpen = false;
+      title.textContent = t('styleRedundancy.title');
+      body.innerHTML = `<p class="exp-empty">${t('styleRedundancy.running')}</p>`;
+      document.getElementById('drawerOverlay').classList.add('active');
       if (btn) btn.disabled = true;
-      showToast(t('pdf.auditAiRunning'));
       try {
         const res = await fetch('/api/pdf/ai-audit', {
           method: 'POST',
@@ -6054,17 +6186,22 @@
           body: JSON.stringify({})
         });
         const data = await res.json();
-        if (data.ok) {
-          const score = (data.style_score * 100).toFixed(0);
-          const verdictLabel = data.style_verdict === 'needs_revision' ? t('pdf.styleNeedsRevision') : (data.style_verdict === 'uneven' ? t('pdf.styleUneven') : t('pdf.styleClear'));
-          const msg = `${t('pdf.auditManuscriptResult')}: ${verdictLabel} (${score}%, ${data.blocks_analyzed} blocks)`;
-          showToast(msg);
-          alert(`${msg}\n\n• Burstiness CV: ${data.burstiness && data.burstiness.cv != null ? data.burstiness.cv.toFixed(2) : 'N/A'}\n• Overused phrasing: ${data.cliches ? data.cliches.total_count : 0}\n• Lexical diversity (TTR): ${data.lexical_diversity && data.lexical_diversity.ttr != null ? data.lexical_diversity.ttr.toFixed(2) : 'N/A'}`);
-        } else {
-          showToast(`Style audit error: ${data.error || 'unknown'}`);
-        }
+        if (!data.ok) throw new Error(data.error || 'unknown');
+        body.innerHTML = renderStyleRedundancy(data);
+        body.querySelectorAll('[data-style-finding]').forEach(el => {
+          el.addEventListener('click', async () => {
+            const finding = data.findings[Number(el.dataset.styleFinding)];
+            const hit = await locateStyleFinding(finding);
+            if (hit) {
+              closeDrawer();
+              jumpToPdfPage(hit.page);
+            } else {
+              showToast(t('styleRedundancy.notInPdf'));
+            }
+          });
+        });
       } catch (err) {
-        showToast(`Style audit failed: ${err.message}`);
+        body.innerHTML = `<p class="exp-empty">${t('styleRedundancy.failed', { error: escapeHtml(err.message) })}</p>`;
       } finally {
         if (btn) btn.disabled = false;
       }
@@ -6690,6 +6827,7 @@
     // listen for the same event and repaint themselves.
     document.addEventListener('languagechange', () => {
       renderThemeButton();
+      if (writingTemplateOpen && document.getElementById('drawerOverlay').classList.contains('active')) openWritingTemplate();
       renderNativeViewerButton();
       renderGraphToolbar();
       const titleKey = { atlas: 'atlas.title.atlas', novelty: 'atlas.title.novelty', papers: 'atlas.title.papers' }[currentGraphKind];
