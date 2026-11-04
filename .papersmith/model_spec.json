@@ -168,5 +168,9 @@
         ]
       }
     ]
+  },
+  "contribution_type": {
+    "type": "Use-Inspired",
+    "why": "The novelty claimed is applying known DRU math to pediatric ADHD EEG, not a new method or proof. Eqs. 2-5 and the degree-L Fourier spectrum restate Perez-Salinas (1904.04767) and Schuld et al. (2021); what is new is fitting the design to the clinical use: the subject-weighted BCE of Eq. 8 matches the subject-level diagnosis, and E4/Eq. 9 audit saliency on fronto-central sites (Fp1-Cz) on the 121-subject IEEE Dataport cohort."
   }
 }
