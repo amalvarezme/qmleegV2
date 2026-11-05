@@ -1,6 +1,6 @@
 # QMLEEG — Claude Code Entrypoint
 
-This standalone paper workspace is managed by `papersmith` 0.61.0.
+This standalone paper workspace is managed by `papersmith` 0.61.1.
 
 ## Canonical context
 

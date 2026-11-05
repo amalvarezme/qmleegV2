@@ -1,9 +1,9 @@
 {
   "schema": 1,
   "kind": "workspace",
-  "version": "0.61.0",
+  "version": "0.61.1",
   "files": {
-    ".agents/AGENTS.md": "ad404cc7639b2c3adae440f688d79ccacf0e63bc6777ed56244476243172132c",
+    ".agents/AGENTS.md": "1a323db67885dc1beb662f110fae0f90a20f4b5b2e165f2a4711840701e5d55a",
     ".agents/agents/ai-auditor.md": "75ba74e37fe0a590eed3c5d86b7b443a0e9cac89fdf2e23dfe63c439c29e1440",
     ".agents/agents/audit-report.md": "a0bcb764f212775f8e21bf6b4c57bb97573a9fcc3e9f16dcac6a71c27b8591a8",
     ".agents/agents/contract-auditor.md": "0f40c7bd6a0f0ee17aab3c113f8507f0483efe2fbad9a29042f0675b809782d2",
@@ -131,8 +131,8 @@
     ".opencode/commands/skill-audit.md": "c13378e769e349053bb5824b7ce7776023f178b753e9d5b7a4831a0f5755df1d",
     ".opencode/commands/upgrade-project.md": "b498bce2f18c5463bf92a18ae3577c286851ae1b664b860aca3e5a57901e49fd",
     ".opencode/plugins/refuse-offpath-push.js": "9d1ced03f970f68d938bfd75fed3576e49785ce9d6a233b3f53f0c4294bf146c",
-    ".papersmith/version": "0837d4f4ec7eb4fdc4eadb921b39fd917d565d4f76ecc2e424e01d3268050f19",
-    ".pi/APPEND_SYSTEM.md": "85dcf5f0cd80e23db8e5654478382c9980b799e1fa4e3d304a00926929edccf8",
+    ".papersmith/version": "230ee5c8bc39f9838fd0a4ed45a57b1b19f62d3128630d252a62209dd44d3089",
+    ".pi/APPEND_SYSTEM.md": "c3754bc0d3daca5fddf8827bccf17fa2c5fbd75ffe90b53dc60ebbcd54dd6e50",
     ".pi/agents/ai-auditor.md": "9a316e729ba57d3021fbf941ea5ff338d5e133c59a08aae6d0fa463155d2612b",
     ".pi/agents/audit-report.md": "7af13ed50bf476d4a4d0298c294916a74e7906d84ce4ee55a0c19bf5eade9177",
     ".pi/agents/contract-auditor.md": "4e684326a6f87117d1a148a0e9e7987954ab74dac8983b2de6261f71af392e11",
@@ -183,8 +183,8 @@
     ".pi/prompts/remote-parallelism.md": "30fbee312ea884adafd804b805e7b1967df836104987f5ac00da0d5d26c71b08",
     ".pi/prompts/skill-audit.md": "c13378e769e349053bb5824b7ce7776023f178b753e9d5b7a4831a0f5755df1d",
     ".pi/prompts/upgrade-project.md": "b498bce2f18c5463bf92a18ae3577c286851ae1b664b860aca3e5a57901e49fd",
-    "CLAUDE.md": "31bde165745695be0763bfbb9722a34bdd5e6348fc8de999f95d519d0909780e",
-    "OPENCODE.md": "865a82999c2979ab0ad8d29ced3f3e6ab08b8deadbc53dd3fd5154e4715c6776",
+    "CLAUDE.md": "851804ac9c31c2bba8b1d39a078fff0f1052c17f2f7bf2f087c2830fd40361de",
+    "OPENCODE.md": "dac52772ed31b7a602da3252fda57858d68299656c12bedd870b2d398b3ed882",
     "opencode.json": "f02635508e2110a4e08a5b2eb2e0e36a5c2624f37655f8ae9bb3cef058edd018",
     "requirements.txt": "71bc0194b7553c94cfa5853ff7cb13b16c4628b458c5ac0bd9e74a59e4eb84e5",
     "scripts/setup-harnesses.sh": "6e5280f211772968dcbadc5f794030d5b3d994cb4bc86fc6537c34fd84e90ba2",
@@ -233,7 +233,7 @@
     "skills/_core/command_center/static/atlas-manuscript-panel.js": "2fbaea71438e175de911020b7dbdc8c75db9aaa75b649bf8ba4a0090fc694e75",
     "skills/_core/command_center/static/cli-console.js": "a96343a823f8cb82f8d0da5a60f4c9af63af634e01ce7a9c6f11a9e199aa2f8b",
     "skills/_core/command_center/static/doctor-panel.js": "1e3db22c4c5db824b5d3c82cdff7c138f362b674ca8af5c0df0e50f8b7aff506",
-    "skills/_core/command_center/static/experiments-panel.js": "2fcf79554b63749baf773edef4e39861cbaf4c40abcbfbf22975865b09c1d382",
+    "skills/_core/command_center/static/experiments-panel.js": "812e8c72f3917cd5ba2d0548112a0b8fb4580fe0cbf3567ce72fd05083128c27",
     "skills/_core/command_center/static/experiments-tutor.js": "6adb83971fce8f96e58cbb5e70be81ddbcd717b5e1e40fd49da7365815cdcf26",
     "skills/_core/command_center/static/favicon.ico": "5adf8c39991e7d0e22706f0400258c5294ef7cc43acfb28fe9e40316a195fb1e",
     "skills/_core/command_center/static/favicon.png": "fc3264e77917a579607419267f8e86255c53e9a425d1416bfbeee69893a37f02",
@@ -252,7 +252,7 @@
     "skills/_core/command_center/static/i18n/es/sections/10-back-matter.md": "8c2ce3e445548df8e93a064c99bcef947db1a004e72c358653f2cc08f636d022",
     "skills/_core/command_center/static/i18n/es/sections/SOURCES.json": "2b55d7f5a02aad37617cdc074777d0c7fe04903b2415c1cebba712ddd9ed2270",
     "skills/_core/command_center/static/i18n/server-es.json": "930d40920b16aab06de421fb33fee8e608ebb10ab8fe79ff3a433f03f17c842b",
-    "skills/_core/command_center/static/index.html": "1fcaf17a3e87d97911b04a0fd5707bcf527af4b83e0c427217f61942c8f4eb5f",
+    "skills/_core/command_center/static/index.html": "5ea39fe899106c2f1ce72f57373bfb4014773d24fb462cd398bae9104a4993f6",
     "skills/_core/command_center/static/journals-panel.js": "8e9035a33b48819d1179a998b5fc8408986e921c803c0122a4128fead35ba38b",
     "skills/_core/command_center/static/logo_labIA.png": "6f1a12789fc5c8377716a7b9c7c0ece596ccec4b68678452380035aa0b808723",
     "skills/_core/command_center/static/manuscript-graph-panel.js": "7bd75ddfaef692bce54d5b5fbe314b609638c2d8a4e543b304096ca264c4dc92",
@@ -740,5 +740,5 @@
     "skills/skill-audit/scripts/audit_cli.py": "0825a24b27fe5b8f961f5883ffe8a626089c79d54e8aa68b02f873a7ef2d455f",
     "skills/upgrade-project/SKILL.md": "610808955e3367e109df138d158a75cd2e9b7296e93f7237692831cb6969dffe"
   },
-  "updated_at": "2026-11-05T00:36:54Z"
+  "updated_at": "2026-11-05T01:27:58Z"
 }
