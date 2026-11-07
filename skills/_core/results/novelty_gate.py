@@ -18,7 +18,9 @@ is the ``poc`` sub-record beside the top-level (full-stage) decision,
 least one proof-of-concept product (a folder with ``AGREED.md`` and no
 ``Experimental_AGREED.md``) has a ``complete`` ``Results/discussion.json``
 (``discussion.py``). The dashboard's G-EXP-POC gate passes on that approval and
-the full experiments unlock after it. A file without the sub-record reads as a
+the full experiments unlock after it. That approval also refuses
+``SOTA_CITATIONS_OWED`` while an experiment of the latest protocol lacks its
+2 to 5 SOTA citations (``citations.py``). A file without the sub-record reads as a
 pending PoC decision, and each stage's write keeps the other's record.
 
 This module owns reading, writing, and auditing the novelty gate file and
@@ -200,6 +202,79 @@ def _write(root: Path, record: dict[str, Any]) -> None:
         raise NoveltyRefusal("WRITE_FAILED", f"could not write {GATE_FILENAME}: {exc}") from exc
 
 
+def judge_state(root: Path) -> dict[str, dict[str, Any]]:
+    """Per stage, how many products close with a ``complete`` discussion and
+    which of them still lack the paper-reviewer's valid ``contribution_type``
+    (the NeurIPS judge); never raises. A malformed type alone makes a discussion
+    fail its check, so a discussion is judged here without that field: one that
+    is complete apart from its type owes the judge, a draft owes nothing."""
+    state: dict[str, dict[str, Any]] = {stage: {"complete": 0, "owed": []} for stage in STAGES}
+    for product in _products(root):
+        try:
+            result = _discussion_module().load_and_check(product)
+            data = result["data"]
+            if not isinstance(data, dict):
+                continue
+            malformed = ("contribution_type" in data
+                         and bool(_contribution_type().problems(data["contribution_type"])))
+            if malformed:
+                bare = {key: value for key, value in data.items() if key != "contribution_type"}
+                result = _discussion_module().check_discussion(product, bare)
+            if result["status"] != "complete":
+                continue
+            kind = None if malformed else _contribution_type().normalize(data.get("contribution_type"))
+        except Exception:  # noqa: BLE001 - an unreadable discussion is not complete
+            continue
+        stage = state["full" if (product / "Experimental_AGREED.md").is_file() else "poc"]
+        stage["complete"] += 1
+        if not kind:
+            stage["owed"].append(product.name)
+    return state
+
+
+def _require_judge(root: Path, stage: str) -> None:
+    """Refuse an approval while a product of ``stage`` still owes the NeurIPS judge."""
+    owed = judge_state(root)[stage]["owed"]
+    if owed:
+        raise NoveltyRefusal(
+            "NEURIPS_JUDGE_OWED",
+            f"run the NeurIPS judge first: {', '.join(owed)} has a complete discussion and no "
+            "contribution_type; launch it from the Novelty & Findings tab, or hand the discussion "
+            "to the paper-reviewer agent in its findings mode",
+        )
+
+
+def _citations():
+    """The SOTA citations contract (``citations.py``), loaded by path."""
+    import importlib.util
+    import sys
+
+    name = "papersmith_citations"
+    if name not in sys.modules:
+        path = Path(__file__).resolve().parent / "citations.py"
+        spec = importlib.util.spec_from_file_location(name, path)
+        module = importlib.util.module_from_spec(spec)
+        sys.modules[name] = module
+        try:
+            spec.loader.exec_module(module)
+        except BaseException:
+            sys.modules.pop(name, None)
+            raise
+    return sys.modules[name]
+
+
+def _require_citations(root: Path) -> None:
+    """Refuse an approval while an experiment of the latest protocol owes its citations."""
+    owed = _citations().state(root)["stages"]["experiments"]["owed"]
+    if owed:
+        raise NoveltyRefusal(
+            "SOTA_CITATIONS_OWED",
+            f"justify every experiment with 2 to 5 SOTA citations first: {', '.join(owed[:10])} "
+            "owes them in .papersmith/citations.json; launch it from the Experiments tab, or run "
+            "`python skills/_core/results/citations_cli.py check --root .`",
+        )
+
+
 def _record_poc(root: Path, action: str, rationale: str, actor: str) -> dict[str, Any]:
     if action not in POC_ACTIONS:
         raise NoveltyRefusal(
@@ -213,6 +288,9 @@ def _record_poc(root: Path, action: str, rationale: str, actor: str) -> dict[str
             "no proof of concept has a complete Results/discussion.json yet; verify its results and "
             "hypotheses with `python skills/_core/results/discussion_cli.py check --product <path>` first",
         )
+    if status == "approved":
+        _require_judge(root, "poc")
+        _require_citations(root)
     record = read_gate(root)
     record["poc"] = {
         "status": status,
@@ -236,7 +314,9 @@ def record_decision(
 
     ``stage="full"`` (the default) is the novelty gate before writing;
     ``stage="poc"`` records the proof-of-concept verification in the ``poc``
-    sub-record and refuses an approval without a complete PoC discussion."""
+    sub-record and refuses an approval without a complete PoC discussion. An
+    approval of either stage refuses while one of its products owes the NeurIPS
+    judge."""
     if stage not in STAGES:
         raise NoveltyRefusal("INVALID_STAGE", f"stage must be one of {list(STAGES)}, got {stage!r}")
     if stage == "poc":
@@ -246,6 +326,9 @@ def record_decision(
             "INVALID_ACTION",
             f"action must be one of {sorted(VALID_ACTIONS.keys())}, got {action!r}",
         )
+
+    if action == "approve":
+        _require_judge(root, "full")
 
     status = VALID_ACTIONS[action]
     target_stage = None
@@ -451,6 +534,8 @@ def get_novelty_overview(root: Path) -> dict[str, Any]:
     return {
         "gate": gate,
         "contribution_type": contribution_type,
+        "judge": judge_state(root),
+        "experiment_citations_owed": _citations().state(root)["stages"]["experiments"]["owed"],
         "discussions": discussions,
         "hypotheses": hypotheses,
         "novelty_claims": novelty_claims,

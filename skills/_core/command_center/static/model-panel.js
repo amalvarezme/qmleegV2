@@ -3,7 +3,7 @@
  * GET /api/model answers `.papersmith/model_spec.json` when the workspace has
  * one, else a neutral specification named after `papersmith.yaml`. This file
  * renders its novelty pillars, hypotheses, concept-map layers and proof-of-
- * concept experiments, and the NeurIPS contribution type the paper-reviewer
+ * concept experiments, each idea with its SOTA citations (citations.js), and the NeurIPS contribution type the paper-reviewer
  * assigned to the proposal (`contribution_type`); when a part is absent it says what produces it instead
  * of showing anybody else's content. Every value is escaped before insertion;
  * prose fields go through math-panel.js's richText, so $…$ compiles with KaTeX.
@@ -13,11 +13,12 @@
  * language. A language switch repaints the panel from the last spec.
  *
  * Above the modules, a stepper (GET /api/model/steps) forces Phase 4's order:
- * the problem and its pillars, then the hypotheses, then the mathematics. Each
- * step's "Generate & deliberate" button types `/proposal-deliberation <the
+ * the problem and its pillars, then the hypotheses, then the mathematics, then
+ * the SOTA citations, then the NeurIPS judge. Each step's button types `/proposal-deliberation <the
  * step's instruction>` into the agent terminal (window.sendToCli); the
- * mathematics step also offers `/math-tutor`. A locked step's buttons are
- * disabled and say what the step requires.
+ * mathematics step also offers `/math-tutor`, and the judge's button repeats on
+ * the contribution-type card, where its verdict appears. A locked step's
+ * buttons are disabled and say what the step requires.
  *
  * Public surface (window): renderModelModules(spec), renderModelSteps(steps),
  * refreshModelSteps().
@@ -38,6 +39,10 @@
     ? window.mathRichText(v).replace(/^<p>|<\/p>$/g, '').replace(/<\/p><p>/g, '<br>')
     : esc(v));
 
+  // An idea's SOTA citations, drawn beside it (citations.js).
+  const cites = (key) => (window.Citations ? window.Citations.block(key) : '');
+  const ideaId = (item, prefix, n) => String(item.id ?? '').trim() || `${prefix}${n}`;
+
   function pillars(spec) {
     const list = ((spec.novelty || {}).pillars || []).filter((p) => p && (p.name || p.summary));
     if (!list.length) return empty(t('modelPanel.noPillars'));
@@ -50,6 +55,7 @@
         </div>
         <h3 style="font-size: 0.95rem; font-weight: 700; color: var(--text);">${rich(p.name)}</h3>
         <p style="font-size: 0.82rem; color: var(--text-muted); line-height: 1.45;">${rich(p.summary)} ${rich(p.details)}</p>
+        ${cites(`pillar:${ideaId(p, 'P', i + 1)}`)}
       </div>`;
     }).join('');
   }
@@ -57,13 +63,14 @@
   function hypotheses(spec) {
     const list = ((spec.novelty || {}).hypotheses || []).filter((h) => h && (h.title || h.statement));
     if (!list.length) return empty(t('modelPanel.noHypotheses'));
-    return list.map((h) => `<div class="model-hypothesis-card">
+    return list.map((h, i) => `<div class="model-hypothesis-card">
         <div style="display: flex; justify-content: space-between; gap: 0.5rem;">
           <strong>${esc(h.id || '')} ${rich(h.title || '')}</strong>
           ${h.status ? `<span class="badge">${esc(h.status)}</span>` : ''}
         </div>
         <p style="font-size: 0.82rem; color: var(--text-muted); line-height: 1.45;">${rich(h.statement)}</p>
         ${h.evidence ? `<p style="font-size: 0.76rem; color: var(--text-muted);">${rich(h.evidence)}</p>` : ''}
+        ${cites(`hypothesis:${ideaId(h, 'H', i + 1)}`)}
       </div>`).join('');
   }
 
@@ -76,16 +83,29 @@
     'Negative Results': 'contribution.type.Negative Results',
   };
 
+  // The button that launches the judge, on the card its verdict lands on. Until
+  // the stepper answers, or while the citations are missing, it stays disabled.
+  function judgeButton(judged) {
+    const step = (lastSteps || []).find((s) => s.id === 'neurips_review');
+    const open = step && step.status !== 'LOCKED';
+    const off = open ? '' : ' disabled aria-disabled="true"';
+    const reason = step && !open
+      ? `<p class="model-step__reason">🔒 ${esc(t('modelSteps.requires', { step: t('modelSteps.sotaCitations') }))}</p>` : '';
+    return `${reason}<div class="model-step__actions" style="margin-top: 0.6rem;">
+        <button type="button" class="btn ${judged ? '' : 'btn--primary '}btn--sm" data-model-step="neurips_review"${off}>${esc(t(judged ? 'modelSteps.judgeAgain' : 'modelSteps.judge'))}</button>
+      </div>`;
+  }
+
   // The paper-reviewer's NeurIPS contribution type for the proposal, after
   // the hypotheses it was read from.
   function contributionType(spec) {
     const ct = spec.contribution_type;
     const head = `<h4 style="font-size: 0.78rem; text-transform: uppercase; color: var(--text-dim); letter-spacing: 0.04em; margin-bottom: 0.6rem;">${esc(t('contribution.title'))}</h4>`;
-    if (!ct || !CONTRIBUTION_TYPE_KEYS[ct.type]) return head + empty(t('contribution.owed', { artifact: '.papersmith/model_spec.json' }));
+    if (!ct || !CONTRIBUTION_TYPE_KEYS[ct.type]) return head + empty(t('contribution.owed', { artifact: '.papersmith/model_spec.json' })) + judgeButton(false);
     return `${head}<div class="model-hypothesis-card">
         <span class="badge">${esc(t(CONTRIBUTION_TYPE_KEYS[ct.type]))}</span>
         <p style="font-size: 0.82rem; color: var(--text-muted); line-height: 1.45;"><strong>${esc(t('contribution.why'))}</strong> ${esc(ct.why)}</p>
-      </div>`;
+      </div>${judgeButton(true)}`;
   }
 
   function layers(spec) {
@@ -95,6 +115,7 @@
     return list.map((layer, i) => {
       const c = colour(layer.color, '#38bdf8');
       const name = layer.name || layer.layer || t('modelPanel.layerN', { n: i + 1 });
+      const key = String(layer.name || '').trim() || String(layer.layer || '').trim() || `L${i + 1}`;
       const nodes = (layer.nodes || []).map((n) => `<div class="concept-node" title="${esc(n.desc)}">
           <strong>${rich(n.name)}</strong>${n.desc ? `<span>${rich(n.desc)}</span>` : ''}</div>`).join('');
       return `<div class="concept-layer-card" style="--tone: ${c}; border-left: 4px solid ${c};">
@@ -104,6 +125,7 @@
           </div>
           <p style="font-size: 0.82rem; color: var(--text-muted); line-height: 1.45;">${rich(layer.description || layer.desc || '')}</p>
           ${nodes ? `<div class="concept-node-grid">${nodes}</div>` : ''}
+          ${cites(`layer:${key}`)}
         </div>`;
     }).join('');
   }
@@ -118,6 +140,7 @@
   }
 
   let lastSpec = null;
+  let lastSteps = null;
 
   function renderModelModules(spec) {
     lastSpec = spec || {};
@@ -139,6 +162,8 @@
     problem_pillars: 'modelSteps.problemPillars',
     hypotheses: 'modelSteps.hypotheses',
     mathematics: 'modelSteps.mathematics',
+    sota_citations: 'modelSteps.sotaCitations',
+    neurips_review: 'modelSteps.neuripsReview',
   };
   const STATUS_LABELS = {
     PASS: 'modelSteps.status.pass',
@@ -153,11 +178,15 @@
       + 'and record them in the revision and in .papersmith/model_spec.json.',
     mathematics: '/proposal-deliberation Now the mathematics: formalize the agreed hypotheses as $$ ... \\tag{N} $$ '
       + 'display blocks in the next revision.',
+    sota_citations: '/proposal-deliberation Justify the proposal with SOTA citations now: in .papersmith/citations.json, '
+      + 'give every pillar, hypothesis, concept-map layer and numbered equation 2 to 5 references of '
+      + 'sota-pool/candidates.json, each with the reason it supports the idea, and fix what '
+      + '`python skills/_core/results/citations_cli.py check --root .` still reports for them.',
+    neurips_review: '/proposal-deliberation Run the NeurIPS judge now: hand the latest revision to the paper-reviewer '
+      + 'agent in its proposal mode and record its contribution_type verbatim in .papersmith/model_spec.json.',
     'math-tutor': '/math-tutor Walk me through the equations of the latest proposal revision.',
   };
   const STEP_OF_BUTTON = { 'math-tutor': 'mathematics' };
-
-  let lastSteps = null;
 
   function stepEvidence(step) {
     const e = step.evidence || {};
@@ -166,11 +195,27 @@
         problem: t(e.problem ? 'modelSteps.evidence.yes' : 'modelSteps.evidence.no'), n: Number(e.pillars) || 0 });
     }
     if (step.id === 'hypotheses') return t('modelSteps.evidence.hypotheses', { n: Number(e.hypotheses) || 0 });
+    if (step.id === 'sota_citations') {
+      return t('modelSteps.evidence.sotaCitations', { cited: Number(e.cited) || 0, ideas: Number(e.ideas) || 0 });
+    }
+    if (step.id === 'neurips_review') {
+      return e.type && CONTRIBUTION_TYPE_KEYS[e.type]
+        ? t('modelSteps.evidence.neuripsReview', { type: t(CONTRIBUTION_TYPE_KEYS[e.type]) })
+        : t('modelSteps.evidence.neuripsOwed');
+    }
     return t('modelSteps.evidence.mathematics', { n: Number(e.equations) || 0 });
+  }
+
+  function stepButton(step) {
+    if (step.id === 'neurips_review') return step.done ? 'modelSteps.judgeAgain' : 'modelSteps.judge';
+    if (step.id === 'sota_citations') return step.done ? 'modelSteps.citeAgain' : 'modelSteps.cite';
+    return 'modelSteps.generate';
   }
 
   function renderModelSteps(steps) {
     lastSteps = Array.isArray(steps) ? steps : [];
+    const card = document.getElementById('modelContributionType');
+    if (card && lastSpec) card.innerHTML = contributionType(lastSpec);
     const host = document.getElementById('modelFlowSteps');
     if (!host) return;
     if (!lastSteps.length) { host.innerHTML = ''; return; }
@@ -191,7 +236,7 @@
           <p class="model-step__evidence">${esc(stepEvidence(step))}</p>
           ${reason}
           <div class="model-step__actions">
-            <button type="button" class="btn btn--primary btn--sm" data-model-step="${esc(step.id)}"${off}>${esc(t('modelSteps.generate'))}</button>
+            <button type="button" class="btn btn--primary btn--sm" data-model-step="${esc(step.id)}"${off}>${esc(t(stepButton(step)))}</button>
             ${tutor}
           </div>
         </div>`;
@@ -222,7 +267,12 @@
     if (typeof window.sendToCli === 'function') window.sendToCli(STEP_COMMANDS[id], false, { kind: 'slash' });
   }
 
-  window.renderModelModules = (spec) => { renderModelModules(spec); refreshModelSteps(); };
+  window.renderModelModules = (spec) => {
+    renderModelModules(spec);
+    refreshModelSteps();
+    if (window.Citations) window.Citations.load();
+  };
+  if (window.Citations) window.Citations.onChange(() => { if (lastSpec) renderModelModules(lastSpec); });
   window.renderModelSteps = renderModelSteps;
   window.refreshModelSteps = refreshModelSteps;
   // The empty states, the notice and the stepper come from the catalogue: repaint them.

@@ -239,7 +239,37 @@ proposed, hand the revision to the `paper-reviewer` agent in its proposal mode
 three sentences, at most 600 characters, naming what decides it. The Concept
 Map & Model tab shows it right after the hypotheses; a missing or malformed
 object shows as not classified yet. Re-classify whenever an accepted revision
-changes a hypothesis, an equation or the claimed novelty.
+changes a hypothesis, an equation or the claimed novelty. This is Phase 4's
+last step: the dashboard's "Launch the NeurIPS judge" button asks for it, and
+Phase 5 stays locked until the type is recorded.
+
+### The SOTA citations: `.papersmith/citations.json`
+
+**Every idea of the proposal is justified by 2 to 5 references of the SOTA
+pool.** This is Phase 4's fourth step, before the judge, so the judge reads
+justified ideas; the dashboard's "Justify with SOTA citations" button asks for
+it. This skill owns the file, written in English and refreshed after each
+accepted revision:
+
+```json
+{"schema": 1, "ideas": {
+  "pillar:pillar-1": [{"id": "<pool identifier>", "why": "<how this reference supports the idea>"}],
+  "hypothesis:H1": [], "layer:<layer name>": [], "equation:1": []}}
+```
+
+The key is the idea's kind and its `id` (its position, `P1` or `H1`, when it has
+none), the layer's name, or the equation's `\tag{N}` in the latest revision.
+Each idea has 2 to 5 entries with distinct ids; each `id` is a
+`candidates[].identifier` of `sota-pool/candidates.json`, and a reference outside
+the pool does not count: name it for `/plausibility` instead of citing it. `why`
+says, in at most 300 characters, how that reference supports that idea, and
+never claims more than the reference's abstract or ingested text states: passing
+the check proves pool membership and a stated reason, not that the reference
+supports the idea. Keys of ideas that no longer exist are ignored. After writing
+it, run `python skills/_core/results/citations_cli.py check --root .`, which
+prints what is owed and exits non-zero until every idea is cited. Experiments
+live in the same file and belong to `/experimental-deliberation`; the check also
+lists them.
 
 ### The novelty graph: `.papersmith/novelty_graph.json`
 

@@ -1,7 +1,7 @@
 # QMLEEG — OpenCode Entrypoint
 
 Generated from the canonical `.claude/` agent definitions by `papersmith`
-0.61.2. Read the workspace configuration and the relevant skill before
+0.61.3. Read the workspace configuration and the relevant skill before
 changing research artifacts.
 
 ## Canonical context
@@ -101,11 +101,19 @@ skill refuses when its input is missing.
    - **Concept map and mathematics**: before implementing a revision, discuss
      its pillars, hypotheses and concept layers and its equations with
      `/math-tutor`, the Socratic tutor that also reads hand-written pages.
+   - **SOTA citations**: every pillar, hypothesis, concept-map layer and
+     numbered equation is justified by 2 to 5 references of
+     `sota-pool/candidates.json`, each with its reason, in
+     `.papersmith/citations.json`, and shown beside the idea. This is the
+     phase's fourth step, launched from its button in the stepper; `python
+     skills/_core/results/citations_cli.py check --root .` says what is owed.
    - **Contribution type**: once the hypotheses are discussed and the
      mathematics and the novelty proposed, the `paper-reviewer` agent
      classifies the proposal's NeurIPS contribution type
      (`contribution_type` in `.papersmith/model_spec.json`), shown right after
-     the hypotheses.
+     the hypotheses. This NeurIPS judge is the phase's fifth step: the
+     "Lanzar el juez NeurIPS" button, on that card and in the stepper, launches
+     it, and Phase 5 stays locked until it records a type.
 5. **Proof of concept and experiments**, in this order:
    `/experimental-deliberation` writes the protocol in `experiments/`; a toy
    set (`/datasets synth`); replication of the comparison methods;
@@ -117,8 +125,13 @@ skill refuses when its input is missing.
    (`/hyperparameter-search`); the full experiments
    (`/experimental-implementation`), locked until G-EXP-POC passes; the code
    review (`experiments-reviewer`); the remote rehearsal; and the operator's
-   launch. The Experimentos tab steps through proof of concept → verify →
-   full experiment with one button each.
+   launch. The Experimentos tab steps through SOTA citations → proof of
+   concept → verify → full experiment with one button each.
+   - **Experiment citations**: every experiment of the latest protocol carries
+     its 2 to 5 SOTA citations in `.papersmith/citations.json`, launched from
+     the Experimentos tab. Until then `/proposal-implementation` and
+     `/experimental-implementation` stay locked and G-EXP-POC refuses its
+     approval (`SOTA_CITATIONS_OWED`).
    - **Data**: `/datasets synth|search|license|qc|prepare|publish` gives both
      stages a seeded toy set always and one official dataset (agents
      `dataset-scout`, `dataset-curator`): license checked, quality measured,
@@ -157,18 +170,22 @@ skill refuses when its input is missing.
      upper bounds, baselines and their implementation) from the protocol,
      the approvals, the code and the results; it never invents a number, and
      a change of decision goes back to `/experimental-deliberation`.
-   - **Remote runs**: one account per person and service
-     (`smith team add … --attest`), `/kaggle-accounts validate`, then
+   - **Remote runs**: accounts associated with distinct emails
+     (`smith team add … [--email <email>] --attest`), `/kaggle-accounts validate`, then
      `/remote-execution`: generate-job → submit --smoke → fetch --smoke /
      smoke record → readiness → gate → submit → status / poll → fetch.
    - **Findings and novelty**: once a stage's discussion is complete, the
      `paper-reviewer` agent classifies the NeurIPS contribution type of its
      findings (`contribution_type` in `Results/discussion.json`). The
-     Novedad & Hallazgos tab contrasts the hypothesis verdicts with the SOTA
+     Novedad & Hallazgos tab launches that judge from a button on its
+     contribution-type card, and G-EXP-POC and G-NOVELTY refuse their approval
+     (`NEURIPS_JUDGE_OWED`) while a complete discussion of that stage has no
+     type. The tab contrasts the hypothesis verdicts with the SOTA
      pool and the operator records `G-NOVELTY` (`smith novelty approve` or
      `iterate`) before the paper is written.
    Only the operator authorizes a launch. The phase passes only with a
-   published protocol, a proof of concept discussed and verified, and a full
+   published protocol with every experiment cited, a proof of concept
+   discussed and verified, and a full
    experiment discussed.
 6. **Scaffolding**: `/paper-writing` opens the `paper/` tree and its section
    contracts.
