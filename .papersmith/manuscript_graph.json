@@ -1,0 +1,1909 @@
+{
+  "edges": [
+    {
+      "from": "hypothesis:exp-E1",
+      "rel": "tested_in",
+      "to": "experiment:E1"
+    },
+    {
+      "from": "hypothesis:exp-E2",
+      "rel": "tested_in",
+      "to": "experiment:E2"
+    },
+    {
+      "from": "hypothesis:exp-E3",
+      "rel": "tested_in",
+      "to": "experiment:E3"
+    },
+    {
+      "from": "hypothesis:exp-E4",
+      "rel": "tested_in",
+      "to": "experiment:E4"
+    },
+    {
+      "from": "hypothesis:exp-E5",
+      "rel": "tested_in",
+      "to": "experiment:E5"
+    },
+    {
+      "from": "base_concept:eq:frontend",
+      "rel": "builds_on",
+      "to": "novelty_concept:eq:encoding"
+    },
+    {
+      "from": "base_concept:eq:dru",
+      "rel": "builds_on",
+      "to": "novelty_concept:eq:encoding"
+    },
+    {
+      "from": "base_concept:eq:encoding_general",
+      "rel": "builds_on",
+      "to": "novelty_concept:eq:encoding"
+    },
+    {
+      "from": "base_concept:eq:fourier",
+      "rel": "builds_on",
+      "to": "novelty_concept:eq:variational"
+    },
+    {
+      "from": "base_concept:eq:fourier",
+      "rel": "builds_on",
+      "to": "novelty_concept:eq:readout"
+    },
+    {
+      "from": "base_concept:eq:expectation",
+      "rel": "builds_on",
+      "to": "novelty_concept:eq:readout"
+    },
+    {
+      "from": "base_concept:eq:param_shift",
+      "rel": "builds_on",
+      "to": "novelty_concept:eq:qubit_attribution"
+    },
+    {
+      "from": "base_concept:eq:frontend",
+      "rel": "builds_on",
+      "to": "novelty_concept:eq:saliency"
+    },
+    {
+      "from": "base_concept:eq:saliency_general",
+      "rel": "builds_on",
+      "to": "novelty_concept:eq:loss"
+    },
+    {
+      "from": "topic",
+      "rel": "frames",
+      "to": "problem"
+    },
+    {
+      "from": "problem",
+      "rel": "decomposes_into",
+      "to": "pillar:spec-1"
+    },
+    {
+      "from": "problem",
+      "rel": "decomposes_into",
+      "to": "pillar:spec-2"
+    },
+    {
+      "from": "problem",
+      "rel": "decomposes_into",
+      "to": "pillar:spec-3"
+    },
+    {
+      "from": "experiment:E1",
+      "rel": "yields",
+      "to": "finding:H1",
+      "verdict": "refuted"
+    },
+    {
+      "from": "experiment:E2",
+      "rel": "yields",
+      "to": "finding:H2",
+      "verdict": "refuted"
+    },
+    {
+      "from": "experiment:E3",
+      "rel": "yields",
+      "to": "finding:H3",
+      "verdict": "supported"
+    },
+    {
+      "from": "experiment:E4",
+      "rel": "yields",
+      "to": "finding:H4",
+      "verdict": "supported"
+    },
+    {
+      "from": "experiment:E5",
+      "rel": "yields",
+      "to": "finding:H5",
+      "verdict": "inconclusive"
+    },
+    {
+      "from": "finding:novelty",
+      "rel": "summarized_in",
+      "to": "conclusion:conclusions.concl-block-2"
+    }
+  ],
+  "generated_from": {
+    ".papersmith/model_spec.json": "dd936a1a3046911d5551885469e0c3e99394619308dbbb9922c1f1e92867edb9",
+    "experiments/experiments-hybrid-quantum-classical-neural-network-with-data-re-uploadi-v10.md": "1dafc665b1eb01f711918a44ae730e44d189f02e5a8159583b30ae38ffffe2d5",
+    "implementations/poc/QMLEEG-DRU-POC/Results/discussion.json": "e938e70c950212d397e2355e71518ec573d87bdf787a4dfa08fe0d3fc958d1d7",
+    "implementations/qmleeg-dru/QMLEEG-DRU/Results/discussion.json": "d72411f1f615e402703dfd530756b2e5cda3b6d126286b9e13739fbde18865e8",
+    "paper/couplings.json": "92c7da4c2b613453cca46f7ef1d3a11fe33fe55367b11e7bbadeba0e68fdb88f",
+    "paper/main.tex": "ec45d8e3d5dd4d540554c861421bb918e80d2744d7ed14738d77ae4af2cc94e5",
+    "paper/refs.bib": "25c50e230b62911823168d3d47e6d5bcde4c9d16d1169f76b1d8ca91d0904583",
+    "papersmith.yaml": "59808a1bb7844caedc4445b880a052ed42c53e2cfc5e53816e6d6f4f52c92667",
+    "proposals/research-concept-hybrid-quantum-classical-neural-network-with-data-re-uploadi-r04.md": "217f66e588d295f7b1931bb26ee165041a7e2081f12bd595ad80a7638cba5ac9",
+    "proposals/research-concept-hybrid-quantum-classical-neural-network-with-data-re-uploadi-r04.sky.json": "3b4f8e820b493f3b36417068c9f11cbaf15b7c2f6de25f26f08dad258c8cdf94",
+    "sota-pool/atlas.json": "d1ff644b313885960098ca82b946c7ac6bd8055ae596ee04ec4805ee7a44e085",
+    "sota-pool/candidates.json": "357e19da8b90259f8cc19bb6cbc22d307ff3cbb64f5e88a87e9c5b0cd8338af4"
+  },
+  "nodes": [
+    {
+      "detail": "EEG-based ADHD identification in pediatric cohorts; Hybrid QNN with circular data re-uploading circuits",
+      "id": "topic",
+      "label": "Quantum Machine Learning for EEG (QMLEEG)",
+      "paper_blocks": [],
+      "source": {
+        "locator": "topic",
+        "path": "papersmith.yaml"
+      },
+      "status": {
+        "state": "present"
+      },
+      "type": "topic"
+    },
+    {
+      "detail": "Shallow quantum embeddings fail on high-dimensional noisy EEG without exploding circuit depth",
+      "id": "problem",
+      "label": "Expressivity bottleneck and barren plateaus in EEG quantum encoding",
+      "paper_blocks": [],
+      "source": {
+        "locator": "planet prob (slot problem)",
+        "path": "proposals/research-concept-hybrid-quantum-classical-neural-network-with-data-re-uploadi-r04.sky.json"
+      },
+      "status": {
+        "state": "present"
+      },
+      "type": "problem"
+    },
+    {
+      "detail": "$f_{\\phi}: \\mathbb{R}^{C \\times T} \\to [-\\pi, \\pi]^d$ with $d = N_q = 4$, bounded by a scaled hyperbolic tangent (Eq. 1).",
+      "id": "pillar:spec-1",
+      "label": "Spatial-temporal EEG feature compression matching the qubit register",
+      "paper_blocks": [],
+      "source": {
+        "locator": "novelty.pillars[0]",
+        "path": ".papersmith/model_spec.json"
+      },
+      "status": {
+        "state": "present"
+      },
+      "type": "pillar"
+    },
+    {
+      "detail": "$U(x, \\theta, \\beta) = \\prod_{l=1}^{L} W_l(\\theta_l) S_l(x, \\beta_l)$ with $S_l = \\bigotimes_j R_y(x_j + \\beta_{l,j})$ at unit scale and a closed CNOT ring (Eqs. 2-5).",
+      "id": "pillar:spec-2",
+      "label": "L-layer circular-entanglement DRU circuit with Fourier expressivity of degree L",
+      "paper_blocks": [],
+      "source": {
+        "locator": "novelty.pillars[1]",
+        "path": ".papersmith/model_spec.json"
+      },
+      "status": {
+        "state": "present"
+      },
+      "type": "pillar"
+    },
+    {
+      "detail": "$\\mathcal{I}(c, t) = \\left| \\sum_{k} \\frac{\\partial \\hat{y}}{\\partial x_k} \\frac{\\partial f_{\\phi}(X)_k}{\\partial X_{c,t}} \\right|$ (Eq. 9).",
+      "id": "pillar:spec-3",
+      "label": "Clinical interpretability via channel-time gradient saliency",
+      "paper_blocks": [],
+      "source": {
+        "locator": "novelty.pillars[2]",
+        "path": ".papersmith/model_spec.json"
+      },
+      "status": {
+        "state": "present"
+      },
+      "type": "pillar"
+    },
+    {
+      "detail": "The hybrid architecture combining classical convolutional embedding with circular data re-uploading (L=3, 4 qubits) provides superior non-linear representation compared to single-shot angle encoding and to a classical linear baseline operating on the identical 4-dimensional representation.",
+      "id": "hypothesis:exp-E1",
+      "label": "The hybrid architecture combining classical convolutional embedding with circular data re-uploading (L=3, 4 qubits) provides superior non-linear representation compared to single-shot angle encoding and to a classical linear baseline operating on the identical 4-dimensional representation.",
+      "paper_blocks": [],
+      "source": {
+        "locator": "[exp:E1] Hypothesis",
+        "path": "experiments/experiments-hybrid-quantum-classical-neural-network-with-data-re-uploadi-v10.md"
+      },
+      "status": {
+        "state": "present"
+      },
+      "type": "hypothesis"
+    },
+    {
+      "detail": "Circular CNOT entanglement topology, which entangles every bipartition of the 4-qubit register without making all of them maximally entangled (no 4-qubit state is maximally entangled across its three two-versus-two bipartitions at once, as proposal r04 states), yields higher diagnostic discriminability than linear nearest-neighbor entanglement or separable non-entangled single-qubit rotations.",
+      "id": "hypothesis:exp-E2",
+      "label": "Circular CNOT entanglement topology, which entangles every bipartition of the 4-qubit register without making all of them maximally entangled (no 4-qubit state is maximally entangled across its three two-versus-two bipartitions at once, as proposal r04 states), yields higher diagnostic discriminability than linear nearest-neighbor entanglement or separable non-entangled single-qubit rotations.",
+      "paper_blocks": [],
+      "source": {
+        "locator": "[exp:E2] Hypothesis",
+        "path": "experiments/experiments-hybrid-quantum-classical-neural-network-with-data-re-uploadi-v10.md"
+      },
+      "status": {
+        "state": "present"
+      },
+      "type": "hypothesis"
+    },
+    {
+      "detail": "Expressivity in the accessible Fourier spectrum increases with re-uploading depth L up to an optimal bound, beyond which gradient variance decays (barren plateau effect) and causes training stagnation or overfitting on validation folds.",
+      "id": "hypothesis:exp-E3",
+      "label": "Expressivity in the accessible Fourier spectrum increases with re-uploading depth L up to an optimal bound, beyond which gradient variance decays (barren plateau effect) and causes training stagnation or overfitting on validation folds.",
+      "paper_blocks": [],
+      "source": {
+        "locator": "[exp:E3] Hypothesis",
+        "path": "experiments/experiments-hybrid-quantum-classical-neural-network-with-data-re-uploadi-v10.md"
+      },
+      "status": {
+        "state": "present"
+      },
+      "type": "hypothesis"
+    },
+    {
+      "detail": "Analytical gradient saliency derived from the classical backbone and quantum parameter-shift rule concentrates its mass on electrophysiologically relevant fronto-central channels and Theta/Beta frequency components rather than posterior noise.",
+      "id": "hypothesis:exp-E4",
+      "label": "Analytical gradient saliency derived from the classical backbone and quantum parameter-shift rule concentrates its mass on electrophysiologically relevant fronto-central channels and Theta/Beta frequency components rather than posterior noise.",
+      "paper_blocks": [],
+      "source": {
+        "locator": "[exp:E4] Hypothesis",
+        "path": "experiments/experiments-hybrid-quantum-classical-neural-network-with-data-re-uploadi-v10.md"
+      },
+      "status": {
+        "state": "present"
+      },
+      "type": "hypothesis"
+    },
+    {
+      "detail": "With a fixed feature front end, the re-uploading readout (L=3) represents a class rule that needs Fourier frequency two in one feature, which single-shot angle encoding (L=1) cannot represent; when the class signal is monotone every arm stays close to the known ceiling, and its degradation with the training label-noise rate is measured.",
+      "id": "hypothesis:exp-E5",
+      "label": "With a fixed feature front end, the re-uploading readout (L=3) represents a class rule that needs Fourier frequency two in one feature, which single-shot angle encoding (L=1) cannot represent; when the class signal is monotone every arm stays close to the known ceiling, and its degradation with the training label-noise rate is measured.",
+      "paper_blocks": [],
+      "source": {
+        "locator": "[exp:E5] Hypothesis",
+        "path": "experiments/experiments-hybrid-quantum-classical-neural-network-with-data-re-uploadi-v10.md"
+      },
+      "status": {
+        "state": "present"
+      },
+      "type": "hypothesis"
+    },
+    {
+      "cite_keys": [
+        "amini2024adhdeepnet"
+      ],
+      "detail": "",
+      "id": "sota:adhdeepnet",
+      "label": "ADHDeepNet From Raw EEG to Diagnosis: Improving ADHD Diagnosis through Temporal-Spatial Processing, Adaptive Attention Mechanisms, and Explainability in Raw EEG Signals",
+      "paper_blocks": [],
+      "source": {
+        "locator": "systems[adhdeepnet]",
+        "path": "sota-pool/atlas.manuscript.json"
+      },
+      "status": {
+        "state": "present"
+      },
+      "type": "sota"
+    },
+    {
+      "cite_keys": [
+        "perez2020data"
+      ],
+      "detail": "",
+      "id": "sota:data-reuploading",
+      "label": "Data re-uploading for a universal quantum classifier",
+      "paper_blocks": [],
+      "source": {
+        "locator": "systems[data-reuploading]",
+        "path": "sota-pool/atlas.manuscript.json"
+      },
+      "status": {
+        "state": "present"
+      },
+      "type": "sota"
+    },
+    {
+      "cite_keys": [
+        "schuld2021effect"
+      ],
+      "detail": "",
+      "id": "sota:encoding-fourier",
+      "label": "The effect of data encoding on the expressive power of variational quantum machine learning models",
+      "paper_blocks": [],
+      "source": {
+        "locator": "systems[encoding-fourier]",
+        "path": "sota-pool/atlas.manuscript.json"
+      },
+      "status": {
+        "state": "present"
+      },
+      "type": "sota"
+    },
+    {
+      "cite_keys": [
+        "bowles2024better"
+      ],
+      "detail": "",
+      "id": "sota:qml-benchmark",
+      "label": "Better than classical? The subtle art of benchmarking quantum machine learning models",
+      "paper_blocks": [],
+      "source": {
+        "locator": "systems[qml-benchmark]",
+        "path": "sota-pool/atlas.manuscript.json"
+      },
+      "status": {
+        "state": "present"
+      },
+      "type": "sota"
+    },
+    {
+      "cite_keys": [
+        "abbas2021power"
+      ],
+      "detail": "",
+      "id": "sota:cite:abbas2021power",
+      "label": "The power of quantum neural networks",
+      "outside_pool": true,
+      "paper_blocks": [],
+      "source": {
+        "locator": "abbas2021power",
+        "path": "paper/refs.bib"
+      },
+      "status": {
+        "state": "present"
+      },
+      "type": "sota"
+    },
+    {
+      "cite_keys": [
+        "adebayo2018sanity"
+      ],
+      "detail": "",
+      "id": "sota:cite:adebayo2018sanity",
+      "label": "Sanity Checks for Saliency Maps",
+      "outside_pool": true,
+      "paper_blocks": [],
+      "source": {
+        "locator": "adebayo2018sanity",
+        "path": "paper/refs.bib"
+      },
+      "status": {
+        "state": "present"
+      },
+      "type": "sota"
+    },
+    {
+      "cite_keys": [
+        "akiba2019optuna"
+      ],
+      "detail": "",
+      "id": "sota:cite:akiba2019optuna",
+      "label": "akiba2019optuna",
+      "outside_pool": true,
+      "paper_blocks": [],
+      "source": {
+        "locator": "akiba2019optuna",
+        "path": "paper/refs.bib"
+      },
+      "status": {
+        "state": "present"
+      },
+      "type": "sota"
+    },
+    {
+      "cite_keys": [
+        "alsaegh2021deep"
+      ],
+      "detail": "",
+      "id": "sota:cite:alsaegh2021deep",
+      "label": "Deep learning for cognitive load classification from {EEG}",
+      "outside_pool": true,
+      "paper_blocks": [],
+      "source": {
+        "locator": "alsaegh2021deep",
+        "path": "paper/refs.bib"
+      },
+      "status": {
+        "state": "present"
+      },
+      "type": "sota"
+    },
+    {
+      "cite_keys": [
+        "altman1995absence"
+      ],
+      "detail": "",
+      "id": "sota:cite:altman1995absence",
+      "label": "altman1995absence",
+      "outside_pool": true,
+      "paper_blocks": [],
+      "source": {
+        "locator": "altman1995absence",
+        "path": "paper/refs.bib"
+      },
+      "status": {
+        "state": "present"
+      },
+      "type": "sota"
+    },
+    {
+      "cite_keys": [
+        "arns2013evaluating"
+      ],
+      "detail": "",
+      "id": "sota:cite:arns2013evaluating",
+      "label": "Evaluating the clinical utility of the {EEG} theta/beta ratio in {ADHD}: a meta-analysis",
+      "outside_pool": true,
+      "paper_blocks": [],
+      "source": {
+        "locator": "arns2013evaluating",
+        "path": "paper/refs.bib"
+      },
+      "status": {
+        "state": "present"
+      },
+      "type": "sota"
+    },
+    {
+      "cite_keys": [
+        "banchi2021measuring"
+      ],
+      "detail": "",
+      "id": "sota:cite:banchi2021measuring",
+      "label": "Measuring analytic gradients on quantum hardware",
+      "outside_pool": true,
+      "paper_blocks": [],
+      "source": {
+        "locator": "banchi2021measuring",
+        "path": "paper/refs.bib"
+      },
+      "status": {
+        "state": "present"
+      },
+      "type": "sota"
+    },
+    {
+      "cite_keys": [
+        "barry2003eeg"
+      ],
+      "detail": "",
+      "id": "sota:cite:barry2003eeg",
+      "label": "A review of electroencephalography in attention-deficit/hyperactivity disorder: I. Qualitative and quantitative {EEG}",
+      "outside_pool": true,
+      "paper_blocks": [],
+      "source": {
+        "locator": "barry2003eeg",
+        "path": "paper/refs.bib"
+      },
+      "status": {
+        "state": "present"
+      },
+      "type": "sota"
+    },
+    {
+      "cite_keys": [
+        "bergstra2011algorithms"
+      ],
+      "detail": "",
+      "id": "sota:cite:bergstra2011algorithms",
+      "label": "Algorithms for Hyper-Parameter Optimization",
+      "outside_pool": true,
+      "paper_blocks": [],
+      "source": {
+        "locator": "bergstra2011algorithms",
+        "path": "paper/refs.bib"
+      },
+      "status": {
+        "state": "present"
+      },
+      "type": "sota"
+    },
+    {
+      "cite_keys": [
+        "bouthillier2021variance"
+      ],
+      "detail": "",
+      "id": "sota:cite:bouthillier2021variance",
+      "label": "Accounting for Variance in Machine Learning Benchmarks",
+      "outside_pool": true,
+      "paper_blocks": [],
+      "source": {
+        "locator": "bouthillier2021variance",
+        "path": "paper/refs.bib"
+      },
+      "status": {
+        "state": "present"
+      },
+      "type": "sota"
+    },
+    {
+      "cite_keys": [
+        "brodersen2010balanced"
+      ],
+      "detail": "",
+      "id": "sota:cite:brodersen2010balanced",
+      "label": "brodersen2010balanced",
+      "outside_pool": true,
+      "paper_blocks": [],
+      "source": {
+        "locator": "brodersen2010balanced",
+        "path": "paper/refs.bib"
+      },
+      "status": {
+        "state": "present"
+      },
+      "type": "sota"
+    },
+    {
+      "cite_keys": [
+        "brookshire2024leakage"
+      ],
+      "detail": "",
+      "id": "sota:cite:brookshire2024leakage",
+      "label": "brookshire2024leakage",
+      "outside_pool": true,
+      "paper_blocks": [],
+      "source": {
+        "locator": "brookshire2024leakage",
+        "path": "paper/refs.bib"
+      },
+      "status": {
+        "state": "present"
+      },
+      "type": "sota"
+    },
+    {
+      "cite_keys": [
+        "caro2022generalization"
+      ],
+      "detail": "",
+      "id": "sota:cite:caro2022generalization",
+      "label": "caro2022generalization",
+      "outside_pool": true,
+      "paper_blocks": [],
+      "source": {
+        "locator": "caro2022generalization",
+        "path": "paper/refs.bib"
+      },
+      "status": {
+        "state": "present"
+      },
+      "type": "sota"
+    },
+    {
+      "cite_keys": [
+        "cecotti2011convolutional"
+      ],
+      "detail": "",
+      "id": "sota:cite:cecotti2011convolutional",
+      "label": "Convolutional neural networks for {P300} detection with application to brain-computer interfaces",
+      "outside_pool": true,
+      "paper_blocks": [],
+      "source": {
+        "locator": "cecotti2011convolutional",
+        "path": "paper/refs.bib"
+      },
+      "status": {
+        "state": "present"
+      },
+      "type": "sota"
+    },
+    {
+      "cite_keys": [
+        "cerezo2021cost"
+      ],
+      "detail": "",
+      "id": "sota:cite:cerezo2021cost",
+      "label": "Cost function dependent barren plateaus in shallow parametrized quantum circuits",
+      "outside_pool": true,
+      "paper_blocks": [],
+      "source": {
+        "locator": "cerezo2021cost",
+        "path": "paper/refs.bib"
+      },
+      "status": {
+        "state": "present"
+      },
+      "type": "sota"
+    },
+    {
+      "cite_keys": [
+        "craik2019deep"
+      ],
+      "detail": "",
+      "id": "sota:cite:craik2019deep",
+      "label": "Deep learning for electroencephalogram ({EEG}) classification tasks: a review",
+      "outside_pool": true,
+      "paper_blocks": [],
+      "source": {
+        "locator": "craik2019deep",
+        "path": "paper/refs.bib"
+      },
+      "status": {
+        "state": "present"
+      },
+      "type": "sota"
+    },
+    {
+      "cite_keys": [
+        "crooks2019gradients"
+      ],
+      "detail": "",
+      "id": "sota:cite:crooks2019gradients",
+      "label": "Gradients of parameterized quantum gates using the parameter-shift rule and gate decomposition",
+      "outside_pool": true,
+      "paper_blocks": [],
+      "source": {
+        "locator": "crooks2019gradients",
+        "path": "paper/refs.bib"
+      },
+      "status": {
+        "state": "present"
+      },
+      "type": "sota"
+    },
+    {
+      "cite_keys": [
+        "delong1988comparing"
+      ],
+      "detail": "",
+      "id": "sota:cite:delong1988comparing",
+      "label": "delong1988comparing",
+      "outside_pool": true,
+      "paper_blocks": [],
+      "source": {
+        "locator": "delong1988comparing",
+        "path": "paper/refs.bib"
+      },
+      "status": {
+        "state": "present"
+      },
+      "type": "sota"
+    },
+    {
+      "cite_keys": [
+        "demsar2006statistical"
+      ],
+      "detail": "",
+      "id": "sota:cite:demsar2006statistical",
+      "label": "Statistical comparisons of classifiers over multiple data sets",
+      "outside_pool": true,
+      "paper_blocks": [],
+      "source": {
+        "locator": "demsar2006statistical",
+        "path": "paper/refs.bib"
+      },
+      "status": {
+        "state": "present"
+      },
+      "type": "sota"
+    },
+    {
+      "cite_keys": [
+        "dien1998issues"
+      ],
+      "detail": "",
+      "id": "sota:cite:dien1998issues",
+      "label": "dien1998issues",
+      "outside_pool": true,
+      "paper_blocks": [],
+      "source": {
+        "locator": "dien1998issues",
+        "path": "paper/refs.bib"
+      },
+      "status": {
+        "state": "present"
+      },
+      "type": "sota"
+    },
+    {
+      "cite_keys": [
+        "dietterich1998approximate"
+      ],
+      "detail": "",
+      "id": "sota:cite:dietterich1998approximate",
+      "label": "dietterich1998approximate",
+      "outside_pool": true,
+      "paper_blocks": [],
+      "source": {
+        "locator": "dietterich1998approximate",
+        "path": "paper/refs.bib"
+      },
+      "status": {
+        "state": "present"
+      },
+      "type": "sota"
+    },
+    {
+      "cite_keys": [
+        "fawcett2006roc"
+      ],
+      "detail": "",
+      "id": "sota:cite:fawcett2006roc",
+      "label": "fawcett2006roc",
+      "outside_pool": true,
+      "paper_blocks": [],
+      "source": {
+        "locator": "fawcett2006roc",
+        "path": "paper/refs.bib"
+      },
+      "status": {
+        "state": "present"
+      },
+      "type": "sota"
+    },
+    {
+      "cite_keys": [
+        "havlicek2019supervised"
+      ],
+      "detail": "",
+      "id": "sota:cite:havlicek2019supervised",
+      "label": "Supervised learning with quantum-enhanced feature spaces",
+      "outside_pool": true,
+      "paper_blocks": [],
+      "source": {
+        "locator": "havlicek2019supervised",
+        "path": "paper/refs.bib"
+      },
+      "status": {
+        "state": "present"
+      },
+      "type": "sota"
+    },
+    {
+      "cite_keys": [
+        "holm1979simple"
+      ],
+      "detail": "",
+      "id": "sota:cite:holm1979simple",
+      "label": "A Simple Sequentially Rejective Multiple Test Procedure",
+      "outside_pool": true,
+      "paper_blocks": [],
+      "source": {
+        "locator": "holm1979simple",
+        "path": "paper/refs.bib"
+      },
+      "status": {
+        "state": "present"
+      },
+      "type": "sota"
+    },
+    {
+      "cite_keys": [
+        "jerbi2023quantum"
+      ],
+      "detail": "",
+      "id": "sota:cite:jerbi2023quantum",
+      "label": "Quantum machine learning beyond kernel methods",
+      "outside_pool": true,
+      "paper_blocks": [],
+      "source": {
+        "locator": "jerbi2023quantum",
+        "path": "paper/refs.bib"
+      },
+      "status": {
+        "state": "present"
+      },
+      "type": "sota"
+    },
+    {
+      "cite_keys": [
+        "lawhern2018eegnet"
+      ],
+      "detail": "",
+      "id": "sota:cite:lawhern2018eegnet",
+      "label": "{EEGNet}: a compact convolutional neural network for {EEG}-based brain--computer interfaces",
+      "outside_pool": true,
+      "paper_blocks": [],
+      "source": {
+        "locator": "lawhern2018eegnet",
+        "path": "paper/refs.bib"
+      },
+      "status": {
+        "state": "present"
+      },
+      "type": "sota"
+    },
+    {
+      "cite_keys": [
+        "little2017pitfalls"
+      ],
+      "detail": "",
+      "id": "sota:cite:little2017pitfalls",
+      "label": "Pitfalls in machine learning for neurological biomarker discovery",
+      "outside_pool": true,
+      "paper_blocks": [],
+      "source": {
+        "locator": "little2017pitfalls",
+        "path": "paper/refs.bib"
+      },
+      "status": {
+        "state": "present"
+      },
+      "type": "sota"
+    },
+    {
+      "cite_keys": [
+        "loshchilov2017sgdr"
+      ],
+      "detail": "",
+      "id": "sota:cite:loshchilov2017sgdr",
+      "label": "SGDR: Stochastic Gradient Descent with Warm Restarts",
+      "outside_pool": true,
+      "paper_blocks": [],
+      "source": {
+        "locator": "loshchilov2017sgdr",
+        "path": "paper/refs.bib"
+      },
+      "status": {
+        "state": "present"
+      },
+      "type": "sota"
+    },
+    {
+      "cite_keys": [
+        "loshchilov2019decoupled"
+      ],
+      "detail": "",
+      "id": "sota:cite:loshchilov2019decoupled",
+      "label": "Decoupled Weight Decay Regularization",
+      "outside_pool": true,
+      "paper_blocks": [],
+      "source": {
+        "locator": "loshchilov2019decoupled",
+        "path": "paper/refs.bib"
+      },
+      "status": {
+        "state": "present"
+      },
+      "type": "sota"
+    },
+    {
+      "cite_keys": [
+        "lotte2018review"
+      ],
+      "detail": "",
+      "id": "sota:cite:lotte2018review",
+      "label": "A review of classification algorithms for {EEG}-based brain--computer interfaces: a 10 year update",
+      "outside_pool": true,
+      "paper_blocks": [],
+      "source": {
+        "locator": "lotte2018review",
+        "path": "paper/refs.bib"
+      },
+      "status": {
+        "state": "present"
+      },
+      "type": "sota"
+    },
+    {
+      "cite_keys": [
+        "mcclean2018barren"
+      ],
+      "detail": "",
+      "id": "sota:cite:mcclean2018barren",
+      "label": "Barren plateaus in quantum neural network training landscapes",
+      "outside_pool": true,
+      "paper_blocks": [],
+      "source": {
+        "locator": "mcclean2018barren",
+        "path": "paper/refs.bib"
+      },
+      "status": {
+        "state": "present"
+      },
+      "type": "sota"
+    },
+    {
+      "cite_keys": [
+        "mitarai2018quantum"
+      ],
+      "detail": "",
+      "id": "sota:cite:mitarai2018quantum",
+      "label": "Quantum circuit learning",
+      "outside_pool": true,
+      "paper_blocks": [],
+      "source": {
+        "locator": "mitarai2018quantum",
+        "path": "paper/refs.bib"
+      },
+      "status": {
+        "state": "present"
+      },
+      "type": "sota"
+    },
+    {
+      "cite_keys": [
+        "nadeau2003inference"
+      ],
+      "detail": "",
+      "id": "sota:cite:nadeau2003inference",
+      "label": "Inference for the generalization error",
+      "outside_pool": true,
+      "paper_blocks": [],
+      "source": {
+        "locator": "nadeau2003inference",
+        "path": "paper/refs.bib"
+      },
+      "status": {
+        "state": "present"
+      },
+      "type": "sota"
+    },
+    {
+      "cite_keys": [
+        "nasrabadi2020eeg"
+      ],
+      "detail": "",
+      "id": "sota:cite:nasrabadi2020eeg",
+      "label": "{EEG} dataset of {ADHD} and normal children during visual attention task",
+      "outside_pool": true,
+      "paper_blocks": [],
+      "source": {
+        "locator": "nasrabadi2020eeg",
+        "path": "paper/refs.bib"
+      },
+      "status": {
+        "state": "present"
+      },
+      "type": "sota"
+    },
+    {
+      "cite_keys": [
+        "prechelt1998early"
+      ],
+      "detail": "",
+      "id": "sota:cite:prechelt1998early",
+      "label": "prechelt1998early",
+      "outside_pool": true,
+      "paper_blocks": [],
+      "source": {
+        "locator": "prechelt1998early",
+        "path": "paper/refs.bib"
+      },
+      "status": {
+        "state": "present"
+      },
+      "type": "sota"
+    },
+    {
+      "cite_keys": [
+        "ribeiro2016why"
+      ],
+      "detail": "",
+      "id": "sota:cite:ribeiro2016why",
+      "label": "``{Why} should {I} trust you?'': Explaining the predictions of any classifier",
+      "outside_pool": true,
+      "paper_blocks": [],
+      "source": {
+        "locator": "ribeiro2016why",
+        "path": "paper/refs.bib"
+      },
+      "status": {
+        "state": "present"
+      },
+      "type": "sota"
+    },
+    {
+      "cite_keys": [
+        "roy2019chrononet"
+      ],
+      "detail": "",
+      "id": "sota:cite:roy2019chrononet",
+      "label": "{ChronoNet}: A deep recurrent neural network for abnormal {EEG} identification",
+      "outside_pool": true,
+      "paper_blocks": [],
+      "source": {
+        "locator": "roy2019chrononet",
+        "path": "paper/refs.bib"
+      },
+      "status": {
+        "state": "present"
+      },
+      "type": "sota"
+    },
+    {
+      "cite_keys": [
+        "saeb2017need"
+      ],
+      "detail": "",
+      "id": "sota:cite:saeb2017need",
+      "label": "The need to separate subject-level cross-validation from feature selection in digital health",
+      "outside_pool": true,
+      "paper_blocks": [],
+      "source": {
+        "locator": "saeb2017need",
+        "path": "paper/refs.bib"
+      },
+      "status": {
+        "state": "present"
+      },
+      "type": "sota"
+    },
+    {
+      "cite_keys": [
+        "scheinost2019connectome"
+      ],
+      "detail": "",
+      "id": "sota:cite:scheinost2019connectome",
+      "label": "Connectome-based predictive modeling: Methods and applications in neuroimaging",
+      "outside_pool": true,
+      "paper_blocks": [],
+      "source": {
+        "locator": "scheinost2019connectome",
+        "path": "paper/refs.bib"
+      },
+      "status": {
+        "state": "present"
+      },
+      "type": "sota"
+    },
+    {
+      "cite_keys": [
+        "schirrmeister2017deepconvnet"
+      ],
+      "detail": "",
+      "id": "sota:cite:schirrmeister2017deepconvnet",
+      "label": "Deep learning with convolutional neural networks for {EEG} decoding and visualization",
+      "outside_pool": true,
+      "paper_blocks": [],
+      "source": {
+        "locator": "schirrmeister2017deepconvnet",
+        "path": "paper/refs.bib"
+      },
+      "status": {
+        "state": "present"
+      },
+      "type": "sota"
+    },
+    {
+      "cite_keys": [
+        "selvaraju2017gradcam"
+      ],
+      "detail": "",
+      "id": "sota:cite:selvaraju2017gradcam",
+      "label": "{Grad-CAM}: Visual explanations from deep networks via gradient-based localization",
+      "outside_pool": true,
+      "paper_blocks": [],
+      "source": {
+        "locator": "selvaraju2017gradcam",
+        "path": "paper/refs.bib"
+      },
+      "status": {
+        "state": "present"
+      },
+      "type": "sota"
+    },
+    {
+      "cite_keys": [
+        "simonyan2013deep"
+      ],
+      "detail": "",
+      "id": "sota:cite:simonyan2013deep",
+      "label": "Deep inside convolutional networks: Visualising image classification models and saliency maps",
+      "outside_pool": true,
+      "paper_blocks": [],
+      "source": {
+        "locator": "simonyan2013deep",
+        "path": "paper/refs.bib"
+      },
+      "status": {
+        "state": "present"
+      },
+      "type": "sota"
+    },
+    {
+      "cite_keys": [
+        "snoek2019confounds"
+      ],
+      "detail": "",
+      "id": "sota:cite:snoek2019confounds",
+      "label": "snoek2019confounds",
+      "outside_pool": true,
+      "paper_blocks": [],
+      "source": {
+        "locator": "snoek2019confounds",
+        "path": "paper/refs.bib"
+      },
+      "status": {
+        "state": "present"
+      },
+      "type": "sota"
+    },
+    {
+      "cite_keys": [
+        "snyder2006clinical"
+      ],
+      "detail": "",
+      "id": "sota:cite:snyder2006clinical",
+      "label": "Clinical utility of an objective measure of attention in children suspected of having attention-deficit/hyperactivity disorder",
+      "outside_pool": true,
+      "paper_blocks": [],
+      "source": {
+        "locator": "snyder2006clinical",
+        "path": "paper/refs.bib"
+      },
+      "status": {
+        "state": "present"
+      },
+      "type": "sota"
+    },
+    {
+      "cite_keys": [
+        "sturm2016interpretable"
+      ],
+      "detail": "",
+      "id": "sota:cite:sturm2016interpretable",
+      "label": "Interpretable deep neural networks for single-trial {EEG} classification",
+      "outside_pool": true,
+      "paper_blocks": [],
+      "source": {
+        "locator": "sturm2016interpretable",
+        "path": "paper/refs.bib"
+      },
+      "status": {
+        "state": "present"
+      },
+      "type": "sota"
+    },
+    {
+      "cite_keys": [
+        "sundararajan2017axiomatic"
+      ],
+      "detail": "",
+      "id": "sota:cite:sundararajan2017axiomatic",
+      "label": "Axiomatic attribution for deep networks",
+      "outside_pool": true,
+      "paper_blocks": [],
+      "source": {
+        "locator": "sundararajan2017axiomatic",
+        "path": "paper/refs.bib"
+      },
+      "status": {
+        "state": "present"
+      },
+      "type": "sota"
+    },
+    {
+      "cite_keys": [
+        "varma2006bias"
+      ],
+      "detail": "",
+      "id": "sota:cite:varma2006bias",
+      "label": "varma2006bias",
+      "outside_pool": true,
+      "paper_blocks": [],
+      "source": {
+        "locator": "varma2006bias",
+        "path": "paper/refs.bib"
+      },
+      "status": {
+        "state": "present"
+      },
+      "type": "sota"
+    },
+    {
+      "cite_keys": [
+        "varoquaux2018cross"
+      ],
+      "detail": "",
+      "id": "sota:cite:varoquaux2018cross",
+      "label": "varoquaux2018cross",
+      "outside_pool": true,
+      "paper_blocks": [],
+      "source": {
+        "locator": "varoquaux2018cross",
+        "path": "paper/refs.bib"
+      },
+      "status": {
+        "state": "present"
+      },
+      "type": "sota"
+    },
+    {
+      "cite_keys": [
+        "varoquaux2022machine"
+      ],
+      "detail": "",
+      "id": "sota:cite:varoquaux2022machine",
+      "label": "Machine learning for medical imaging: methodological failures and recommendations for the future",
+      "outside_pool": true,
+      "paper_blocks": [],
+      "source": {
+        "locator": "varoquaux2022machine",
+        "path": "paper/refs.bib"
+      },
+      "status": {
+        "state": "present"
+      },
+      "type": "sota"
+    },
+    {
+      "cite_keys": [
+        "vidal2020input"
+      ],
+      "detail": "",
+      "id": "sota:cite:vidal2020input",
+      "label": "Input gradients and sensitivity analysis for quantum neural networks",
+      "outside_pool": true,
+      "paper_blocks": [],
+      "source": {
+        "locator": "vidal2020input",
+        "path": "paper/refs.bib"
+      },
+      "status": {
+        "state": "present"
+      },
+      "type": "sota"
+    },
+    {
+      "cite_keys": [
+        "walker2011noninferiority"
+      ],
+      "detail": "",
+      "id": "sota:cite:walker2011noninferiority",
+      "label": "walker2011noninferiority",
+      "outside_pool": true,
+      "paper_blocks": [],
+      "source": {
+        "locator": "walker2011noninferiority",
+        "path": "paper/refs.bib"
+      },
+      "status": {
+        "state": "present"
+      },
+      "type": "sota"
+    },
+    {
+      "cite_keys": [
+        "widmann2015digital"
+      ],
+      "detail": "",
+      "id": "sota:cite:widmann2015digital",
+      "label": "widmann2015digital",
+      "outside_pool": true,
+      "paper_blocks": [],
+      "source": {
+        "locator": "widmann2015digital",
+        "path": "paper/refs.bib"
+      },
+      "status": {
+        "state": "present"
+      },
+      "type": "sota"
+    },
+    {
+      "cite_keys": [
+        "yarkoni2017choosing"
+      ],
+      "detail": "",
+      "id": "sota:cite:yarkoni2017choosing",
+      "label": "Choosing prediction over explanation in psychology: Lessons from machine learning",
+      "outside_pool": true,
+      "paper_blocks": [],
+      "source": {
+        "locator": "yarkoni2017choosing",
+        "path": "paper/refs.bib"
+      },
+      "status": {
+        "state": "present"
+      },
+      "type": "sota"
+    },
+    {
+      "cite_keys": [
+        "zhang2017rethinking"
+      ],
+      "detail": "",
+      "id": "sota:cite:zhang2017rethinking",
+      "label": "Understanding deep learning requires rethinking generalization",
+      "outside_pool": true,
+      "paper_blocks": [],
+      "source": {
+        "locator": "zhang2017rethinking",
+        "path": "paper/refs.bib"
+      },
+      "status": {
+        "state": "present"
+      },
+      "type": "sota"
+    },
+    {
+      "concept_kind": "equation",
+      "detail": "\\bar{p}_{s} = \\frac{1}{n_{s}} \\sum_{i \\in \\mathcal{I}_{s}} g_{\\boldsymbol{\\Theta}}(\\mathbf{X}_{i}), \\qquad \\hat{y}_{s} = \\mathbb{1}\\!\\left[\\bar{p}_{s} \\geq \\tfrac{1}{2}\\right],",
+      "id": "base_concept:eq:subject_decision",
+      "label": "eq:subject_decision",
+      "paper_blocks": [
+        "materials-and-methods.mm-borrowed-machinery"
+      ],
+      "source": {
+        "locator": "materials-and-methods.mm-borrowed-machinery equation 1",
+        "path": "paper/main.tex"
+      },
+      "status": {
+        "state": "present"
+      },
+      "type": "base_concept"
+    },
+    {
+      "concept_kind": "equation",
+      "detail": "\\mathbf{x} = f_{\\boldsymbol{\\phi}}(\\mathbf{X}) = \\pi \\tanh\\!\\big(h_{\\boldsymbol{\\phi}}(\\mathbf{X})\\big) \\in [-\\pi, \\pi]^{N_{q}},",
+      "id": "base_concept:eq:frontend",
+      "label": "eq:frontend",
+      "paper_blocks": [
+        "materials-and-methods.mm-borrowed-machinery"
+      ],
+      "source": {
+        "locator": "materials-and-methods.mm-borrowed-machinery equation 2",
+        "path": "paper/main.tex"
+      },
+      "status": {
+        "state": "present"
+      },
+      "type": "base_concept"
+    },
+    {
+      "concept_kind": "equation",
+      "detail": "U(\\mathbf{x}, \\boldsymbol{\\theta}, \\boldsymbol{\\beta}) = \\prod_{l=1}^{L} W_{l}(\\boldsymbol{\\theta}_{l})\\, S_{l}(\\mathbf{x}, \\boldsymbol{\\beta}_{l}),",
+      "id": "base_concept:eq:dru",
+      "label": "eq:dru",
+      "paper_blocks": [
+        "materials-and-methods.mm-borrowed-machinery"
+      ],
+      "source": {
+        "locator": "materials-and-methods.mm-borrowed-machinery equation 3",
+        "path": "paper/main.tex"
+      },
+      "status": {
+        "state": "present"
+      },
+      "type": "base_concept"
+    },
+    {
+      "concept_kind": "equation",
+      "detail": "S_{l}(\\mathbf{x}, \\boldsymbol{\\beta}_{l}) = \\bigotimes_{j=1}^{N_{q}} R_{y}\\big(\\alpha_{l,j}\\, x_{j} + \\beta_{l,j}\\big),",
+      "id": "base_concept:eq:encoding_general",
+      "label": "eq:encoding_general",
+      "paper_blocks": [
+        "materials-and-methods.mm-borrowed-machinery"
+      ],
+      "source": {
+        "locator": "materials-and-methods.mm-borrowed-machinery equation 4",
+        "path": "paper/main.tex"
+      },
+      "status": {
+        "state": "present"
+      },
+      "type": "base_concept"
+    },
+    {
+      "concept_kind": "equation",
+      "detail": "\\langle Z_{j} \\rangle(\\mathbf{x}, \\boldsymbol{\\theta}, \\boldsymbol{\\beta}) = \\langle 0|^{\\otimes N_{q}}\\, U^{\\dagger}(\\mathbf{x}, \\boldsymbol{\\theta}, \\boldsymbol{\\beta})\\, Z_{j}\\, U(\\mathbf{x}, \\boldsymbol{\\theta}, \\boldsymbol{\\beta})\\, |0\\rangle^{\\otimes N_{q}} \\in [-1, 1],",
+      "id": "base_concept:eq:expectation",
+      "label": "eq:expectation",
+      "paper_blocks": [
+        "materials-and-methods.mm-borrowed-machinery"
+      ],
+      "source": {
+        "locator": "materials-and-methods.mm-borrowed-machinery equation 5",
+        "path": "paper/main.tex"
+      },
+      "status": {
+        "state": "present"
+      },
+      "type": "base_concept"
+    },
+    {
+      "concept_kind": "equation",
+      "detail": "\\langle Z_{j} \\rangle(\\mathbf{x}, \\boldsymbol{\\theta}, \\boldsymbol{\\beta}) = \\sum_{\\boldsymbol{\\omega} \\in \\Omega} c_{j, \\boldsymbol{\\omega}}(\\boldsymbol{\\theta}, \\boldsymbol{\\beta})\\, e^{\\,i\\, \\boldsymbol{\\omega}^{\\top} \\mathbf{x}},",
+      "id": "base_concept:eq:fourier",
+      "label": "eq:fourier",
+      "paper_blocks": [
+        "materials-and-methods.mm-borrowed-machinery"
+      ],
+      "source": {
+        "locator": "materials-and-methods.mm-borrowed-machinery equation 6",
+        "path": "paper/main.tex"
+      },
+      "status": {
+        "state": "present"
+      },
+      "type": "base_concept"
+    },
+    {
+      "concept_kind": "equation",
+      "detail": "\\mathcal{G}(c, t) = \\left| \\frac{\\partial \\hat{y}}{\\partial X_{c,t}} \\right|,",
+      "id": "base_concept:eq:saliency_general",
+      "label": "eq:saliency_general",
+      "paper_blocks": [
+        "materials-and-methods.mm-borrowed-machinery"
+      ],
+      "source": {
+        "locator": "materials-and-methods.mm-borrowed-machinery equation 7",
+        "path": "paper/main.tex"
+      },
+      "status": {
+        "state": "present"
+      },
+      "type": "base_concept"
+    },
+    {
+      "concept_kind": "equation",
+      "detail": "\\frac{\\partial}{\\partial a} \\langle Z_{j} \\rangle = \\frac{1}{2}\\left[ \\langle Z_{j} \\rangle\\Big(a + \\frac{\\pi}{2}\\Big) - \\langle Z_{j} \\rangle\\Big(a - \\frac{\\pi}{2}\\Big) \\right],",
+      "id": "base_concept:eq:param_shift",
+      "label": "eq:param_shift",
+      "paper_blocks": [
+        "materials-and-methods.mm-borrowed-machinery"
+      ],
+      "source": {
+        "locator": "materials-and-methods.mm-borrowed-machinery equation 8",
+        "path": "paper/main.tex"
+      },
+      "status": {
+        "state": "present"
+      },
+      "type": "base_concept"
+    },
+    {
+      "concept_kind": "equation",
+      "detail": "\\frac{\\partial}{\\partial a} \\langle M \\rangle = r \\left[ \\langle M \\rangle\\Big(a + \\frac{\\pi}{4r}\\Big) - \\langle M \\rangle\\Big(a - \\frac{\\pi}{4r}\\Big) \\right],",
+      "id": "base_concept:eq:param_shift_general",
+      "label": "eq:param_shift_general",
+      "paper_blocks": [
+        "materials-and-methods.mm-borrowed-machinery"
+      ],
+      "source": {
+        "locator": "materials-and-methods.mm-borrowed-machinery equation 9",
+        "path": "paper/main.tex"
+      },
+      "status": {
+        "state": "present"
+      },
+      "type": "base_concept"
+    },
+    {
+      "concept_kind": "equation",
+      "detail": "S_{l}(\\mathbf{x}, \\boldsymbol{\\beta}_{l}) = \\bigotimes_{j=1}^{N_{q}} R_{y}\\big(x_{j} + \\beta_{l,j}\\big),",
+      "id": "novelty_concept:eq:encoding",
+      "label": "eq:encoding",
+      "paper_blocks": [
+        "materials-and-methods.mm-proposal"
+      ],
+      "source": {
+        "locator": "materials-and-methods.mm-proposal equation 1",
+        "path": "paper/main.tex"
+      },
+      "status": {
+        "state": "present"
+      },
+      "type": "novelty_concept"
+    },
+    {
+      "concept_kind": "equation",
+      "detail": "W_{l}(\\boldsymbol{\\theta}_{l}) = V_{\\mathrm{ent}} \\bigotimes_{j=1}^{N_{q}} R_{z}\\big(\\theta^{(2)}_{l,j}\\big)\\, R_{y}\\big(\\theta^{(1)}_{l,j}\\big),",
+      "id": "novelty_concept:eq:variational",
+      "label": "eq:variational",
+      "paper_blocks": [
+        "materials-and-methods.mm-proposal"
+      ],
+      "source": {
+        "locator": "materials-and-methods.mm-proposal equation 2",
+        "path": "paper/main.tex"
+      },
+      "status": {
+        "state": "present"
+      },
+      "type": "novelty_concept"
+    },
+    {
+      "concept_kind": "equation",
+      "detail": "V_{\\mathrm{ent}} = \\left( \\prod_{j=1}^{N_{q}-1} \\mathrm{CNOT}_{j, j+1} \\right) \\mathrm{CNOT}_{N_{q}, 1},",
+      "id": "novelty_concept:eq:ring",
+      "label": "eq:ring",
+      "paper_blocks": [
+        "materials-and-methods.mm-proposal"
+      ],
+      "source": {
+        "locator": "materials-and-methods.mm-proposal equation 3",
+        "path": "paper/main.tex"
+      },
+      "status": {
+        "state": "present"
+      },
+      "type": "novelty_concept"
+    },
+    {
+      "concept_kind": "equation",
+      "detail": "z = \\mathbf{w}^{\\top} \\langle \\mathbf{Z} \\rangle(\\mathbf{x}, \\boldsymbol{\\theta}, \\boldsymbol{\\beta}) + b, \\qquad \\hat{y} = \\sigma(z),",
+      "id": "novelty_concept:eq:readout",
+      "label": "eq:readout",
+      "paper_blocks": [
+        "materials-and-methods.mm-proposal"
+      ],
+      "source": {
+        "locator": "materials-and-methods.mm-proposal equation 4",
+        "path": "paper/main.tex"
+      },
+      "status": {
+        "state": "present"
+      },
+      "type": "novelty_concept"
+    },
+    {
+      "concept_kind": "equation",
+      "detail": "|\\boldsymbol{\\theta}| + |\\boldsymbol{\\beta}| + |\\mathbf{w}| + 1 = 2 L N_{q} + L N_{q} + N_{q} + 1",
+      "id": "novelty_concept:eq:qcount",
+      "label": "eq:qcount",
+      "paper_blocks": [
+        "materials-and-methods.mm-proposal"
+      ],
+      "source": {
+        "locator": "materials-and-methods.mm-proposal equation 5",
+        "path": "paper/main.tex"
+      },
+      "status": {
+        "state": "present"
+      },
+      "type": "novelty_concept"
+    },
+    {
+      "concept_kind": "equation",
+      "detail": "a_{k}(\\mathbf{X}) = \\frac{\\partial \\hat{y}}{\\partial x_{k}} = \\hat{y}\\,(1 - \\hat{y}) \\sum_{j=1}^{N_{q}} w_{j} \\sum_{l=1}^{L} \\frac{\\partial \\langle Z_{j} \\rangle}{\\partial \\beta_{l,k}},",
+      "id": "novelty_concept:eq:qubit_attribution",
+      "label": "eq:qubit_attribution",
+      "paper_blocks": [
+        "materials-and-methods.mm-proposal"
+      ],
+      "source": {
+        "locator": "materials-and-methods.mm-proposal equation 6",
+        "path": "paper/main.tex"
+      },
+      "status": {
+        "state": "present"
+      },
+      "type": "novelty_concept"
+    },
+    {
+      "concept_kind": "equation",
+      "detail": "\\mathcal{I}(c, t) = \\left| \\sum_{k=1}^{N_{q}} a_{k}(\\mathbf{X})\\, \\frac{\\partial f_{\\boldsymbol{\\phi}}(\\mathbf{X})_{k}}{\\partial X_{c,t}} \\right|,",
+      "id": "novelty_concept:eq:saliency",
+      "label": "eq:saliency",
+      "paper_blocks": [
+        "materials-and-methods.mm-proposal"
+      ],
+      "source": {
+        "locator": "materials-and-methods.mm-proposal equation 7",
+        "path": "paper/main.tex"
+      },
+      "status": {
+        "state": "present"
+      },
+      "type": "novelty_concept"
+    },
+    {
+      "concept_kind": "equation",
+      "detail": "\\mathcal{L}(\\boldsymbol{\\Theta}) = \\frac{1}{S} \\sum_{s=1}^{S} \\frac{1}{n_{s}} \\sum_{i \\in \\mathcal{I}_{s}} \\Big[ \\log\\big(1 + e^{z_{i}}\\big) - y_{s}\\, z_{i} \\Big] + \\lambda_{w} \\lVert \\mathbf{w} \\rVert_{2}^{2},",
+      "id": "novelty_concept:eq:loss",
+      "label": "eq:loss",
+      "paper_blocks": [
+        "materials-and-methods.mm-proposal"
+      ],
+      "source": {
+        "locator": "materials-and-methods.mm-proposal equation 8",
+        "path": "paper/main.tex"
+      },
+      "status": {
+        "state": "present"
+      },
+      "type": "novelty_concept"
+    },
+    {
+      "concept_kind": "contribution",
+      "detail": "",
+      "id": "novelty_concept:contribution:Circular Data Re-Uploading (CDRU)",
+      "label": "Circular Data Re-Uploading (CDRU)",
+      "paper_blocks": [],
+      "source": {
+        "locator": "facts.contributions",
+        "path": "paper/couplings.json"
+      },
+      "status": {
+        "state": "present"
+      },
+      "type": "novelty_concept"
+    },
+    {
+      "concept_kind": "contribution",
+      "detail": "",
+      "id": "novelty_concept:contribution:Analytical Saliency via Parameter-Shift Backpropagation",
+      "label": "Analytical Saliency via Parameter-Shift Backpropagation",
+      "paper_blocks": [],
+      "source": {
+        "locator": "facts.contributions",
+        "path": "paper/couplings.json"
+      },
+      "status": {
+        "state": "present"
+      },
+      "type": "novelty_concept"
+    },
+    {
+      "detail": "Hypothesis: The hybrid architecture combining classical convolutional embedding with circular data re-uploading (L=3, 4 qubits) provides superior non-linear representation compared to single-shot angle encoding and to a classical linear baseline operating on the identical 4-dimensional representation.; Success criterion: Balanced Accuracy on subject-level test evaluation reaches at least 0.85 and the Hybrid DRU is superior to both single-shot angle encoding and the classical linear probe by the corrected resampled t-test with Holm-adjusted p < 0.05, and non-inferior to EEGNet: the lower one-sided 95% confidence bound of the Balanced Accuracy difference (Hybrid DRU minus EEGNet) lies above -0.03.",
+      "id": "experiment:E1",
+      "label": "Hybrid Classification and Fourier Expressivity",
+      "paper_blocks": [],
+      "source": {
+        "locator": "[exp:E1]",
+        "path": "experiments/experiments-hybrid-quantum-classical-neural-network-with-data-re-uploadi-v10.md"
+      },
+      "status": {
+        "state": "present"
+      },
+      "type": "experiment"
+    },
+    {
+      "detail": "Hypothesis: Circular CNOT entanglement topology, which entangles every bipartition of the 4-qubit register without making all of them maximally entangled (no 4-qubit state is maximally entangled across its three two-versus-two bipartitions at once, as proposal r04 states), yields higher diagnostic discriminability than linear nearest-neighbor entanglement or separable non-entangled single-qubit rotations.; Success criterion: Circular entanglement topology demonstrates a higher subject-level F1-score by at least 0.03 compared to the separable non-entangled circuit, with Holm-adjusted post-hoc p < 0.05.",
+      "id": "experiment:E2",
+      "label": "Entanglement Topology Ablation",
+      "paper_blocks": [],
+      "source": {
+        "locator": "[exp:E2]",
+        "path": "experiments/experiments-hybrid-quantum-classical-neural-network-with-data-re-uploadi-v10.md"
+      },
+      "status": {
+        "state": "present"
+      },
+      "type": "experiment"
+    },
+    {
+      "detail": "Hypothesis: Expressivity in the accessible Fourier spectrum increases with re-uploading depth L up to an optimal bound, beyond which gradient variance decays (barren plateau effect) and causes training stagnation or overfitting on validation folds.; Success criterion: The optimal re-uploading depth L identifies the trade-off point where validation loss reaches a minimum before gradient variance decays by more than one order of magnitude, with the regression slope's 95% confidence interval excluding zero.",
+      "id": "experiment:E3",
+      "label": "Re-uploading Depth and Barren Plateau Analysis",
+      "paper_blocks": [],
+      "source": {
+        "locator": "[exp:E3]",
+        "path": "experiments/experiments-hybrid-quantum-classical-neural-network-with-data-re-uploadi-v10.md"
+      },
+      "status": {
+        "state": "present"
+      },
+      "type": "experiment"
+    },
+    {
+      "detail": "Hypothesis: Analytical gradient saliency derived from the classical backbone and quantum parameter-shift rule concentrates its mass on electrophysiologically relevant fronto-central channels and Theta/Beta frequency components rather than posterior noise.; Success criterion: The mean per-subject analytical gradient saliency allocated to fronto-central electrode channels (Fp1, Fp2, F3, F4, Fz, Cz) in the Theta and Beta frequency bands is statistically greater (Wilcoxon signed-rank over subjects, Holm-adjusted p < 0.01) than the saliency allocated to posterior temporal-occipital channels.",
+      "id": "experiment:E4",
+      "label": "Clinical Interpretability via Analytical Gradients",
+      "paper_blocks": [],
+      "source": {
+        "locator": "[exp:E4]",
+        "path": "experiments/experiments-hybrid-quantum-classical-neural-network-with-data-re-uploadi-v10.md"
+      },
+      "status": {
+        "state": "present"
+      },
+      "type": "experiment"
+    },
+    {
+      "detail": "Hypothesis: With a fixed feature front end, the re-uploading readout (L=3) represents a class rule that needs Fourier frequency two in one feature, which single-shot angle encoding (L=1) cannot represent; when the class signal is monotone every arm stays close to the known ceiling, and its degradation with the training label-noise rate is measured.; Success criterion: In the fixed regime on the frequency-two rule without label noise, the Hybrid DRU's subject-level Balanced Accuracy is higher than the Single-shot arm's by the Wilcoxon signed-rank test over the 8 paired replicates with Holm-adjusted p < 0.05; with the monotone rule and no label noise, each arm's mean subject-level Balanced Accuracy in both regimes lies within 0.05 of the ceiling Φ(d′/2) (pipeline check); and in the fixed regime the linear probe's mean subject-level Balanced Accuracy on the interaction and frequency-two rules stays at or below 0.675, the linear ceiling plus 0.05 (construction…",
+      "id": "experiment:E5",
+      "label": "Controlled Synthetic Capacity and Robustness",
+      "paper_blocks": [],
+      "source": {
+        "locator": "[exp:E5]",
+        "path": "experiments/experiments-hybrid-quantum-classical-neural-network-with-data-re-uploadi-v10.md"
+      },
+      "status": {
+        "state": "present"
+      },
+      "type": "experiment"
+    },
+    {
+      "detail": "The hybrid architecture combining classical convolutional embedding with circular data re-uploading (L=3, 4 qubits) provides superior non-linear representation compared to single-shot angle encoding and to a classical linear baseline operating on the identical 4-dimensional representation.; Observed: Hybrid DRU achieved Subject Balanced Accuracy 0.683 (95% CI [0.562, 0.803], F1 0.745), compared to Single-shot (0.708) and Classical Linear (0.689). The strict 0.85 threshold and superiority margin were not met.",
+      "discussion_status": "complete",
+      "experiment": "E1",
+      "id": "finding:H1",
+      "label": "H1: not_supported",
+      "observed": "Hybrid DRU achieved Subject Balanced Accuracy 0.683 (95% CI [0.562, 0.803], F1 0.745), compared to Single-shot (0.708) and Classical Linear (0.689). The strict 0.85 threshold and superiority margin were not met.",
+      "outcome": "refuted",
+      "paper_blocks": [],
+      "source": {
+        "locator": "hypotheses[0]",
+        "path": "implementations/qmleeg-dru/QMLEEG-DRU/Results/discussion.json"
+      },
+      "status": {
+        "state": "present"
+      },
+      "type": "finding",
+      "verdict": "not_supported"
+    },
+    {
+      "detail": "Circular CNOT entanglement topology provides maximum non-local bipartite state connectivity across the 4-qubit register, yielding higher diagnostic discriminability than linear nearest-neighbor entanglement or separable non-entangled single-qubit rotations.; Observed: Circular topology attained F1 0.745, Linear 0.748, and Separable 0.747. The observed F1 difference was -0.0024 with Holm-adjusted p = 1.0.",
+      "discussion_status": "complete",
+      "experiment": "E2",
+      "id": "finding:H2",
+      "label": "H2: not_supported",
+      "observed": "Circular topology attained F1 0.745, Linear 0.748, and Separable 0.747. The observed F1 difference was -0.0024 with Holm-adjusted p = 1.0.",
+      "outcome": "refuted",
+      "paper_blocks": [],
+      "source": {
+        "locator": "hypotheses[1]",
+        "path": "implementations/qmleeg-dru/QMLEEG-DRU/Results/discussion.json"
+      },
+      "status": {
+        "state": "present"
+      },
+      "type": "finding",
+      "verdict": "not_supported"
+    },
+    {
+      "detail": "Expressivity in the accessible Fourier spectrum increases with re-uploading depth L up to an optimal bound, beyond which gradient variance decays (barren plateau effect) and causes training stagnation or overfitting on validation folds.; Observed: Validation loss reaches optimum at shallow depth (L=1,2); gradient variance exhibits exponential-like decay with depth, but regression slope 95% CI [-0.181, 0.059] spans zero.",
+      "discussion_status": "complete",
+      "experiment": "E3",
+      "id": "finding:H3",
+      "label": "H3: partially_supported",
+      "observed": "Validation loss reaches optimum at shallow depth (L=1,2); gradient variance exhibits exponential-like decay with depth, but regression slope 95% CI [-0.181, 0.059] spans zero.",
+      "outcome": "supported",
+      "paper_blocks": [],
+      "source": {
+        "locator": "hypotheses[2]",
+        "path": "implementations/qmleeg-dru/QMLEEG-DRU/Results/discussion.json"
+      },
+      "status": {
+        "state": "present"
+      },
+      "type": "finding",
+      "verdict": "partially_supported"
+    },
+    {
+      "detail": "Analytical gradient saliency derived from the classical backbone and quantum parameter-shift rule concentrates its mass on electrophysiologically relevant fronto-central channels and Theta/Beta frequency components rather than posterior noise.; Observed: Fronto-central saliency was statistically greater than temporal-occipital saliency in both Theta (W+ = 1711, Holm p < 0.001) and Beta (W+ = 1711, Holm p < 0.001) bands across 58 evaluated subjects.",
+      "discussion_status": "complete",
+      "experiment": "E4",
+      "id": "finding:H4",
+      "label": "H4: supported",
+      "observed": "Fronto-central saliency was statistically greater than temporal-occipital saliency in both Theta (W+ = 1711, Holm p < 0.001) and Beta (W+ = 1711, Holm p < 0.001) bands across 58 evaluated subjects.",
+      "outcome": "supported",
+      "paper_blocks": [],
+      "source": {
+        "locator": "hypotheses[3]",
+        "path": "implementations/qmleeg-dru/QMLEEG-DRU/Results/discussion.json"
+      },
+      "status": {
+        "state": "present"
+      },
+      "type": "finding",
+      "verdict": "supported"
+    },
+    {
+      "detail": "With a fixed feature front end, the re-uploading readout (L=3) represents a class rule that needs Fourier frequency two in one feature, which single-shot angle encoding (L=1) cannot represent; when the class signal is monotone every arm stays close to the known ceiling, and its degradation with the training label-noise rate is measured.; Observed: Confirmatory condition on frequency-two rule held; construction check held (< 0.675), while monotone pipeline check deviated at lower d' values.",
+      "discussion_status": "complete",
+      "experiment": "E5",
+      "id": "finding:H5",
+      "label": "H5: inconclusive",
+      "observed": "Confirmatory condition on frequency-two rule held; construction check held (< 0.675), while monotone pipeline check deviated at lower d' values.",
+      "outcome": "inconclusive",
+      "paper_blocks": [],
+      "source": {
+        "locator": "hypotheses[4]",
+        "path": "implementations/qmleeg-dru/QMLEEG-DRU/Results/discussion.json"
+      },
+      "status": {
+        "state": "present"
+      },
+      "type": "finding",
+      "verdict": "inconclusive"
+    },
+    {
+      "detail": "Interleaved classical spatial-temporal feature extraction with quantum data re-uploading circuits for multichannel pediatric EEG classification and exact analytical gradient interpretability.; Observed: The work provides the first end-to-end benchmark of quantum data re-uploading on a full clinical 120-subject EEG cohort with rigorous non-inferiority comparisons against established deep neural baselines (EEGNet, ADHDeepNet), analytical barren plateau profiling, and electrophysiologically validated gradient topomaps.",
+      "discussion_status": "complete",
+      "experiment": "",
+      "id": "finding:novelty",
+      "label": "novelty: justified",
+      "observed": "The work provides the first end-to-end benchmark of quantum data re-uploading on a full clinical 120-subject EEG cohort with rigorous non-inferiority comparisons against established deep neural baselines (EEGNet, ADHDeepNet), analytical barren plateau profiling, and electrophysiologically validated gradient topomaps.",
+      "outcome": "supported",
+      "paper_blocks": [],
+      "source": {
+        "locator": "novelty",
+        "path": "implementations/qmleeg-dru/QMLEEG-DRU/Results/discussion.json"
+      },
+      "status": {
+        "state": "present"
+      },
+      "type": "finding",
+      "verdict": "justified"
+    },
+    {
+      "detail": "This work introduced the hybrid quantum-classical data re-uploading network (Hybrid DRU), a classifier for electroencephalography (EEG) screening of Attention Deficit Hyperactivity Disorder (ADHD). It contributed two components: Circular Data Re-Uploading (CDRU), which re-uploads four convolutional features with unit-scale encoding into a ring-entangled circuit so that depth alone fixes its accessible frequencies, and Analytical Saliency via Parameter-Shift Backpropagation, which carries the exact derivative of every qubit expectation through the convolutional front-end to each electrode. Unlike post-hoc attribution methods, the proposed Hybrid DRU takes its channel attributions from the exact gradients of the trained model, without surrogate models or input perturbation, and its expressivity is known before training rather than measured after it.",
+      "id": "conclusion:conclusions.concl-block-1",
+      "label": "This work introduced the hybrid quantum-classical data re-uploading network (Hybrid DRU), a classifier for electroencephalography (EEG) screening of Attention Deficit Hyperactivity Disorder (ADHD).",
+      "paper_blocks": [
+        "conclusions.concl-block-1"
+      ],
+      "source": {
+        "locator": "conclusions.concl-block-1",
+        "path": "paper/main.tex"
+      },
+      "status": {
+        "state": "present"
+      },
+      "type": "conclusion"
+    },
+    {
+      "detail": "On the general task, the Hybrid DRU matched but did not surpass its comparators. Evaluated subject-wise on 120 children, its balanced accuracy was statistically indistinguishable from those of the single-upload and linear readouts and of EEGNet, and non-inferiority to EEGNet could not be established. A recording-duration control came close to every network, leaving an EEG classifier only a small margin to claim on this cohort. The model operated at a higher sensitivity than EEGNet at the cost of specificity, without a better ranking of the children. Circular Data Re-Uploading delivered the expressivity it promises where that expressivity is known to matter. On synthetic EEG whose class depends on the second harmonic of one feature, three uploads outperformed a single upload in every paired replicate, while the parameterization stayed close to that of EEGNet and far below that of ADHDeepNet. On the clinical cohort, neither re-uploading, nor the entangling ring, nor additional depth improved accuracy, and gradient variance decreased only slightly across depth, without the collapse of a barren plateau. The capacity CDRU adds is therefore verified but is not what limits accuracy on these data. The analytical saliency localized the decisions of the model on the frontal scalp. The saliency energy of the fronto-central electrodes exceeded that of the temporal-occipital ones in every child with ADHD, in both the Theta and the Beta band, with its maximum at a left-frontal electrode. The learned features did not correlate with the Theta/Beta biomarkers reported for ADHD, and no faithfulness measure was computed, so this localization describes where the trained model is sensitive rather than which electrodes cause its decisions.",
+      "id": "conclusion:conclusions.concl-block-2",
+      "label": "On the general task, the Hybrid DRU matched but did not surpass its comparators.",
+      "paper_blocks": [
+        "conclusions.concl-block-2"
+      ],
+      "source": {
+        "locator": "conclusions.concl-block-2",
+        "path": "paper/main.tex"
+      },
+      "status": {
+        "state": "present"
+      },
+      "type": "conclusion"
+    },
+    {
+      "detail": "For clinicians and reviewers, the consequence is a screening model whose sensitivity can be traced to electrodes and whose reported performance is a property of unseen children rather than of recordings the model has already seen. Accuracies reported on this cohort from epoch-level rather than subject-level splits, or without a check of what recording duration alone predicts, should be read with caution.",
+      "id": "conclusion:conclusions.concl-block-3",
+      "label": "For clinicians and reviewers, the consequence is a screening model whose sensitivity can be traced to electrodes and whose reported performance is a property of unseen children rather than of recordings the model has already seen.",
+      "paper_blocks": [
+        "conclusions.concl-block-3"
+      ],
+      "source": {
+        "locator": "conclusions.concl-block-3",
+        "path": "paper/main.tex"
+      },
+      "status": {
+        "state": "present"
+      },
+      "type": "conclusion"
+    },
+    {
+      "detail": "Future work follows three directions motivated by the limitations of this study. First, deeper re-uploading circuits will be trained with local cost functions, which keep gradients measurable in parameterized circuits , to relax the depth bound of the present model. Second, the circuit will be executed on physical quantum processors, estimating the parameter-shift gradients behind the saliency maps from finite measurement shots , to test whether the attributions survive hardware noise. Third, the model will be validated on independent multi-center cohorts with different montages and acquisition protocols, following the external-validation practice recommended for clinical machine learning . Together, these directions would carry the method from a simulated single-cohort study towards clinical screening.",
+      "id": "conclusion:conclusions.concl-block-4",
+      "label": "Future work follows three directions motivated by the limitations of this study.",
+      "paper_blocks": [
+        "conclusions.concl-block-4"
+      ],
+      "source": {
+        "locator": "conclusions.concl-block-4",
+        "path": "paper/main.tex"
+      },
+      "status": {
+        "state": "present"
+      },
+      "type": "conclusion"
+    }
+  ],
+  "schema": "papersmith.manuscript-graph/v1",
+  "summary": {
+    "counts": {
+      "base_concept": 9,
+      "conclusion": 4,
+      "experiment": 5,
+      "finding": 6,
+      "hypothesis": 5,
+      "novelty_concept": 10,
+      "pillar": 3,
+      "problem": 1,
+      "sota": 58,
+      "topic": 1
+    },
+    "edges": 24,
+    "missing": []
+  }
+}

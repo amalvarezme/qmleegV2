@@ -1,0 +1,407 @@
+{
+  "schema": 1,
+  "ideas": {
+    "pillar:C1": [
+      {
+        "id": "1912.08278",
+        "why": "Augments a pre-trained classical network with a final variational circuit that takes a select set of informative features, the compression pattern used here. This work trains its backbone end to end instead."
+      },
+      {
+        "id": "2407.19214",
+        "why": "Integrates quantum layers with the classical EEGNet architecture for EEG, showing a convolutional EEG front end feeding a quantum stage."
+      },
+      {
+        "id": "1611.08024",
+        "why": "Provides the compact convolutional EEG model with depthwise and separable convolutions that informs a small spatial-temporal encoder."
+      }
+    ],
+    "pillar:C2": [
+      {
+        "id": "1907.02085",
+        "why": "Introduces data re-uploading as series of re-uploading and processing units. Its abstract credits entanglement with efficiency, while its body reports that effect varies by problem."
+      },
+      {
+        "id": "2008.08605",
+        "why": "Shows quantum models are partial Fourier series whose accessible frequencies are set by the data-encoding gates, and that repeating encoding enriches the spectrum: the basis of the degree-L claim."
+      },
+      {
+        "id": "2505.20337",
+        "why": "With limited qubits and high-dimensional data, performance degrades as encoding layers carrying distinct data chunks grow, which motivates compressing the input to four features. Its layers are chunks, not this work's repetitions of the same features."
+      },
+      {
+        "id": "quant-ph/0005013",
+        "why": "Describes a four-qubit pure state with maximally mixed single-qubit marginals whose average entanglement as two pairs appears maximal. The abstract does not itself state the limit the protocol attributes to it; that rests on the full text, not ingested here."
+      }
+    ],
+    "pillar:C3": [
+      {
+        "id": "1611.08024",
+        "why": "Computes single-trial feature relevance with DeepLIFT, a gradient-based attribution, to interpret an EEG network. A classical precedent only: it does not cover quantum gradients."
+      },
+      {
+        "id": "2509.08779",
+        "why": "Analyses learned weights and activation patterns to identify key brain regions and frequency bands for ADHD, the same interpretability goal by a different method."
+      },
+      {
+        "id": "10.3390/math13244026",
+        "why": "Reports interpretable spatial attention patterns consistent with ADHD-related neurophysiological findings, supporting the demand for spatially auditable EEG decisions."
+      },
+      {
+        "id": "1312.6034",
+        "why": "Computes a class saliency map from the gradient of the class score with respect to the input, the classical origin of this input-gradient map. Stated for images, not EEG."
+      },
+      {
+        "id": "1811.11184",
+        "why": "In many important instances, gradients of expectation values come from running the circuit twice with one gate parameter shifted, the quantum factor of the saliency. Here x_k enters L gates, so each derivative needs one such pair per gate."
+      }
+    ],
+    "hypothesis:E1": [
+      {
+        "id": "1907.02085",
+        "why": "Motivates re-uploading over a single encoding: repeated uploading gives a universal classifier even on one qubit, though it does not test EEG or an identical-feature comparison."
+      },
+      {
+        "id": "2407.19214",
+        "why": "Reports a hybrid quantum EEG model outperforming EEGNet on most subjects of BCI IV 2a while noting results might not always surpass traditional methods."
+      },
+      {
+        "id": "2403.07059",
+        "why": "Counter-evidence that sets the bar: out-of-the-box classical models overall outperform the quantum classifiers tested, which is why the hypothesis is tested against classical controls."
+      },
+      {
+        "id": "1803.00745",
+        "why": "Proposes a hybrid scheme in which a low-depth tunable circuit approximates nonlinear functions, supporting the nonlinear capacity claimed. It does not address EEG."
+      }
+    ],
+    "hypothesis:E2": [
+      {
+        "id": "1907.02085",
+        "why": "The abstract states entanglement enhances the multi-qubit classifier's efficiency, but the body is mixed: it does not change results on some problems and improves them significantly on others."
+      },
+      {
+        "id": "2403.07059",
+        "why": "Overall, removing entanglement often gives as good or better performance, but it lowers test accuracy for the DataReuploadingClassifier and shows no drop for the Dressed model. The ablation is therefore open for this model family and needs a separable arm."
+      },
+      {
+        "id": "2407.19214",
+        "why": "Uses a ring pattern of CNOT gates in a quantum EEG layer, a precedent for the circular topology, without an ablation of it."
+      },
+      {
+        "id": "quant-ph/0005013",
+        "why": "Describes a four-qubit pure state with maximally mixed single-qubit marginals whose average entanglement as two pairs appears maximal. The abstract does not itself state the limit the protocol attributes to it; that rests on the full text, not ingested here."
+      }
+    ],
+    "hypothesis:E3": [
+      {
+        "id": "2008.08605",
+        "why": "Supports the first half: repeating simple encoding gates lets models access increasingly rich frequency spectra."
+      },
+      {
+        "id": "2505.20337",
+        "why": "Studies depth in re-uploading: performance degrades with layers carrying distinct data chunks, and P repetitions cannot repair it. This work's L repeats the same four features, closer to its P, so this is context for the sweep, not a prediction of it."
+      },
+      {
+        "id": "1803.11173",
+        "why": "Shows that for a wide class of parameterized circuits the probability of a non-zero gradient at fixed precision is exponentially small in the qubit count. Stated for random circuits on more than a few qubits, so its reach at 4 qubits is what this work measures."
+      }
+    ],
+    "hypothesis:E4": [
+      {
+        "id": "1611.08024",
+        "why": "Precedent for attributing EEG decisions with gradient-based relevance. It does not address the parameter-shift rule or ADHD."
+      },
+      {
+        "id": "2509.08779",
+        "why": "Identifies key brain regions and frequency bands for ADHD from a trained model, the kind of claim this hypothesis checks at fronto-central sites."
+      },
+      {
+        "id": "2412.02695",
+        "why": "Reports salient frontopolar, parietal and occipital regions for ADHD, partial and mixed support: frontopolar sites agree, but posterior sites also appear."
+      },
+      {
+        "id": "1811.11184",
+        "why": "In many important instances, gradients of expectation values come from running the circuit twice with one gate parameter shifted, the quantum factor of the saliency. Here x_k enters L gates, so each derivative needs one such pair per gate."
+      },
+      {
+        "id": "10.1177/1087054712460087",
+        "why": "Meta-analysis at Cz in ages 6-18: excess Theta/Beta ratio cannot be considered a reliable diagnostic measure of ADHD, though it has prognostic value in a sub-group. It bounds how far a Theta/Beta contrast may be read."
+      }
+    ],
+    "hypothesis:E5": [
+      {
+        "id": "2008.08605",
+        "why": "Accessible frequencies are determined by the encoding gates, which grounds the prediction that one encoding cannot represent a rule needing frequency two in a feature."
+      },
+      {
+        "id": "1907.02085",
+        "why": "Shows added re-uploading layers let a classifier capture shapes one layer cannot, such as a circle after a half-plane split."
+      },
+      {
+        "id": "2403.07059",
+        "why": "Generates synthetic benchmarks that each vary the dimension or a parameter, with control of important variables, the controlled design this experiment follows."
+      }
+    ],
+    "layer:Layer 1: EEG inputs": [
+      {
+        "id": "2509.08779",
+        "why": "Works on 121 participants (61 ADHD, 60 controls) with C = 19 EEG channels, matching this layer's input."
+      },
+      {
+        "id": "10.3390/technologies14070392",
+        "why": "Describes 19 scalp electrodes in the international 10-20 montage with subject-independent partitions."
+      },
+      {
+        "id": "10.3390/math11224698",
+        "why": "Uses raw EEG from 61 individuals with ADHD and 60 controls during a visual attention task."
+      }
+    ],
+    "layer:Layer 2: Classical spatial-temporal backbone": [
+      {
+        "id": "1611.08024",
+        "why": "Compact convolutional EEG network encapsulating known feature-extraction concepts, the reference for a convolutional encoder."
+      },
+      {
+        "id": "1912.08278",
+        "why": "Places a classical network before a variational circuit to embed a few informative features into the quantum processor."
+      },
+      {
+        "id": "2603.28122",
+        "why": "Pairs a pretrained EEG encoder with a quantum classifier, a recent EEG instance of a classical front end. Its encoder is pretrained, unlike this one."
+      }
+    ],
+    "layer:Layer 3: Circular DRU quantum circuit": [
+      {
+        "id": "1907.02085",
+        "why": "Source of the layered data re-uploading circuit with entanglement across qubits."
+      },
+      {
+        "id": "2008.08605",
+        "why": "Gives the Fourier reading of repeated encoding that this layer's expressivity relies on."
+      },
+      {
+        "id": "2407.19214",
+        "why": "Uses a ring pattern of CNOT gates in an EEG quantum layer, the closed ring of this circuit."
+      }
+    ],
+    "layer:Layer 4: Readout and objective": [
+      {
+        "id": "2407.19214",
+        "why": "Measures the Pauli-Z expectation of each qubit as the quantum layer's output."
+      },
+      {
+        "id": "2403.07059",
+        "why": "Describes expectation values post-processed classically for prediction, and argues cross entropy is the natural classification loss. Subject weighting is this proposal's own choice."
+      },
+      {
+        "id": "2505.20337",
+        "why": "Trains data re-uploading models with a cross-entropy loss on expectation-value outputs."
+      }
+    ],
+    "layer:Layer 5: Clinical interpretability": [
+      {
+        "id": "1611.08024",
+        "why": "Gradient-based single-trial relevance on EEG features, a classical precedent for a per-channel, per-time map."
+      },
+      {
+        "id": "2509.08779",
+        "why": "Links a trained model to key brain regions and frequency bands for ADHD, the biomarker reading this layer contrasts post hoc."
+      },
+      {
+        "id": "1312.6034",
+        "why": "Computes a class saliency map from the gradient of the class score with respect to the input, the classical origin of this input-gradient map. Stated for images, not EEG."
+      },
+      {
+        "id": "1811.11184",
+        "why": "In many important instances, gradients of expectation values come from running the circuit twice with one gate parameter shifted, the quantum factor of the saliency. Here x_k enters L gates, so each derivative needs one such pair per gate."
+      },
+      {
+        "id": "10.1177/1087054712460087",
+        "why": "Meta-analysis at Cz in ages 6-18: excess Theta/Beta ratio cannot be considered a reliable diagnostic measure of ADHD, though it has prognostic value in a sub-group. It bounds how far a Theta/Beta contrast may be read."
+      }
+    ],
+    "equation:1": [
+      {
+        "id": "1912.08278",
+        "why": "Embeds a select set of informative classical features into a quantum processor, the role of the map to d = N_q features. It does not state the tanh bound."
+      },
+      {
+        "id": "2403.07059",
+        "why": "Describes a classical network fed into a quantum circuit via angle embedding."
+      }
+    ],
+    "equation:2": [
+      {
+        "id": "1907.02085",
+        "why": "Organizes the circuit as a series of data re-uploading and processing units, the layered product of this equation."
+      },
+      {
+        "id": "2505.20337",
+        "why": "Writes the data re-uploading circuit as an ordered product of parameterized gates and data encoding gates over repetitions."
+      }
+    ],
+    "equation:3": [
+      {
+        "id": "1907.02085",
+        "why": "Its layer gate adds a parameter to the weighted data inside the rotation, the form of x_j + beta. It uses general SU(2) rotations, not only R_y."
+      },
+      {
+        "id": "2407.19214",
+        "why": "Encodes each input as a rotation about Y on its own qubit, the tensor-product R_y encoding used here."
+      }
+    ],
+    "equation:4": [
+      {
+        "id": "2505.20337",
+        "why": "Defines single-qubit rotations R_z and R_y and places trainable gates between encoding layers, with CNOT as a typical entangler."
+      },
+      {
+        "id": "2407.19214",
+        "why": "Combines trainable single-qubit rotations with CNOT entanglers in each layer. Its stated order is the ring and then a rotation, so it matches the ingredients, not the order."
+      }
+    ],
+    "equation:5": [
+      {
+        "id": "2407.19214",
+        "why": "Uses a ring pattern of CNOT gates, the closed ring of this equation."
+      },
+      {
+        "id": "2403.07059",
+        "why": "Describes one model, the Dressed classifier, with single-qubit Y rotations and CNOT gates applied in a ring pattern."
+      }
+    ],
+    "equation:6": [
+      {
+        "id": "2407.19214",
+        "why": "Measures the expectation value of Pauli-Z on each qubit, the same per-qubit quantity."
+      },
+      {
+        "id": "2505.20337",
+        "why": "Defines measurement outputs as expectation values Tr[H rho] of a Hermitian observable."
+      }
+    ],
+    "equation:7": [
+      {
+        "id": "2403.07059",
+        "why": "Describes hybrid models whose output expectation values are post-processed classically, of which a linear readout is a simple case."
+      },
+      {
+        "id": "2407.19214",
+        "why": "Takes per-qubit Pauli-Z expectations as the output passed on from the quantum layer. It does not state this exact readout."
+      }
+    ],
+    "equation:8": [
+      {
+        "id": "2403.07059",
+        "why": "Argues cross entropy is a natural classification loss, as the maximum likelihood estimator. It says nothing of per-subject weights, which are this proposal's own."
+      },
+      {
+        "id": "1611.08024",
+        "why": "Trains an EEG network by minimizing categorical cross-entropy. No per-subject weighting is stated."
+      }
+    ],
+    "equation:9": [
+      {
+        "id": "1611.08024",
+        "why": "Uses gradient-based relevance per EEG feature on single trials, a classical precedent. This exact channel-time formula is the proposal's own."
+      },
+      {
+        "id": "1312.6034",
+        "why": "Computes a class saliency map from the gradient of the class score with respect to the input, the classical origin of this input-gradient map. Stated for images, not EEG. The channel-time form here is the proposal's own."
+      },
+      {
+        "id": "1811.11184",
+        "why": "In many important instances, gradients of expectation values come from running the circuit twice with one gate parameter shifted, the quantum factor of the saliency. Here x_k enters L gates, so each derivative needs one such pair per gate."
+      }
+    ],
+    "experiment:E1": [
+      {
+        "id": "1611.08024",
+        "why": "Source of the EEGNet reference arm."
+      },
+      {
+        "id": "2509.08779",
+        "why": "Source of the ADHDeepNet reference arm, on a dataset of 121 participants with cross-subject validation meant to avoid leakage."
+      },
+      {
+        "id": "2403.07059",
+        "why": "Warns that experimental design shapes quantum benchmark results and that classical models often win, which justifies classical controls."
+      },
+      {
+        "id": "10.3390/technologies14070392",
+        "why": "Precedent for strict subject-independent group partitions and statistical comparisons on ADHD EEG."
+      }
+    ],
+    "experiment:E2": [
+      {
+        "id": "2403.07059",
+        "why": "Overall, removing entanglement often gives as good or better performance, but it lowers test accuracy for the DataReuploadingClassifier and shows no drop for the Dressed model. The ablation is therefore open for this model family and needs a separable arm."
+      },
+      {
+        "id": "1907.02085",
+        "why": "Compares classifiers with and without entanglement, a precedent for this ablation. Its reported effect varies by problem."
+      },
+      {
+        "id": "2407.19214",
+        "why": "Precedent for the ring CNOT arm in an EEG model."
+      },
+      {
+        "id": "quant-ph/0005013",
+        "why": "Describes a four-qubit pure state with maximally mixed single-qubit marginals whose average entanglement as two pairs appears maximal. The abstract does not itself state the limit the protocol attributes to it; that rests on the full text, not ingested here."
+      }
+    ],
+    "experiment:E3": [
+      {
+        "id": "2505.20337",
+        "why": "Studies depth in re-uploading: performance degrades with layers carrying distinct data chunks, and P repetitions cannot repair it. This work's L repeats the same four features, closer to its P, so this is context for the sweep, not a prediction of it."
+      },
+      {
+        "id": "2008.08605",
+        "why": "Repeated encoding enlarges the accessible spectrum, the expressivity side of the depth trade-off."
+      },
+      {
+        "id": "1803.11173",
+        "why": "Shows that for a wide class of parameterized circuits the probability of a non-zero gradient at fixed precision is exponentially small in the qubit count. Stated for random circuits on more than a few qubits, so its reach at 4 qubits is what this work measures."
+      },
+      {
+        "id": "1803.00745",
+        "why": "Reports that iterative tuning of parameters allows a hybrid scheme to circumvent high-depth circuits."
+      }
+    ],
+    "experiment:E4": [
+      {
+        "id": "1611.08024",
+        "why": "Precedent for gradient-based single-trial relevance on EEG."
+      },
+      {
+        "id": "2509.08779",
+        "why": "Precedent for extracting brain regions and frequency bands from an ADHD EEG model."
+      },
+      {
+        "id": "1312.6034",
+        "why": "Computes a class saliency map from the gradient of the class score with respect to the input, the classical origin of this input-gradient map. Stated for images, not EEG."
+      },
+      {
+        "id": "1811.11184",
+        "why": "In many important instances, gradients of expectation values come from running the circuit twice with one gate parameter shifted, the quantum factor of the saliency. Here x_k enters L gates, so each derivative needs one such pair per gate."
+      },
+      {
+        "id": "10.1177/1087054712460087",
+        "why": "Meta-analysis at Cz in ages 6-18: excess Theta/Beta ratio cannot be considered a reliable diagnostic measure of ADHD, though it has prognostic value in a sub-group. It bounds how far a Theta/Beta contrast may be read."
+      }
+    ],
+    "experiment:E5": [
+      {
+        "id": "2008.08605",
+        "why": "Encoding gates fix the accessible frequencies, which predicts the frequency-two rule's outcome."
+      },
+      {
+        "id": "2403.07059",
+        "why": "Generates synthetic benchmarks that each vary the dimension or a parameter, with control of important variables, the controlled design this experiment follows."
+      },
+      {
+        "id": "2505.20337",
+        "why": "Validates its findings on synthetic datasets as well as real data, a precedent for a synthetic check of re-uploading models."
+      }
+    ]
+  }
+}

@@ -171,6 +171,6 @@
   },
   "contribution_type": {
     "type": "Use-Inspired",
-    "why": "The novelty claimed is applying known DRU math to pediatric ADHD EEG, not a new method or proof. Eqs. 2-5 and the degree-L Fourier spectrum restate Perez-Salinas (1904.04767) and Schuld et al. (2021); what is new is fitting the design to the clinical use: the subject-weighted BCE of Eq. 8 matches the subject-level diagnosis, and E4/Eq. 9 audit saliency on fronto-central sites (Fp1-Cz) on the 121-subject IEEE Dataport cohort."
+    "why": "What is new is fitting known parts to subject-level pediatric ADHD diagnosis, not a method or a proof: Eqs. 2-7 reuse the re-uploading of 1907.02085, the spectrum of 2008.08605 and the CNOT ring of 2407.19214, and no theorem is claimed. The use-specific parts are Eq. 8's subject-weighted loss and E4/Eq. 9's fronto-central audit, and E1 decides the claim on unseen subjects. No pool abstract applies a hybrid quantum model to ADHD EEG, and E5 is a synthetic capacity check, not the contribution."
   }
 }
