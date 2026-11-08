@@ -9,7 +9,7 @@
  * this workspace, a placeholder of the neutral specification for instance, and
  * draws nothing. Every value is escaped before insertion.
  *
- * Public surface (window.Citations): load(), block(key), mark(key), onChange(fn).
+ * Public surface (window.Citations): load(), block(key), mark(key), trees(), onChange(fn).
  */
 (function () {
   'use strict';
@@ -21,6 +21,7 @@
   })[c]);
 
   let ideas = new Map();
+  let trees = [];
   let pending = null;
   const listeners = [];
 
@@ -28,7 +29,9 @@
 
   function entry(c) {
     const year = c.year ? ` <span style="color: var(--text-dim);">(${esc(c.year)})</span>` : '';
-    return `<li style="margin-top: 0.25rem;"><strong>${esc(c.title || c.id)}</strong>${year}
+    const lab = c.lab ? ` <span class="badge">${esc(c.lab)}</span>` : '';
+    // The reference opens on the SOTA constellation (atlas-reference.js).
+    return `<li style="margin-top: 0.25rem;"><button type="button" class="cite-link" data-atlas-ref="${esc(c.id)}" title="${esc(t('citations.openInAtlas'))}"><strong>${esc(c.title || c.id)}</strong></button>${year}${lab}
         ${c.why ? `<span style="color: var(--text-muted);"> — ${esc(c.why)}</span>` : ''}</li>`;
   }
 
@@ -54,6 +57,7 @@
       if (!res.ok) return;
       const body = await res.json();
       ideas = new Map((body.ideas || []).map((idea) => [idea.key, idea]));
+      trees = Array.isArray(body.trees) ? body.trees : [];
       listeners.forEach((fn) => fn());
     } catch (_) { /* offline: keep what is shown */ }
   }
@@ -65,5 +69,5 @@
     return pending;
   }
 
-  window.Citations = { load, block, mark, onChange: (fn) => { listeners.push(fn); } };
+  window.Citations = { load, block, mark, trees: () => trees, onChange: (fn) => { listeners.push(fn); } };
 })();

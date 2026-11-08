@@ -127,18 +127,18 @@
     }
   ],
   "generated_from": {
-    ".papersmith/model_spec.json": "dd936a1a3046911d5551885469e0c3e99394619308dbbb9922c1f1e92867edb9",
+    ".papersmith/model_spec.json": "e0e5570b5e2b8e3f5e12cb6ff1d6c2710d78280b136271de71827098d5454cea",
     "experiments/experiments-hybrid-quantum-classical-neural-network-with-data-re-uploadi-v10.md": "1dafc665b1eb01f711918a44ae730e44d189f02e5a8159583b30ae38ffffe2d5",
-    "implementations/poc/QMLEEG-DRU-POC/Results/discussion.json": "e938e70c950212d397e2355e71518ec573d87bdf787a4dfa08fe0d3fc958d1d7",
-    "implementations/qmleeg-dru/QMLEEG-DRU/Results/discussion.json": "d72411f1f615e402703dfd530756b2e5cda3b6d126286b9e13739fbde18865e8",
+    "implementations/poc/QMLEEG-DRU-POC/Results/discussion.json": "7e7354fd2cd8fff139671c954e6eddab901f89d7c759fd6a77074f6c00f5668b",
+    "implementations/qmleeg-dru/QMLEEG-DRU/Results/discussion.json": "7e0909eb9a30cc877d30a3304031b2870deb63c7a11a731def2441ea4e4026df",
     "paper/couplings.json": "92c7da4c2b613453cca46f7ef1d3a11fe33fe55367b11e7bbadeba0e68fdb88f",
     "paper/main.tex": "ec45d8e3d5dd4d540554c861421bb918e80d2744d7ed14738d77ae4af2cc94e5",
     "paper/refs.bib": "25c50e230b62911823168d3d47e6d5bcde4c9d16d1169f76b1d8ca91d0904583",
-    "papersmith.yaml": "59808a1bb7844caedc4445b880a052ed42c53e2cfc5e53816e6d6f4f52c92667",
+    "papersmith.yaml": "777ec8c07454df281360fd61ad4d899fda1b4dd6ea957c3ef6e3b10aa75c4d29",
     "proposals/research-concept-hybrid-quantum-classical-neural-network-with-data-re-uploadi-r04.md": "217f66e588d295f7b1931bb26ee165041a7e2081f12bd595ad80a7638cba5ac9",
     "proposals/research-concept-hybrid-quantum-classical-neural-network-with-data-re-uploadi-r04.sky.json": "3b4f8e820b493f3b36417068c9f11cbaf15b7c2f6de25f26f08dad258c8cdf94",
-    "sota-pool/atlas.json": "d1ff644b313885960098ca82b946c7ac6bd8055ae596ee04ec4805ee7a44e085",
-    "sota-pool/candidates.json": "357e19da8b90259f8cc19bb6cbc22d307ff3cbb64f5e88a87e9c5b0cd8338af4"
+    "sota-pool/atlas.json": "65000aeee9019099f6dc0b2bd4ab7dcc7e9084fd940dda18fd75dcf3dbb1cd16",
+    "sota-pool/candidates.json": "be97bf1936bca2a940995bc2b5a54e5efb452bd842095c8362309938949c296d"
   },
   "nodes": [
     {
@@ -351,6 +351,57 @@
     },
     {
       "cite_keys": [
+        "mcclean2018barren"
+      ],
+      "detail": "",
+      "id": "sota:barren-plateaus",
+      "label": "Barren plateaus in quantum neural network training landscapes",
+      "paper_blocks": [],
+      "source": {
+        "locator": "systems[barren-plateaus]",
+        "path": "sota-pool/atlas.manuscript.json"
+      },
+      "status": {
+        "state": "present"
+      },
+      "type": "sota"
+    },
+    {
+      "cite_keys": [
+        "mitarai2018quantum"
+      ],
+      "detail": "",
+      "id": "sota:qcl",
+      "label": "Quantum Circuit Learning",
+      "paper_blocks": [],
+      "source": {
+        "locator": "systems[qcl]",
+        "path": "sota-pool/atlas.manuscript.json"
+      },
+      "status": {
+        "state": "present"
+      },
+      "type": "sota"
+    },
+    {
+      "cite_keys": [
+        "simonyan2013deep"
+      ],
+      "detail": "",
+      "id": "sota:saliency-maps",
+      "label": "Deep Inside Convolutional Networks: Visualising Image Classification Models and Saliency Maps",
+      "paper_blocks": [],
+      "source": {
+        "locator": "systems[saliency-maps]",
+        "path": "sota-pool/atlas.manuscript.json"
+      },
+      "status": {
+        "state": "present"
+      },
+      "type": "sota"
+    },
+    {
+      "cite_keys": [
         "abbas2021power"
       ],
       "detail": "",
@@ -391,7 +442,7 @@
       ],
       "detail": "",
       "id": "sota:cite:akiba2019optuna",
-      "label": "akiba2019optuna",
+      "label": "{Optuna}: A Next-generation Hyperparameter Optimization Framework",
       "outside_pool": true,
       "paper_blocks": [],
       "source": {
@@ -427,7 +478,7 @@
       ],
       "detail": "",
       "id": "sota:cite:altman1995absence",
-      "label": "altman1995absence",
+      "label": "Statistics notes: Absence of evidence is not evidence of absence",
       "outside_pool": true,
       "paper_blocks": [],
       "source": {
@@ -535,7 +586,7 @@
       ],
       "detail": "",
       "id": "sota:cite:brodersen2010balanced",
-      "label": "brodersen2010balanced",
+      "label": "The Balanced Accuracy and Its Posterior Distribution",
       "outside_pool": true,
       "paper_blocks": [],
       "source": {
@@ -553,7 +604,7 @@
       ],
       "detail": "",
       "id": "sota:cite:brookshire2024leakage",
-      "label": "brookshire2024leakage",
+      "label": "Data leakage in deep learning studies of translational {EEG}",
       "outside_pool": true,
       "paper_blocks": [],
       "source": {
@@ -571,7 +622,7 @@
       ],
       "detail": "",
       "id": "sota:cite:caro2022generalization",
-      "label": "caro2022generalization",
+      "label": "Generalization in quantum machine learning from few training data",
       "outside_pool": true,
       "paper_blocks": [],
       "source": {
@@ -661,7 +712,7 @@
       ],
       "detail": "",
       "id": "sota:cite:delong1988comparing",
-      "label": "delong1988comparing",
+      "label": "Comparing the Areas under Two or More Correlated Receiver Operating Characteristic Curves: A Nonparametric Approach",
       "outside_pool": true,
       "paper_blocks": [],
       "source": {
@@ -697,7 +748,7 @@
       ],
       "detail": "",
       "id": "sota:cite:dien1998issues",
-      "label": "dien1998issues",
+      "label": "Issues in the application of the average reference: Review, critiques, and recommendations",
       "outside_pool": true,
       "paper_blocks": [],
       "source": {
@@ -715,7 +766,7 @@
       ],
       "detail": "",
       "id": "sota:cite:dietterich1998approximate",
-      "label": "dietterich1998approximate",
+      "label": "Approximate Statistical Tests for Comparing Supervised Classification Learning Algorithms",
       "outside_pool": true,
       "paper_blocks": [],
       "source": {
@@ -733,7 +784,7 @@
       ],
       "detail": "",
       "id": "sota:cite:fawcett2006roc",
-      "label": "fawcett2006roc",
+      "label": "An introduction to {ROC} analysis",
       "outside_pool": true,
       "paper_blocks": [],
       "source": {
@@ -891,42 +942,6 @@
     },
     {
       "cite_keys": [
-        "mcclean2018barren"
-      ],
-      "detail": "",
-      "id": "sota:cite:mcclean2018barren",
-      "label": "Barren plateaus in quantum neural network training landscapes",
-      "outside_pool": true,
-      "paper_blocks": [],
-      "source": {
-        "locator": "mcclean2018barren",
-        "path": "paper/refs.bib"
-      },
-      "status": {
-        "state": "present"
-      },
-      "type": "sota"
-    },
-    {
-      "cite_keys": [
-        "mitarai2018quantum"
-      ],
-      "detail": "",
-      "id": "sota:cite:mitarai2018quantum",
-      "label": "Quantum circuit learning",
-      "outside_pool": true,
-      "paper_blocks": [],
-      "source": {
-        "locator": "mitarai2018quantum",
-        "path": "paper/refs.bib"
-      },
-      "status": {
-        "state": "present"
-      },
-      "type": "sota"
-    },
-    {
-      "cite_keys": [
         "nadeau2003inference"
       ],
       "detail": "",
@@ -967,7 +982,7 @@
       ],
       "detail": "",
       "id": "sota:cite:prechelt1998early",
-      "label": "prechelt1998early",
+      "label": "Early Stopping - But When?",
       "outside_pool": true,
       "paper_blocks": [],
       "source": {
@@ -1089,29 +1104,11 @@
     },
     {
       "cite_keys": [
-        "simonyan2013deep"
-      ],
-      "detail": "",
-      "id": "sota:cite:simonyan2013deep",
-      "label": "Deep inside convolutional networks: Visualising image classification models and saliency maps",
-      "outside_pool": true,
-      "paper_blocks": [],
-      "source": {
-        "locator": "simonyan2013deep",
-        "path": "paper/refs.bib"
-      },
-      "status": {
-        "state": "present"
-      },
-      "type": "sota"
-    },
-    {
-      "cite_keys": [
         "snoek2019confounds"
       ],
       "detail": "",
       "id": "sota:cite:snoek2019confounds",
-      "label": "snoek2019confounds",
+      "label": "How to control for confounds in decoding analyses of neuroimaging data",
       "outside_pool": true,
       "paper_blocks": [],
       "source": {
@@ -1183,7 +1180,7 @@
       ],
       "detail": "",
       "id": "sota:cite:varma2006bias",
-      "label": "varma2006bias",
+      "label": "Bias in error estimation when using cross-validation for model selection",
       "outside_pool": true,
       "paper_blocks": [],
       "source": {
@@ -1201,7 +1198,7 @@
       ],
       "detail": "",
       "id": "sota:cite:varoquaux2018cross",
-      "label": "varoquaux2018cross",
+      "label": "Cross-validation failure: Small sample sizes lead to large error bars",
       "outside_pool": true,
       "paper_blocks": [],
       "source": {
@@ -1255,7 +1252,7 @@
       ],
       "detail": "",
       "id": "sota:cite:walker2011noninferiority",
-      "label": "walker2011noninferiority",
+      "label": "Understanding Equivalence and Noninferiority Testing",
       "outside_pool": true,
       "paper_blocks": [],
       "source": {
@@ -1273,7 +1270,7 @@
       ],
       "detail": "",
       "id": "sota:cite:widmann2015digital",
-      "label": "widmann2015digital",
+      "label": "Digital filter design for electrophysiological data – a practical approach",
       "outside_pool": true,
       "paper_blocks": [],
       "source": {

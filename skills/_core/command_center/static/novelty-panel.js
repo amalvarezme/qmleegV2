@@ -221,7 +221,7 @@
     const tone = state === 'approved' ? 'ok' : (state === 'iterating' ? 'info' : 'warn');
     const pocHypotheses = (data.hypotheses || []).filter((h) => h && h.stage === 'poc');
     return `
-      <section id="noveltyPocVerify" class="panel" style="border: 2px solid var(--${state === 'approved' ? 'ok' : 'accent'}); margin-bottom: 1.5rem; background: var(--surface);">
+      <section data-fold="novelty:poc" data-fold-title="novelty.poc.title" data-fold-open id="noveltyPocVerify" class="panel" style="border: 2px solid var(--${state === 'approved' ? 'ok' : 'accent'}); margin-bottom: 1.5rem; background: var(--surface);">
         <div class="panel__header">
           <div class="panel__title" style="font-size:1.05rem; font-weight:700; color:var(--text);">🧪 ${esc(t('novelty.poc.title', 'Verify the proof of concept'))}</div>
           <span class="badge badge--${tone}">${esc(t(POC_STATE_KEYS[state]))}</span>
@@ -276,7 +276,7 @@
     // SUBSECTION 4: DECISION GATE CARD (Highlighted at top)
     // ----------------------------------------------------
     html += `
-      <section class="panel" style="border: 2px solid ${status === 'approved' ? 'var(--ok)' : 'var(--accent)'}; margin-bottom: 1.5rem; background: var(--surface);">
+      <section data-fold="novelty:gate" data-fold-title="novelty.gate.title" data-fold-open class="panel" style="border: 2px solid ${status === 'approved' ? 'var(--ok)' : 'var(--accent)'}; margin-bottom: 1.5rem; background: var(--surface);">
         <div class="panel__header">
           <div class="panel__title" style="font-size:1.05rem; font-weight:700; color:var(--text);">
             🚪 ${t('novelty.gate.title', 'Novelty Decision Gate')}
@@ -331,7 +331,7 @@
     // ----------------------------------------------------
     const hypotheses = data.hypotheses || [];
     html += `
-      <section class="panel" style="margin-bottom: 1.5rem;">
+      <section data-fold="novelty:hypotheses" data-fold-title="novelty.hypotheses.title" class="panel" style="margin-bottom: 1.5rem;">
         <div class="panel__header">
           <div class="panel__title">
             1. ${t('novelty.hypotheses.title', 'Hypotheses vs. Empirical Evidence')}
@@ -390,7 +390,7 @@
     // NeurIPS contribution type the paper-reviewer read from the checked findings
     const ct = data.contribution_type;
     html += `
-      <section id="noveltyContributionType" class="panel" style="margin-bottom: 1.5rem;">
+      <section data-fold="novelty:contribution" data-fold-title="contribution.title" data-fold-open id="noveltyContributionType" class="panel" style="margin-bottom: 1.5rem;">
         <div class="panel__header">
           <div class="panel__title">${esc(t('contribution.title', 'NeurIPS contribution type'))}</div>
           ${ct && ct.product ? `<span class="panel__meta">${esc(ct.product)} · ${esc(ct.stage)}</span>` : ''}
@@ -399,6 +399,7 @@
           <div style="margin-top:0.75rem; font-size:0.9rem; line-height:1.5;">
             <span class="badge">${esc(t(CONTRIBUTION_TYPE_KEYS[ct.type], ct.type))}</span>
             <p style="margin-top:0.5rem;"><strong>${esc(t('contribution.why', 'Why:'))}</strong> ${esc(ct.why)}</p>
+            ${window.ContributionAffinity ? window.ContributionAffinity.html(ct) : ''}
           </div>` : `
           <p style="margin-top:0.75rem; font-size:0.85rem; color:var(--text-muted);">${esc(t('contribution.owed', 'paper-reviewer').replace('{artifact}', 'Results/discussion.json'))}</p>`}
         <div style="margin-top:0.6rem;">${judgeActions()}</div>
@@ -412,7 +413,7 @@
     const noveltyClaims = data.novelty_claims || [];
     const sobrietyItems = sobrietyListItems(data);
     html += `
-      <section class="panel" style="margin-bottom: 1.5rem;">
+      <section data-fold="novelty:sota" data-fold-title="novelty.sota.title" class="panel" style="margin-bottom: 1.5rem;">
         <div class="panel__header">
           <div class="panel__title">
             2. ${t('novelty.sota.title', 'Novelty Assessment & Scientific Sobriety vs. SOTA')}
@@ -420,7 +421,7 @@
           <span class="panel__meta">${sota.candidates_count || 0} ${t('novelty.sota.candidates_meta', 'candidates in SOTA pool')}</span>
         </div>
         <div style="padding: 0.75rem 0;">
-          <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap:1rem; margin-bottom:1rem;">
+          <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(min(300px, 100%), 1fr)); gap:1rem; margin-bottom:1rem;">
             <div style="background:var(--surface); border:1px solid var(--border); padding:1rem; border-radius:6px;">
               <div style="font-weight:700; color:var(--accent); margin-bottom:0.5rem;">🌟 ${t('novelty.sota.core_claim', 'Core Novelty Claims')}</div>
               ${noveltyClaims.length > 0 ? noveltyClaims.map(nc => `
@@ -451,7 +452,7 @@
     // ----------------------------------------------------
     const rigor = data.rigor_audit || [];
     html += `
-      <section class="panel" style="margin-bottom: 1.5rem;">
+      <section data-fold="novelty:rigor" data-fold-title="novelty.rigor.title" class="panel" style="margin-bottom: 1.5rem;">
         <div class="panel__header">
           <div class="panel__title">
             3. ${t('novelty.rigor.title', 'Scientific Rigor & Reviewer Defense Audit')}
@@ -459,7 +460,7 @@
           <span class="panel__meta">${t('novelty.rigor.meta', 'Adversarial defense')}</span>
         </div>
         <div style="padding: 0.75rem 0;">
-          <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap:0.75rem;">
+          <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(min(280px, 100%), 1fr)); gap:0.75rem;">
             ${rigor.map(r => `
               <div style="background:var(--surface); border:1px solid ${r.passed ? 'var(--ok)' : 'var(--warn)'}; padding:0.85rem; border-radius:6px;">
                 <div style="display:flex; align-items:center; gap:0.5rem; margin-bottom:0.4rem;">
@@ -494,6 +495,7 @@
     }
 
     root.innerHTML = html;
+    if (window.SectionFolds) window.SectionFolds.wrap(root);
   }
 
   // Export to window

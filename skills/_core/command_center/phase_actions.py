@@ -76,6 +76,7 @@ _WRITING_GUIDE = [
     "Name a block or an action: open the paper/ tree, see which writing phase is unlocked, or write a block.",
     "A block is written on its own: the agent never touches another byte of paper/main.tex.",
     "Every claim needs a source that holds it (resolve); without a source, nothing is written.",
+    "refs.bib comes from bib build; after citations change, run resolve --references to store each paper's abstract.",
     "Write in the paper's language; the register and style come from the declarations.",
 ]
 
@@ -135,7 +136,7 @@ ACTIONS: dict[str, dict[str, Any]] = {
                 "Ask for the first version, a change to the current proposal or a revision operation (rNN).",
                 "The agent is a tutor: it discusses before deciding and applies no change without your approval.",
                 "The mathematics goes in $$ … \\tag{N} $$ blocks; the novelty is placed inside the SOTA sky.",
-                "Every pillar, hypothesis, layer and numbered equation is justified by 2 to 5 references of the SOTA pool in .papersmith/citations.json.",
+                "The central problem, every direct cause, pillar, hypothesis, layer and numbered equation is justified by 2 to 5 references of the SOTA pool in .papersmith/citations.json; the problem, causes, pillars and hypotheses take Q1 or Q2 journal articles at most 4 years old.",
                 "The domain guides in guidance/paper-guide/ load on their own.",
             ], "E.g.: let us discuss whether hypothesis H2 still stands against the Smith 2024 reference."),
             _redirect("Discuss the concept map", "modelo",

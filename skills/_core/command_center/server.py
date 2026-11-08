@@ -40,7 +40,7 @@ from typing import Any, AsyncIterator, Callable
 from fastapi import FastAPI, Request
 from fastapi.responses import HTMLResponse, JSONResponse, Response, StreamingResponse
 
-from . import agents_view, ai_history, banco_suggest, ai_transcripts, atlas, atlas_build, atlas_manuscript, decisions, experiments_tutor, experiments_view, math_view, phase_actions, phase_steps, terminal, tutor, history, paper_preview, novelty_graph, model_spec, manuscript_graph
+from . import agents_view, ai_archive, ai_history, banco_suggest, ai_transcripts, atlas, atlas_build, atlas_manuscript, atlas_reference, decisions, experiments_tutor, experiments_view, math_view, phase_actions, phase_steps, terminal, tutor, history, paper_preview, novelty_graph, model_spec, manuscript_graph, paper_explorer
 from . import doctor_view, localize, toolchain
 from .health_inspector import get_wiring_health
 from .state_extractor import get_workspace_state, memo_by_file
@@ -1287,6 +1287,9 @@ def create_app(root: Path | str, *, debounce_ms: int = 300,
 
     @app.get("/api/status")
     def api_status_adapter() -> JSONResponse:
+        # The dashboard polls this route, so conversations reach the archive
+        # without the AI History tab being opened.
+        ai_archive.sync_in_background(root_path)
         import re
         from datetime import datetime, timezone
 
@@ -2714,6 +2717,14 @@ def create_app(root: Path | str, *, debounce_ms: int = 300,
         # `verify`, a successful compile, or `smith atlas cited`.
         return JSONResponse(atlas_manuscript.read_layer(root_path), headers=dict(_PAPER_HEADERS))
 
+    @app.get("/api/atlas/reference")
+    def api_atlas_reference(id: str = "") -> JSONResponse:
+        # Read-only: one cited reference's pool record and its constellation
+        # system (topic, problem, novelty...), for the citation buttons.
+        if not id.strip():
+            return JSONResponse({"error": "id is required"}, status_code=400)
+        return JSONResponse(atlas_reference.reference(root_path, id), headers=dict(_PAPER_HEADERS))
+
     @app.post("/api/atlas/manuscript/build")
     def api_atlas_manuscript_build(request: Request) -> JSONResponse:
         # Writes only sota-pool/atlas.manuscript.json (never atlas.json).
@@ -2734,6 +2745,12 @@ def create_app(root: Path | str, *, debounce_ms: int = 300,
         # changed since it was written. Written by `bib build`, `verify`, a
         # successful compile, `smith atlas summary` or the build route below.
         return JSONResponse(manuscript_graph.read_graph(root_path), headers=dict(_PAPER_HEADERS))
+
+    @app.get("/api/atlas/cited-papers")
+    def api_atlas_cited_papers() -> JSONResponse:
+        # Read-only: every paper the manuscript cites, joined live from
+        # main.tex, refs.bib, the SOTA pool, evidence and citations.json.
+        return JSONResponse(paper_explorer.cited_papers(root_path), headers=dict(_PAPER_HEADERS))
 
     @app.get("/api/atlas/manuscript-graph/view")
     def api_atlas_manuscript_graph_view(lang: str = "en") -> Response:
@@ -3720,14 +3737,25 @@ def create_app(root: Path | str, *, debounce_ms: int = 300,
 
     @app.get("/api/ai-history")
     def api_ai_history() -> JSONResponse:
-        # The AI History pane: each phase's gate, colour and timeline,
-        # read-only from decisions, revisions and this workspace's transcripts.
+        # The AI History pane: each phase's gate, colour and timeline, from
+        # decisions, revisions and this workspace's transcripts. It first brings
+        # the archive up to date, so what a harness later deletes is not lost.
+        ai_archive.sync_in_background(root_path)
         try:
             phases = json.loads(bytes(api_status_adapter().body)).get("fases") or []
         except Exception:  # noqa: BLE001 - the pane still answers without phases
             phases = []
         return JSONResponse(ai_history.build_ai_history(root_path, phases),
                             headers=dict(_PAPER_HEADERS))
+
+    @app.get("/api/ai-history/session")
+    def api_ai_history_session(ref: str = "") -> JSONResponse:
+        # A whole conversation, in full, from the workspace's archive.
+        turns = ai_archive.session(Path(root_path), ref)
+        if turns is None:
+            return JSONResponse({"detail": "No archived session has that reference."}, status_code=404,
+                                headers=dict(_PAPER_HEADERS))
+        return JSONResponse({"ref": ref, "turns": turns}, headers=dict(_PAPER_HEADERS))
 
     @app.get("/api/events")
     async def api_events(request: Request) -> StreamingResponse:

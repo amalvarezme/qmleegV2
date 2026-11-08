@@ -26,6 +26,30 @@ for an idea that no longer exists is ignored; a kind with no ideas owes nothing.
 Validity means pool membership and a stated reason: it does not prove that the
 reference supports the idea.
 
+The proposal's two concept trees raise that bar. ``novelty.problem_tree`` holds
+the problem tree and each hypothesis names its ``pillars``:
+
+    {"problem_tree": {"central": {"text": "..."},
+                      "causes": [{"id": "DC1", "text": "..."}],
+                      "effects": [{"id": "EF1", "text": "...", "caused_by": ["DC1"]}]},
+     "pillars": [{"id": "C1", ...}], "hypotheses": [{"id": "E1", "pillars": ["C1"]}]}
+
+``tree_findings`` checks their shape, language and wording: every statement in
+English, 2 to 3 direct causes, each
+reaching an effect; at least 2 pillars, each reaching a hypothesis; and a central
+problem and causes that state a negative condition. The central problem and each
+cause are ideas too (``problem:central``, ``cause:DC1``), and the citations of
+those two kinds, of pillars and of hypotheses must be Q1 or Q2 journal articles
+at most 4 years old. Quartile, work type and published year come from
+``sota-pool/journal-ranks.json``, written by ``citations_cli.py rank`` from the
+SJR table: a quartile from any other source does not count. A preprint also
+counts when an author belongs to a lab of ``ACCEPTED_LABS``, found in OpenAlex or
+confirmed by the operator with ``citations_cli.py lab``; the age limit still holds.
+Layers, equations
+and experiments keep the plain rule, so a foundational reference stays citable
+there. What ``tree_findings`` reports owes under the proposal stage as
+``tree:<node>: <reason>``, so Phase 4's citations step stays open on it.
+
 Read-only, bounded and never raises. This module has no dependencies, so the
 gates and the dashboard load it by path; the two small parsers below stay here
 because ``math_view`` and ``experiments_view`` belong to the dashboard's
@@ -34,6 +58,7 @@ package, and tests hold them to the same answers.
 
 from __future__ import annotations
 
+import datetime
 import json
 import re
 from pathlib import Path
@@ -43,6 +68,7 @@ SCHEMA = 1
 CITATIONS_REL = ".papersmith/citations.json"
 SPEC_REL = ".papersmith/model_spec.json"
 POOL_REL = "sota-pool/candidates.json"
+RANKS_REL = "sota-pool/journal-ranks.json"
 
 MIN_CITATIONS = 2
 MAX_CITATIONS = 5
@@ -53,10 +79,34 @@ MAX_EQUATIONS = 40
 MAX_FILE_BYTES = 2 * 1024 * 1024
 MAX_POOL_BYTES = 16 * 1024 * 1024
 MAX_PROTOCOL_BYTES = 1024 * 1024
+MIN_CAUSES = 2
+MAX_CAUSES = 3
+MIN_PILLARS = 2
+#: A tree statement's length in lines of this many characters: the central problem
+#: takes at most four, every cause, effect, pillar and hypothesis at most three.
+LINE_CHARS = 100
+PROBLEM_LINES = 4
+ITEM_LINES = 3
+MAX_REFERENCE_AGE = 4
+ACCEPTED_QUARTILES = ("Q1", "Q2")
+#: Research labs whose preprints support the concept trees, by ROR id.
+ACCEPTED_LABS = {
+    "00njsd438": "Google", "00971b260": "Google DeepMind", "05wx9n238": "OpenAI", "056y0v115": "Anthropic",
+    "00d0nc645": "Microsoft", "0300m5276": "Microsoft", "05k87vq12": "Microsoft",
+    "01zbnvs85": "Meta", "02388em19": "Meta", "020ye1821": "Meta",
+    "03jdj4y14": "NVIDIA", "02kr42612": "NVIDIA", "059hsda18": "Apple",
+    "05hh8d621": "IBM", "0265w5591": "IBM", "005w8dd04": "IBM", "04mv4n011": "Amazon",
+    "05w520734": "Allen Institute for AI", "05qj0n416": "Xanadu", "03ssvsv78": "Quantinuum",
+    "0507j3z22": "Quantinuum", "02ft1jb97": "IonQ",
+}
+LAB_SOURCES = ("openalex", "operator")
+#: The ideas of the two concept trees, whose references must pass the journal rule.
+TREE_KINDS = ("problem", "cause", "pillar", "hypothesis")
 
 #: The two stages an idea belongs to: Phase 4's step reads the proposal's,
 #: the implementation actions and G-EXP-POC the experiments'.
-STAGE_KINDS = {"proposal": ("pillar", "hypothesis", "layer", "equation"), "experiments": ("experiment",)}
+STAGE_KINDS = {"proposal": ("problem", "cause", "pillar", "hypothesis", "layer", "equation"),
+               "experiments": ("experiment",)}
 
 _DOI_PREFIXES = ("https://doi.org/", "http://doi.org/", "https://dx.doi.org/", "http://dx.doi.org/", "doi:")
 _ARXIV_PREFIX = re.compile(r"^(?:https?://(?:www\.)?arxiv\.org/(?:abs|pdf)/|arxiv:)", re.IGNORECASE)
@@ -66,6 +116,23 @@ _PROTOCOL = re.compile(r"^experiments-.+-v(\d+)\.md$")
 _EXPERIMENT = re.compile(r"^##\s+Experiment\s+\[exp:([^\]]+)\]")
 _TAG = re.compile(r"\\tag\{([^{}]*)\}")
 _FENCE = re.compile(r"^(```|~~~)")
+_CAUSE_ID = re.compile(r"^DC\d+$")
+_WORD = re.compile(r"[^\W\d_]+")
+_FORMULA = re.compile(r"\$[^$]*\$")
+_ACCENT = re.compile(r"[áéíóúñ]")
+#: Common words of these statements, outside English prose as lowercase words,
+#: and Spanish function words of which one alone can be English (``de novo``), so
+#: two are needed.
+_SPANISH_WORDS = frozenset({
+    "datos", "ruidosos", "baja", "bajo", "sujetos", "señal", "efecto", "efectos", "circuito", "circuitos",
+    "modelo", "modelos", "ganancia", "variabilidad", "profundidad", "entre", "sobre", "mediante", "según",
+    "cuando", "muestra", "causa", "causas", "pilar", "pilares"})
+_SPANISH_GLUE = frozenset({"de", "del", "la", "las", "el", "los", "en", "que", "con", "por", "para", "una", "un",
+                           "se", "y"})
+#: Openers that name an absent solution instead of a negative condition.
+_ABSENCE = re.compile(r"^(?:(?:(?:the|an?)\s+)?(?:(?:lack|absence|shortage|deficiency|nonexistence)\s+of\b"
+                      r"|need(?:s|ed)?\b)|there\s+(?:is|are)\s+(?:no\b|an?\s+(?:lack|absence|shortage|need)\b)"
+                      r"|no\s|not\s|requires?\b|required\b|to\s+(?!date\b)\w)", re.IGNORECASE)
 
 
 def normalize(identifier: Any) -> str | None:
@@ -179,11 +246,139 @@ def _experiments(root: Path) -> list[str]:
     return [match.group(1).strip()[:40] for match in matches if match]
 
 
-def _ideas(root: Path) -> list[tuple[str, str]]:
-    """Every ``(kind, id)`` of the workspace, in the panels' order, each once."""
+def _reads_spanish(text: str) -> bool:
+    """Whether a short statement is Spanish. ``paper_language.is_spanish_prose``
+    is built for paragraphs and misses most short phrases. It is a heuristic: a
+    capitalized word can be a name, so it counts only as the sentence's first
+    word, and the particles of a surname (``de la Cruz``) count as nothing."""
+    words = _WORD.findall(_FORMULA.sub(" ", text))
+    prose = [word for index, word in enumerate(words)
+             if (word[0].islower() or index == 0)
+             and not (index + 1 < len(words) and word.lower() in _SPANISH_GLUE
+                      and (words[index + 1][0].isupper() or words[index + 1].lower() in _SPANISH_GLUE
+                           and index + 2 < len(words) and words[index + 2][0].isupper()))]
+    lowered = [word.lower() for word in prose]
+    return (any(word[0].islower() and _ACCENT.search(word) for word in prose)
+            or bool(_SPANISH_WORDS.intersection(lowered))
+            or len(_SPANISH_GLUE.intersection(lowered)) >= 2)
+
+
+def _language(node: str, *texts: Any) -> list[str]:
+    """The tree's statements are English whatever the conversation's language."""
+    if any(isinstance(text, str) and _reads_spanish(text) for text in texts):
+        return [f"tree:{node}: must be written in English"]
+    return []
+
+
+def _names(value: Any) -> list[str]:
+    """The non-blank strings of a list."""
+    return [item.strip() for item in value if isinstance(item, str) and item.strip()] if isinstance(value, list) else []
+
+
+def _wording(node: str, text: str) -> list[str]:
+    """A tree statement names a negative condition, never a missing solution."""
+    opener = text.strip()
+    if not _ABSENCE.match(opener):
+        return []
+    return [f"tree:{node}: must state a negative condition, not open with {opener.split()[0]!r}"]
+
+
+def _length(node: str, lines: int, *texts: Any) -> list[str]:
+    """A tree statement is short enough to read at a glance."""
+    limit = lines * LINE_CHARS
+    return [f"tree:{node}: is {len(text.strip())} characters, at most {limit} ({lines} lines)"
+            for text in texts if isinstance(text, str) and len(text.strip()) > limit]
+
+
+def _problem_tree_findings(tree: Any) -> list[str]:
+    if not isinstance(tree, dict):
+        return ["tree:problem: novelty.problem_tree is missing"]
+    found: list[str] = []
+    central = tree.get("central") if isinstance(tree.get("central"), dict) else {}
+    text = central.get("text")
+    if isinstance(text, str) and text.strip():
+        found += _wording("central", text) + _language("central", text) + _length("central", PROBLEM_LINES, text)
+    else:
+        found.append("tree:central: has no text")
+    causes = _listed(tree.get("causes"), "text")
+    if not MIN_CAUSES <= len(causes) <= MAX_CAUSES:
+        found.append(f"tree:causes: {len(causes)} direct cause(s), needs {MIN_CAUSES} to {MAX_CAUSES}")
+    ids: list[str] = []
+    for position, cause in enumerate(causes, 1):
+        ident = _id(cause, "DC", position)
+        if not _CAUSE_ID.match(ident):
+            found.append(f"tree:causes: id {ident!r} must look like DC1")
+        if ident in ids:
+            found.append(f"tree:causes: duplicate id {ident!r}")
+        ids.append(ident)
+        found += (_wording(ident, cause["text"]) + _language(ident, cause["text"])
+                  + _length(ident, ITEM_LINES, cause["text"]))
+    effects = _listed(tree.get("effects"), "text")
+    if not effects:
+        found.append("tree:effects: needs at least 1 effect")
+    reached: set[str] = set()
+    for position, effect in enumerate(effects, 1):
+        found += (_wording(_id(effect, "EF", position), effect["text"])
+                  + _language(_id(effect, "EF", position), effect["text"])
+                  + _length(_id(effect, "EF", position), ITEM_LINES, effect["text"]))
+        for name in _names(effect.get("caused_by")):
+            if name in ids:
+                reached.add(name)
+            else:
+                found.append(f"tree:effects: {_id(effect, 'EF', position)} names unknown cause {name}")
+    if effects:
+        found += [f"tree:effects: cause {ident} has no effect" for ident in ids if ident not in reached]
+    return found
+
+
+def tree_findings(novelty: dict[str, Any]) -> list[str]:
+    """What the two concept trees of ``novelty`` still owe, ``[]`` when both hold."""
+    found = _problem_tree_findings(novelty.get("problem_tree"))
+    pillars = _listed(novelty.get("pillars"), "name", "summary")
+    if len(pillars) < MIN_PILLARS:
+        found.append(f"tree:pillars: {len(pillars)} pillar(s), needs at least {MIN_PILLARS}")
+    ids = [_id(item, "P", n) for n, item in enumerate(pillars, 1)]
+    for ident, item in zip(ids, pillars):
+        found += _language(ident, item.get("name")) + _length(ident, ITEM_LINES, item.get("name"), item.get("summary"))
+    found += [f"tree:pillars: duplicate id {ident!r}" for ident in sorted({i for i in ids if ids.count(i) > 1})]
+    reached: set[str] = set()
+    seen: set[str] = set()
+    for position, hypothesis in enumerate(_listed(novelty.get("hypotheses"), "title", "statement"), 1):
+        ident = _id(hypothesis, "H", position)
+        if ident in seen:
+            found.append(f"tree:hypotheses: duplicate id {ident!r}")
+        seen.add(ident)
+        found += (_language(ident, hypothesis.get("title"), hypothesis.get("statement"))
+                  + _length(ident, ITEM_LINES, hypothesis.get("title"), hypothesis.get("statement")))
+        names = _names(hypothesis.get("pillars"))
+        if not names:
+            found.append(f"tree:hypotheses: {ident} names no pillar")
+        for name in names:
+            if name in ids:
+                reached.add(name)
+            else:
+                found.append(f"tree:hypotheses: {ident} names unknown pillar {name}")
+    found += [f"tree:pillars: {ident} reaches no hypothesis" for ident in ids if ident not in reached]
+    return found
+
+
+def _novelty(root: Path) -> tuple[dict[str, Any], dict[str, Any]]:
+    """The specification and its ``novelty`` block, both empty when absent."""
     spec = _json(root / SPEC_REL, root)
     spec = spec if isinstance(spec, dict) else {}
-    novelty = spec.get("novelty") if isinstance(spec.get("novelty"), dict) else {}
+    return spec, spec.get("novelty") if isinstance(spec.get("novelty"), dict) else {}
+
+
+def _tree_ideas(novelty: dict[str, Any]) -> list[tuple[str, str]]:
+    tree = novelty.get("problem_tree") if isinstance(novelty.get("problem_tree"), dict) else {}
+    central = tree.get("central") if isinstance(tree.get("central"), dict) else {}
+    found = [("problem", "central")] if _listed([central], "text") else []
+    return found + [("cause", _id(item, "DC", n)) for n, item in enumerate(_listed(tree.get("causes"), "text"), 1)]
+
+
+def _ideas(root: Path) -> list[tuple[str, str]]:
+    """Every ``(kind, id)`` of the workspace, in the panels' order, each once."""
+    spec, novelty = _novelty(root)
     proposal = _latest(root / "proposals", root, _REVISION)
     sky = _json(proposal.with_suffix(".sky.json"), root) if proposal else None
     sky = sky if isinstance(sky, dict) else {}
@@ -193,7 +388,8 @@ def _ideas(root: Path) -> list[tuple[str, str]]:
     source = spec.get("concept_map") or spec.get("conceptual_map")
     layers = source.get("layers") if isinstance(source, dict) else None
     layers = [item for item in layers if isinstance(item, dict)] if isinstance(layers, list) else []
-    found = [("pillar", _id(item, "P", n)) for n, item in enumerate(pillars, 1)]
+    found = _tree_ideas(novelty)
+    found += [("pillar", _id(item, "P", n)) for n, item in enumerate(pillars, 1)]
     found += [("hypothesis", _id(item, "H", n)) for n, item in enumerate(hypotheses, 1)]
     for n, layer in enumerate(layers, 1):
         name = next((layer[f].strip() for f in ("name", "layer")
@@ -217,6 +413,57 @@ def _pool(root: Path) -> dict[str, dict[str, Any]]:
     return pool
 
 
+def _ranks(root: Path) -> dict[str, dict[str, Any]]:
+    """The journal ranks of ``citations_cli.py rank`` by normalized identifier."""
+    data = _json(root / RANKS_REL, root, MAX_POOL_BYTES)
+    ranks = data.get("ranks") if isinstance(data, dict) else None
+    found: dict[str, dict[str, Any]] = {}
+    for identifier, rank in ranks.items() if isinstance(ranks, dict) else []:
+        identity = normalize(identifier)
+        if identity and isinstance(rank, dict):
+            found[identity] = rank
+    return found
+
+
+def _year(value: Any) -> int | None:
+    if isinstance(value, bool):
+        return None
+    try:
+        return int(value)
+    except (TypeError, ValueError, OverflowError):
+        return None
+
+
+def _lab(rank: dict[str, Any] | None) -> str:
+    """The accepted lab behind a preprint, ``""`` when it has none."""
+    rank = rank or {}
+    lab = rank.get("lab")
+    return lab if lab in ACCEPTED_LABS.values() and rank.get("lab_source") in LAB_SOURCES else ""
+
+
+def _journal_problems(key: str, label: str, record: dict[str, Any], rank: dict[str, Any] | None) -> list[str]:
+    """Why a reference cannot support an idea of the concept trees."""
+    rank = rank or {}
+    found = []
+    if _lab(rank):
+        pass
+    elif rank.get("work_type") == "preprint":
+        found.append(f"{key}: {label!r} has no SJR quartile and no accepted lab")
+    elif rank.get("quartile_source") != "sjr" or not rank.get("quartile"):
+        found.append(f"{key}: {label!r} has no SJR quartile")
+    elif rank.get("work_type") != "journal-article":
+        found.append(f"{key}: {label!r} is not a journal article")
+    elif rank["quartile"] not in ACCEPTED_QUARTILES:
+        found.append(f"{key}: {label!r} is {rank['quartile']}, needs Q1 or Q2")
+    year = _year(rank.get("year")) or _year(record.get("year"))
+    oldest = datetime.date.today().year - MAX_REFERENCE_AGE
+    if year is None:
+        found.append(f"{key}: {label!r} has no publication year")
+    elif year < oldest:
+        found.append(f"{key}: {label!r} is from {year}, needs {oldest} or later")
+    return found
+
+
 def _recorded(root: Path) -> tuple[dict[str, Any], list[str]]:
     """The ``ideas`` of the citations file and what is wrong with the file; a
     file that is not there is no problem, its ideas simply owe citations."""
@@ -236,8 +483,10 @@ def _recorded(root: Path) -> tuple[dict[str, Any], list[str]]:
     return data["ideas"], []
 
 
-def problems(key: str, entries: Any, pool: dict[str, dict[str, Any]]) -> list[str]:
-    """What is wrong with one idea's citations, ``[]`` when they are valid."""
+def problems(key: str, entries: Any, pool: dict[str, dict[str, Any]],
+             ranks: dict[str, dict[str, Any]] | None = None) -> list[str]:
+    """What is wrong with one idea's citations, ``[]`` when they are valid. With
+    ``ranks``, the ideas of the concept trees also pass the journal rule."""
     if entries is None:
         entries = []
     if not isinstance(entries, list):
@@ -257,6 +506,8 @@ def problems(key: str, entries: Any, pool: dict[str, dict[str, Any]]) -> list[st
             found.append(f"{key}: duplicate id {entry['id'].strip()!r}")
         elif identity not in pool:
             found.append(f"{key}: {entry['id'].strip()!r} is not in {POOL_REL}")
+        elif ranks is not None and key.split(":", 1)[0] in TREE_KINDS:
+            found += _journal_problems(key, entry["id"].strip(), pool[identity], ranks.get(identity))
         if identity:
             seen.add(identity)
         why = entry.get("why")
@@ -264,6 +515,8 @@ def problems(key: str, entries: Any, pool: dict[str, dict[str, Any]]) -> list[st
             found.append(f"{key}: entry {position} has no why")
         elif len(why) > MAX_WHY:
             found.append(f"{key}: entry {position} why is longer than {MAX_WHY} characters")
+        elif ranks is not None and key.split(":", 1)[0] in TREE_KINDS and _reads_spanish(why):
+            found.append(f"{key}: entry {position} why must be written in English")
     return found
 
 
@@ -271,7 +524,8 @@ def _clip(value: Any) -> str:
     return value.strip()[:MAX_TEXT] if isinstance(value, str) else ""
 
 
-def _shown(entries: Any, pool: dict[str, dict[str, Any]]) -> list[dict[str, Any]]:
+def _shown(entries: Any, pool: dict[str, dict[str, Any]],
+           ranks: dict[str, dict[str, Any]] | None = None) -> list[dict[str, Any]]:
     """An idea's citations as the panels show them, joined to the pool's record."""
     shown = []
     for entry in (entries if isinstance(entries, list) else [])[:MAX_CITATIONS]:
@@ -280,7 +534,9 @@ def _shown(entries: Any, pool: dict[str, dict[str, Any]]) -> list[dict[str, Any]
         record = pool.get(normalize(entry["id"]), {})
         year = record.get("year")
         authors = record.get("authors")
-        shown.append({"id": _clip(entry["id"]), "why": _clip(entry.get("why")), "title": _clip(record.get("title")),
+        lab = _lab((ranks or {}).get(normalize(entry["id"])))
+        shown.append({**({"lab": lab} if lab else {}),
+                      "id": _clip(entry["id"]), "why": _clip(entry.get("why")), "title": _clip(record.get("title")),
                       "year": year if isinstance(year, int) and not isinstance(year, bool) else _clip(year),
                       "authors": ([_clip(a) for a in authors[:MAX_AUTHORS]] if isinstance(authors, list)
                                   else _clip(authors)),
@@ -295,24 +551,28 @@ def state(root: Path | str) -> dict[str, Any]:
     try:
         root = Path(root).expanduser().resolve()
     except (OSError, RuntimeError):
-        return {"ideas": [], "stages": stages, "file_problems": []}
+        return {"ideas": [], "stages": stages, "file_problems": [], "trees": []}
     recorded, file_problems = _recorded(root)
     pool = _pool(root)
+    ranks = _ranks(root)
     ideas = []
     for kind, ident in _ideas(root):
         key = f"{kind}:{ident}"
         entries = recorded.get(key)
-        found = list(file_problems) or problems(key, entries, pool)
+        found = list(file_problems) or problems(key, entries, pool, ranks)
         ideas.append({"key": key, "kind": kind, "id": ident, "owed": bool(found), "problems": found,
-                      "citations": _shown(entries, pool)})
+                      "citations": _shown(entries, pool, ranks)})
         stage = stages["experiments" if kind in STAGE_KINDS["experiments"] else "proposal"]
         stage["ideas"] += 1
         if found:
             stage["owed"].append(key)
         else:
             stage["cited"] += 1
-    return {"ideas": ideas, "stages": stages, "file_problems": file_problems}
+    trees = tree_findings(_novelty(root)[1]) if stages["proposal"]["ideas"] else []
+    stages["proposal"]["owed"] += trees
+    return {"ideas": ideas, "stages": stages, "file_problems": file_problems, "trees": trees}
 
 
-__all__ = ["CITATIONS_REL", "MAX_CITATIONS", "MAX_WHY", "MIN_CITATIONS", "POOL_REL", "SCHEMA", "STAGE_KINDS",
-           "normalize", "problems", "state"]
+__all__ = ["ACCEPTED_LABS", "ACCEPTED_QUARTILES", "CITATIONS_REL", "MAX_CITATIONS", "MAX_REFERENCE_AGE", "MAX_WHY", "MIN_CITATIONS",
+           "POOL_REL", "RANKS_REL", "SCHEMA", "STAGE_KINDS", "TREE_KINDS", "normalize", "problems", "state",
+           "tree_findings"]
