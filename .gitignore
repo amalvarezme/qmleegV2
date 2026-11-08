@@ -63,3 +63,6 @@ backup/experiments/
 # Dataset payloads stay local (re-derived and sha256-checked from datasets/registry.json); only their metadata is versioned.
 datasets/**/*.csv
 datasets/**/*.npy
+
+# AI conversations stay on this machine; a public repository never versions them.
+.papersmith/ai-history/
