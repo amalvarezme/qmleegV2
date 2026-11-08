@@ -5,7 +5,7 @@
   "trl": "Phase 4 complete (proposal r04)",
   "executive_summary": "A hybrid quantum-classical architecture for ADHD diagnosis from 19-channel EEG: a classical spatial-temporal backbone $f_{\\phi}$ condenses each epoch into $d = N_q = 4$ features bounded to $[-\\pi, \\pi]$, and a parameterized quantum circuit with circular Data Re-uploading (DRU) over $L$ layers acts as an expressive non-linear classifier. The whole network is trained end-to-end with a subject-weighted binary cross-entropy, and analytical gradients through both stages give a channel-time saliency map for clinical audit.",
   "novelty": {
-    "problem_statement": "Shallow quantum embeddings fail on high-dimensional, noisy EEG without exploding circuit depth: multichannel EEG carries strong inter-subject variability, a low signal-to-noise ratio and volume-conduction artifacts, while single-shot encodings limit the expressivity of the quantum classifier and deeper circuits risk barren plateaus.",
+    "problem_statement": "Degraded subject-level classification accuracy of hybrid quantum-classical models with shallow data encodings on pediatric ADHD EEG.",
     "pillars": [
       {
         "id": "C1",
@@ -38,37 +38,97 @@
         "title": "Hybrid classification and Fourier expressivity",
         "status": "Stated in protocol v10",
         "evidence": "Experiment E1",
-        "statement": "The hybrid architecture combining classical convolutional embedding with circular data re-uploading (L=3, 4 qubits) provides superior non-linear representation compared to single-shot angle encoding and to a classical linear baseline operating on the identical 4-dimensional representation."
+        "statement": "The hybrid architecture combining classical convolutional embedding with circular data re-uploading (L=3, 4 qubits) provides superior non-linear representation compared to single-shot angle encoding and to a classical linear baseline operating on the identical 4-dimensional representation.",
+        "pillars": [
+          "C1",
+          "C2"
+        ]
       },
       {
         "id": "E2",
         "title": "Entanglement topology ablation",
         "status": "Stated in protocol v10",
         "evidence": "Experiment E2",
-        "statement": "Circular CNOT entanglement topology, which entangles every bipartition of the 4-qubit register without making all of them maximally entangled (no 4-qubit state is maximally entangled across its three two-versus-two bipartitions at once, as proposal r04 states), yields higher diagnostic discriminability than linear nearest-neighbor entanglement or separable non-entangled single-qubit rotations."
+        "statement": "Circular CNOT entanglement, which entangles every bipartition of the 4-qubit register without making all of them maximally entangled at once, yields higher diagnostic discriminability than linear nearest-neighbor entanglement or separable single-qubit rotations.",
+        "pillars": [
+          "C2"
+        ]
       },
       {
         "id": "E3",
         "title": "Re-uploading depth and barren plateaus",
         "status": "Stated in protocol v10",
         "evidence": "Experiment E3",
-        "statement": "Expressivity in the accessible Fourier spectrum increases with re-uploading depth L up to an optimal bound, beyond which gradient variance decays (barren plateau effect) and causes training stagnation or overfitting on validation folds."
+        "statement": "Expressivity in the accessible Fourier spectrum increases with re-uploading depth L up to an optimal bound, beyond which gradient variance decays (barren plateau effect) and causes training stagnation or overfitting on validation folds.",
+        "pillars": [
+          "C2"
+        ]
       },
       {
         "id": "E4",
         "title": "Clinical interpretability via analytical gradients",
         "status": "Stated in protocol v10",
         "evidence": "Experiment E4",
-        "statement": "Analytical gradient saliency derived from the classical backbone and quantum parameter-shift rule concentrates its mass on electrophysiologically relevant fronto-central channels and Theta/Beta frequency components rather than posterior noise."
+        "statement": "Analytical gradient saliency derived from the classical backbone and quantum parameter-shift rule concentrates its mass on electrophysiologically relevant fronto-central channels and Theta/Beta frequency components rather than posterior noise.",
+        "pillars": [
+          "C3"
+        ]
       },
       {
         "id": "E5",
         "title": "Controlled synthetic capacity and robustness",
         "status": "Stated in protocol v10",
         "evidence": "Experiment E5",
-        "statement": "With a fixed feature front end, the re-uploading readout (L=3) represents a class rule that needs Fourier frequency two in one feature, which single-shot angle encoding (L=1) cannot represent; when the class signal is monotone every arm stays close to the known ceiling, and its degradation with the training label-noise rate is measured."
+        "statement": "With a fixed feature front end, the re-uploading readout (L=3) represents a class rule needing Fourier frequency two in one feature, which single-shot angle encoding (L=1) cannot; under a monotone class signal every arm stays near the known ceiling, and its degradation with label noise is measured.",
+        "pillars": [
+          "C2"
+        ]
       }
-    ]
+    ],
+    "problem_tree": {
+      "central": {
+        "text": "Degraded subject-level classification accuracy of hybrid quantum-classical models with shallow data encodings on pediatric ADHD EEG."
+      },
+      "causes": [
+        {
+          "id": "DC1",
+          "text": "High inter-subject variability, low signal-to-noise ratio and volume-conduction blurring in multichannel EEG recordings."
+        },
+        {
+          "id": "DC2",
+          "text": "Restricted expressivity of single-shot quantum encodings and vanishing gradients in deeper parameterized circuits."
+        },
+        {
+          "id": "DC3",
+          "text": "Overestimated generalization from small clinical cohorts when epochs of one subject leak across data splits."
+        }
+      ],
+      "effects": [
+        {
+          "id": "EF1",
+          "text": "Unreliable subject-independent ADHD screening on unseen children.",
+          "caused_by": [
+            "DC1",
+            "DC3"
+          ]
+        },
+        {
+          "id": "EF2",
+          "text": "Inconsistent gains of quantum layers over classical EEG baselines.",
+          "caused_by": [
+            "DC1",
+            "DC2"
+          ]
+        },
+        {
+          "id": "EF3",
+          "text": "Inflated circuit depth and unstable training in hybrid classifiers.",
+          "caused_by": [
+            "DC2"
+          ]
+        }
+      ]
+    }
   },
   "conceptual_map": {
     "layers": [
@@ -171,6 +231,28 @@
   },
   "contribution_type": {
     "type": "Use-Inspired",
-    "why": "What is new is fitting known parts to subject-level pediatric ADHD diagnosis, not a method or a proof: Eqs. 2-7 reuse the re-uploading of 1907.02085, the spectrum of 2008.08605 and the CNOT ring of 2407.19214, and no theorem is claimed. The use-specific parts are Eq. 8's subject-weighted loss and E4/Eq. 9's fronto-central audit, and E1 decides the claim on unseen subjects. No pool abstract applies a hybrid quantum model to ADHD EEG, and E5 is a synthetic capacity check, not the contribution."
+    "why": "The revision is built around one real clinical use case, subject-independent pediatric ADHD screening from 19-channel 10-20 EEG on the IEEE Dataport cohort. Its design follows from that case: a subject-weighted loss (Eq. 8) against cross-subject leakage (DC3), and fronto-central saliency for a clinical audit (Eq. 9, E4). Its mathematics reuses known results (data re-uploading, the Schuld et al. Fourier spectrum, Eqs. 2-5) rather than proving new ones.",
+    "affinity": {
+      "General": {
+        "score": 58,
+        "why": "E1-E3 test a general hybrid design question (re-uploading vs. single-shot encoding, ring vs. linear entanglement, depth vs. barren plateaus), but they are only tested on one clinical dataset, so the claims are narrower than a General contribution."
+      },
+      "Theory": {
+        "score": 15,
+        "why": "The Fourier spectrum of degree L (Section 3.2) and the bipartition limit (Higuchi-Sudbery) are cited, not proved. No hypothesis E1-E5 proposes a theorem or a new proof technique."
+      },
+      "Use-Inspired": {
+        "score": 74,
+        "why": "The use case is real (ADHD diagnosis biased by questionnaires) and the design fits it (Eqs. 8-9, E4 checks against the TBR biomarker). But E1 compares only with ML baselines; no non-ML clinical rule, such as a Theta/Beta ratio threshold, is planned."
+      },
+      "Concept & Feasibility": {
+        "score": 44,
+        "why": "A 4-qubit simulated pilot on 121 subjects with a synthetic capacity test (E5) reads as feasibility. But data re-uploading is an existing idea, so the type's high bar (an idea that changes how the problem is approached) is not met."
+      },
+      "Negative Results": {
+        "score": 6,
+        "why": "Every hypothesis E1-E5 predicts a positive effect. Only E3 expects gradient decay beyond some depth, and that is a planned ablation, not a central negative finding grounded in deeper analysis."
+      }
+    }
   }
 }
