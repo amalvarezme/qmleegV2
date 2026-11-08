@@ -137,8 +137,8 @@
     "papersmith.yaml": "777ec8c07454df281360fd61ad4d899fda1b4dd6ea957c3ef6e3b10aa75c4d29",
     "proposals/research-concept-hybrid-quantum-classical-neural-network-with-data-re-uploadi-r04.md": "217f66e588d295f7b1931bb26ee165041a7e2081f12bd595ad80a7638cba5ac9",
     "proposals/research-concept-hybrid-quantum-classical-neural-network-with-data-re-uploadi-r04.sky.json": "3b4f8e820b493f3b36417068c9f11cbaf15b7c2f6de25f26f08dad258c8cdf94",
-    "sota-pool/atlas.json": "d9264337fd09c50cd4c7cddd8721de85c7e45484e9818a71c801a8df3493c118",
-    "sota-pool/candidates.json": "be97bf1936bca2a940995bc2b5a54e5efb452bd842095c8362309938949c296d"
+    "sota-pool/atlas.json": "91379f0fd4d51f21ae02ea39c021cef0fa4ee212a14096548006b5906475ea31",
+    "sota-pool/candidates.json": "e1a0b75bbdf3b8155f857d9f1191988c309a32814a0734f177eb896a9bc91f26"
   },
   "nodes": [
     {
@@ -419,6 +419,499 @@
     },
     {
       "cite_keys": [
+        "adebayo2018sanity"
+      ],
+      "detail": "",
+      "id": "sota:saliency-sanity-checks",
+      "label": "Sanity Checks for Saliency Maps",
+      "paper_blocks": [],
+      "source": {
+        "locator": "systems[saliency-sanity-checks]",
+        "path": "sota-pool/atlas.manuscript.json"
+      },
+      "status": {
+        "state": "present"
+      },
+      "type": "sota"
+    },
+    {
+      "cite_keys": [
+        "akiba2019optuna"
+      ],
+      "detail": "",
+      "id": "sota:optuna",
+      "label": "Optuna",
+      "paper_blocks": [],
+      "source": {
+        "locator": "systems[optuna]",
+        "path": "sota-pool/atlas.manuscript.json"
+      },
+      "status": {
+        "state": "present"
+      },
+      "type": "sota"
+    },
+    {
+      "cite_keys": [
+        "altman1995absence"
+      ],
+      "detail": "",
+      "id": "sota:absence-of-evidence",
+      "label": "Statistics notes: Absence of evidence is not evidence of absence",
+      "paper_blocks": [],
+      "source": {
+        "locator": "systems[absence-of-evidence]",
+        "path": "sota-pool/atlas.manuscript.json"
+      },
+      "status": {
+        "state": "present"
+      },
+      "type": "sota"
+    },
+    {
+      "cite_keys": [
+        "bergstra2011algorithms"
+      ],
+      "detail": "",
+      "id": "sota:tpe-hyperopt",
+      "label": "Algorithms for Hyper-Parameter Optimization",
+      "paper_blocks": [],
+      "source": {
+        "locator": "systems[tpe-hyperopt]",
+        "path": "sota-pool/atlas.manuscript.json"
+      },
+      "status": {
+        "state": "present"
+      },
+      "type": "sota"
+    },
+    {
+      "cite_keys": [
+        "bouthillier2021variance"
+      ],
+      "detail": "",
+      "id": "sota:benchmark-variance",
+      "label": "Accounting for Variance in Machine Learning Benchmarks",
+      "paper_blocks": [],
+      "source": {
+        "locator": "systems[benchmark-variance]",
+        "path": "sota-pool/atlas.manuscript.json"
+      },
+      "status": {
+        "state": "present"
+      },
+      "type": "sota"
+    },
+    {
+      "cite_keys": [
+        "brodersen2010balanced"
+      ],
+      "detail": "",
+      "id": "sota:balanced-accuracy",
+      "label": "The Balanced Accuracy and Its Posterior Distribution",
+      "paper_blocks": [],
+      "source": {
+        "locator": "systems[balanced-accuracy]",
+        "path": "sota-pool/atlas.manuscript.json"
+      },
+      "status": {
+        "state": "present"
+      },
+      "type": "sota"
+    },
+    {
+      "cite_keys": [
+        "caro2022generalization"
+      ],
+      "detail": "",
+      "id": "sota:qml-generalization",
+      "label": "Generalization in quantum machine learning from few training data",
+      "paper_blocks": [],
+      "source": {
+        "locator": "systems[qml-generalization]",
+        "path": "sota-pool/atlas.manuscript.json"
+      },
+      "status": {
+        "state": "present"
+      },
+      "type": "sota"
+    },
+    {
+      "cite_keys": [
+        "cecotti2011convolutional"
+      ],
+      "detail": "",
+      "id": "sota:cnn-p300",
+      "label": "Convolutional Neural Networks for P300 Detection with Application to Brain-Computer Interfaces",
+      "paper_blocks": [],
+      "source": {
+        "locator": "systems[cnn-p300]",
+        "path": "sota-pool/atlas.manuscript.json"
+      },
+      "status": {
+        "state": "present"
+      },
+      "type": "sota"
+    },
+    {
+      "cite_keys": [
+        "cerezo2021cost"
+      ],
+      "detail": "",
+      "id": "sota:cost-barren-plateaus",
+      "label": "Cost function dependent barren plateaus in shallow parametrized quantum circuits",
+      "paper_blocks": [],
+      "source": {
+        "locator": "systems[cost-barren-plateaus]",
+        "path": "sota-pool/atlas.manuscript.json"
+      },
+      "status": {
+        "state": "present"
+      },
+      "type": "sota"
+    },
+    {
+      "cite_keys": [
+        "craik2019deep"
+      ],
+      "detail": "",
+      "id": "sota:eeg-dl-review",
+      "label": "Deep learning for electroencephalogram (EEG) classification tasks: a review",
+      "paper_blocks": [],
+      "source": {
+        "locator": "systems[eeg-dl-review]",
+        "path": "sota-pool/atlas.manuscript.json"
+      },
+      "status": {
+        "state": "present"
+      },
+      "type": "sota"
+    },
+    {
+      "cite_keys": [
+        "crooks2019gradients"
+      ],
+      "detail": "",
+      "id": "sota:parameter-shift-decomposition",
+      "label": "Gradients of parameterized quantum gates using the parameter-shift rule and gate decomposition",
+      "paper_blocks": [],
+      "source": {
+        "locator": "systems[parameter-shift-decomposition]",
+        "path": "sota-pool/atlas.manuscript.json"
+      },
+      "status": {
+        "state": "present"
+      },
+      "type": "sota"
+    },
+    {
+      "cite_keys": [
+        "delong1988comparing"
+      ],
+      "detail": "",
+      "id": "sota:delong-auc",
+      "label": "Comparing the Areas under Two or More Correlated Receiver Operating Characteristic Curves: A Nonparametric Approach",
+      "paper_blocks": [],
+      "source": {
+        "locator": "systems[delong-auc]",
+        "path": "sota-pool/atlas.manuscript.json"
+      },
+      "status": {
+        "state": "present"
+      },
+      "type": "sota"
+    },
+    {
+      "cite_keys": [
+        "demsar2006statistical"
+      ],
+      "detail": "",
+      "id": "sota:demsar-comparisons",
+      "label": "Statistical Comparisons of Classifiers over Multiple Data Sets",
+      "paper_blocks": [],
+      "source": {
+        "locator": "systems[demsar-comparisons]",
+        "path": "sota-pool/atlas.manuscript.json"
+      },
+      "status": {
+        "state": "present"
+      },
+      "type": "sota"
+    },
+    {
+      "cite_keys": [
+        "dietterich1998approximate"
+      ],
+      "detail": "",
+      "id": "sota:dietterich-tests",
+      "label": "Approximate Statistical Tests for Comparing Supervised Classification Learning Algorithms",
+      "paper_blocks": [],
+      "source": {
+        "locator": "systems[dietterich-tests]",
+        "path": "sota-pool/atlas.manuscript.json"
+      },
+      "status": {
+        "state": "present"
+      },
+      "type": "sota"
+    },
+    {
+      "cite_keys": [
+        "holm1979simple"
+      ],
+      "detail": "",
+      "id": "sota:holm-procedure",
+      "label": "A Simple Sequentially Rejective Multiple Test Procedure",
+      "paper_blocks": [],
+      "source": {
+        "locator": "systems[holm-procedure]",
+        "path": "sota-pool/atlas.manuscript.json"
+      },
+      "status": {
+        "state": "present"
+      },
+      "type": "sota"
+    },
+    {
+      "cite_keys": [
+        "jerbi2023quantum"
+      ],
+      "detail": "",
+      "id": "sota:linear-quantum-models",
+      "label": "Quantum machine learning beyond kernel methods",
+      "paper_blocks": [],
+      "source": {
+        "locator": "systems[linear-quantum-models]",
+        "path": "sota-pool/atlas.manuscript.json"
+      },
+      "status": {
+        "state": "present"
+      },
+      "type": "sota"
+    },
+    {
+      "cite_keys": [
+        "lawhern2018eegnet"
+      ],
+      "detail": "",
+      "id": "sota:eegnet-jne",
+      "label": "EEGNet: a compact convolutional neural network for EEG-based brain–computer interfaces",
+      "paper_blocks": [],
+      "source": {
+        "locator": "systems[eegnet-jne]",
+        "path": "sota-pool/atlas.manuscript.json"
+      },
+      "status": {
+        "state": "present"
+      },
+      "type": "sota"
+    },
+    {
+      "cite_keys": [
+        "loshchilov2017sgdr"
+      ],
+      "detail": "",
+      "id": "sota:sgdr",
+      "label": "SGDR: Stochastic Gradient Descent with Warm Restarts",
+      "paper_blocks": [],
+      "source": {
+        "locator": "systems[sgdr]",
+        "path": "sota-pool/atlas.manuscript.json"
+      },
+      "status": {
+        "state": "present"
+      },
+      "type": "sota"
+    },
+    {
+      "cite_keys": [
+        "loshchilov2019decoupled"
+      ],
+      "detail": "",
+      "id": "sota:adamw",
+      "label": "Decoupled Weight Decay Regularization",
+      "paper_blocks": [],
+      "source": {
+        "locator": "systems[adamw]",
+        "path": "sota-pool/atlas.manuscript.json"
+      },
+      "status": {
+        "state": "present"
+      },
+      "type": "sota"
+    },
+    {
+      "cite_keys": [
+        "lotte2018review"
+      ],
+      "detail": "",
+      "id": "sota:bci-classifier-review",
+      "label": "A review of classification algorithms for EEG-based brain–computer interfaces: a 10 year update",
+      "paper_blocks": [],
+      "source": {
+        "locator": "systems[bci-classifier-review]",
+        "path": "sota-pool/atlas.manuscript.json"
+      },
+      "status": {
+        "state": "present"
+      },
+      "type": "sota"
+    },
+    {
+      "cite_keys": [
+        "ribeiro2016why"
+      ],
+      "detail": "",
+      "id": "sota:lime",
+      "label": "“Why Should I Trust You?”: Explaining the Predictions of Any Classifier",
+      "paper_blocks": [],
+      "source": {
+        "locator": "systems[lime]",
+        "path": "sota-pool/atlas.manuscript.json"
+      },
+      "status": {
+        "state": "present"
+      },
+      "type": "sota"
+    },
+    {
+      "cite_keys": [
+        "schirrmeister2017deepconvnet"
+      ],
+      "detail": "",
+      "id": "sota:deep-convnet-eeg",
+      "label": "Deep learning with convolutional neural networks for EEG decoding and visualization",
+      "paper_blocks": [],
+      "source": {
+        "locator": "systems[deep-convnet-eeg]",
+        "path": "sota-pool/atlas.manuscript.json"
+      },
+      "status": {
+        "state": "present"
+      },
+      "type": "sota"
+    },
+    {
+      "cite_keys": [
+        "selvaraju2017gradcam"
+      ],
+      "detail": "",
+      "id": "sota:grad-cam",
+      "label": "Grad-CAM: Visual Explanations from Deep Networks via Gradient-Based Localization",
+      "paper_blocks": [],
+      "source": {
+        "locator": "systems[grad-cam]",
+        "path": "sota-pool/atlas.manuscript.json"
+      },
+      "status": {
+        "state": "present"
+      },
+      "type": "sota"
+    },
+    {
+      "cite_keys": [
+        "snoek2019confounds"
+      ],
+      "detail": "",
+      "id": "sota:decoding-confounds",
+      "label": "How to control for confounds in decoding analyses of neuroimaging data",
+      "paper_blocks": [],
+      "source": {
+        "locator": "systems[decoding-confounds]",
+        "path": "sota-pool/atlas.manuscript.json"
+      },
+      "status": {
+        "state": "present"
+      },
+      "type": "sota"
+    },
+    {
+      "cite_keys": [
+        "sundararajan2017axiomatic"
+      ],
+      "detail": "",
+      "id": "sota:integrated-gradients",
+      "label": "Axiomatic Attribution for Deep Networks",
+      "paper_blocks": [],
+      "source": {
+        "locator": "systems[integrated-gradients]",
+        "path": "sota-pool/atlas.manuscript.json"
+      },
+      "status": {
+        "state": "present"
+      },
+      "type": "sota"
+    },
+    {
+      "cite_keys": [
+        "varma2006bias"
+      ],
+      "detail": "",
+      "id": "sota:cv-selection-bias",
+      "label": "Bias in error estimation when using cross-validation for model selection",
+      "paper_blocks": [],
+      "source": {
+        "locator": "systems[cv-selection-bias]",
+        "path": "sota-pool/atlas.manuscript.json"
+      },
+      "status": {
+        "state": "present"
+      },
+      "type": "sota"
+    },
+    {
+      "cite_keys": [
+        "varoquaux2022machine"
+      ],
+      "detail": "",
+      "id": "sota:medical-imaging-ml-failures",
+      "label": "Machine learning for medical imaging: methodological failures and recommendations for the future",
+      "paper_blocks": [],
+      "source": {
+        "locator": "systems[medical-imaging-ml-failures]",
+        "path": "sota-pool/atlas.manuscript.json"
+      },
+      "status": {
+        "state": "present"
+      },
+      "type": "sota"
+    },
+    {
+      "cite_keys": [
+        "yarkoni2017choosing"
+      ],
+      "detail": "",
+      "id": "sota:prediction-over-explanation",
+      "label": "Choosing Prediction Over Explanation in Psychology: Lessons From Machine Learning",
+      "paper_blocks": [],
+      "source": {
+        "locator": "systems[prediction-over-explanation]",
+        "path": "sota-pool/atlas.manuscript.json"
+      },
+      "status": {
+        "state": "present"
+      },
+      "type": "sota"
+    },
+    {
+      "cite_keys": [
+        "zhang2017rethinking"
+      ],
+      "detail": "",
+      "id": "sota:rethinking-generalization",
+      "label": "Understanding deep learning requires rethinking generalization",
+      "paper_blocks": [],
+      "source": {
+        "locator": "systems[rethinking-generalization]",
+        "path": "sota-pool/atlas.manuscript.json"
+      },
+      "status": {
+        "state": "present"
+      },
+      "type": "sota"
+    },
+    {
+      "cite_keys": [
         "abbas2021power"
       ],
       "detail": "",
@@ -437,42 +930,6 @@
     },
     {
       "cite_keys": [
-        "adebayo2018sanity"
-      ],
-      "detail": "",
-      "id": "sota:cite:adebayo2018sanity",
-      "label": "Sanity Checks for Saliency Maps",
-      "outside_pool": true,
-      "paper_blocks": [],
-      "source": {
-        "locator": "adebayo2018sanity",
-        "path": "paper/refs.bib"
-      },
-      "status": {
-        "state": "present"
-      },
-      "type": "sota"
-    },
-    {
-      "cite_keys": [
-        "akiba2019optuna"
-      ],
-      "detail": "",
-      "id": "sota:cite:akiba2019optuna",
-      "label": "{Optuna}: A Next-generation Hyperparameter Optimization Framework",
-      "outside_pool": true,
-      "paper_blocks": [],
-      "source": {
-        "locator": "akiba2019optuna",
-        "path": "paper/refs.bib"
-      },
-      "status": {
-        "state": "present"
-      },
-      "type": "sota"
-    },
-    {
-      "cite_keys": [
         "alsaegh2021deep"
       ],
       "detail": "",
@@ -482,24 +939,6 @@
       "paper_blocks": [],
       "source": {
         "locator": "alsaegh2021deep",
-        "path": "paper/refs.bib"
-      },
-      "status": {
-        "state": "present"
-      },
-      "type": "sota"
-    },
-    {
-      "cite_keys": [
-        "altman1995absence"
-      ],
-      "detail": "",
-      "id": "sota:cite:altman1995absence",
-      "label": "Statistics notes: Absence of evidence is not evidence of absence",
-      "outside_pool": true,
-      "paper_blocks": [],
-      "source": {
-        "locator": "altman1995absence",
         "path": "paper/refs.bib"
       },
       "status": {
@@ -563,186 +1002,6 @@
     },
     {
       "cite_keys": [
-        "bergstra2011algorithms"
-      ],
-      "detail": "",
-      "id": "sota:cite:bergstra2011algorithms",
-      "label": "Algorithms for Hyper-Parameter Optimization",
-      "outside_pool": true,
-      "paper_blocks": [],
-      "source": {
-        "locator": "bergstra2011algorithms",
-        "path": "paper/refs.bib"
-      },
-      "status": {
-        "state": "present"
-      },
-      "type": "sota"
-    },
-    {
-      "cite_keys": [
-        "bouthillier2021variance"
-      ],
-      "detail": "",
-      "id": "sota:cite:bouthillier2021variance",
-      "label": "Accounting for Variance in Machine Learning Benchmarks",
-      "outside_pool": true,
-      "paper_blocks": [],
-      "source": {
-        "locator": "bouthillier2021variance",
-        "path": "paper/refs.bib"
-      },
-      "status": {
-        "state": "present"
-      },
-      "type": "sota"
-    },
-    {
-      "cite_keys": [
-        "brodersen2010balanced"
-      ],
-      "detail": "",
-      "id": "sota:cite:brodersen2010balanced",
-      "label": "The Balanced Accuracy and Its Posterior Distribution",
-      "outside_pool": true,
-      "paper_blocks": [],
-      "source": {
-        "locator": "brodersen2010balanced",
-        "path": "paper/refs.bib"
-      },
-      "status": {
-        "state": "present"
-      },
-      "type": "sota"
-    },
-    {
-      "cite_keys": [
-        "caro2022generalization"
-      ],
-      "detail": "",
-      "id": "sota:cite:caro2022generalization",
-      "label": "Generalization in quantum machine learning from few training data",
-      "outside_pool": true,
-      "paper_blocks": [],
-      "source": {
-        "locator": "caro2022generalization",
-        "path": "paper/refs.bib"
-      },
-      "status": {
-        "state": "present"
-      },
-      "type": "sota"
-    },
-    {
-      "cite_keys": [
-        "cecotti2011convolutional"
-      ],
-      "detail": "",
-      "id": "sota:cite:cecotti2011convolutional",
-      "label": "Convolutional neural networks for {P300} detection with application to brain-computer interfaces",
-      "outside_pool": true,
-      "paper_blocks": [],
-      "source": {
-        "locator": "cecotti2011convolutional",
-        "path": "paper/refs.bib"
-      },
-      "status": {
-        "state": "present"
-      },
-      "type": "sota"
-    },
-    {
-      "cite_keys": [
-        "cerezo2021cost"
-      ],
-      "detail": "",
-      "id": "sota:cite:cerezo2021cost",
-      "label": "Cost function dependent barren plateaus in shallow parametrized quantum circuits",
-      "outside_pool": true,
-      "paper_blocks": [],
-      "source": {
-        "locator": "cerezo2021cost",
-        "path": "paper/refs.bib"
-      },
-      "status": {
-        "state": "present"
-      },
-      "type": "sota"
-    },
-    {
-      "cite_keys": [
-        "craik2019deep"
-      ],
-      "detail": "",
-      "id": "sota:cite:craik2019deep",
-      "label": "Deep learning for electroencephalogram ({EEG}) classification tasks: a review",
-      "outside_pool": true,
-      "paper_blocks": [],
-      "source": {
-        "locator": "craik2019deep",
-        "path": "paper/refs.bib"
-      },
-      "status": {
-        "state": "present"
-      },
-      "type": "sota"
-    },
-    {
-      "cite_keys": [
-        "crooks2019gradients"
-      ],
-      "detail": "",
-      "id": "sota:cite:crooks2019gradients",
-      "label": "Gradients of parameterized quantum gates using the parameter-shift rule and gate decomposition",
-      "outside_pool": true,
-      "paper_blocks": [],
-      "source": {
-        "locator": "crooks2019gradients",
-        "path": "paper/refs.bib"
-      },
-      "status": {
-        "state": "present"
-      },
-      "type": "sota"
-    },
-    {
-      "cite_keys": [
-        "delong1988comparing"
-      ],
-      "detail": "",
-      "id": "sota:cite:delong1988comparing",
-      "label": "Comparing the Areas under Two or More Correlated Receiver Operating Characteristic Curves: A Nonparametric Approach",
-      "outside_pool": true,
-      "paper_blocks": [],
-      "source": {
-        "locator": "delong1988comparing",
-        "path": "paper/refs.bib"
-      },
-      "status": {
-        "state": "present"
-      },
-      "type": "sota"
-    },
-    {
-      "cite_keys": [
-        "demsar2006statistical"
-      ],
-      "detail": "",
-      "id": "sota:cite:demsar2006statistical",
-      "label": "Statistical comparisons of classifiers over multiple data sets",
-      "outside_pool": true,
-      "paper_blocks": [],
-      "source": {
-        "locator": "demsar2006statistical",
-        "path": "paper/refs.bib"
-      },
-      "status": {
-        "state": "present"
-      },
-      "type": "sota"
-    },
-    {
-      "cite_keys": [
         "dien1998issues"
       ],
       "detail": "",
@@ -752,24 +1011,6 @@
       "paper_blocks": [],
       "source": {
         "locator": "dien1998issues",
-        "path": "paper/refs.bib"
-      },
-      "status": {
-        "state": "present"
-      },
-      "type": "sota"
-    },
-    {
-      "cite_keys": [
-        "dietterich1998approximate"
-      ],
-      "detail": "",
-      "id": "sota:cite:dietterich1998approximate",
-      "label": "Approximate Statistical Tests for Comparing Supervised Classification Learning Algorithms",
-      "outside_pool": true,
-      "paper_blocks": [],
-      "source": {
-        "locator": "dietterich1998approximate",
         "path": "paper/refs.bib"
       },
       "status": {
@@ -815,60 +1056,6 @@
     },
     {
       "cite_keys": [
-        "holm1979simple"
-      ],
-      "detail": "",
-      "id": "sota:cite:holm1979simple",
-      "label": "A Simple Sequentially Rejective Multiple Test Procedure",
-      "outside_pool": true,
-      "paper_blocks": [],
-      "source": {
-        "locator": "holm1979simple",
-        "path": "paper/refs.bib"
-      },
-      "status": {
-        "state": "present"
-      },
-      "type": "sota"
-    },
-    {
-      "cite_keys": [
-        "jerbi2023quantum"
-      ],
-      "detail": "",
-      "id": "sota:cite:jerbi2023quantum",
-      "label": "Quantum machine learning beyond kernel methods",
-      "outside_pool": true,
-      "paper_blocks": [],
-      "source": {
-        "locator": "jerbi2023quantum",
-        "path": "paper/refs.bib"
-      },
-      "status": {
-        "state": "present"
-      },
-      "type": "sota"
-    },
-    {
-      "cite_keys": [
-        "lawhern2018eegnet"
-      ],
-      "detail": "",
-      "id": "sota:cite:lawhern2018eegnet",
-      "label": "{EEGNet}: a compact convolutional neural network for {EEG}-based brain--computer interfaces",
-      "outside_pool": true,
-      "paper_blocks": [],
-      "source": {
-        "locator": "lawhern2018eegnet",
-        "path": "paper/refs.bib"
-      },
-      "status": {
-        "state": "present"
-      },
-      "type": "sota"
-    },
-    {
-      "cite_keys": [
         "little2017pitfalls"
       ],
       "detail": "",
@@ -878,60 +1065,6 @@
       "paper_blocks": [],
       "source": {
         "locator": "little2017pitfalls",
-        "path": "paper/refs.bib"
-      },
-      "status": {
-        "state": "present"
-      },
-      "type": "sota"
-    },
-    {
-      "cite_keys": [
-        "loshchilov2017sgdr"
-      ],
-      "detail": "",
-      "id": "sota:cite:loshchilov2017sgdr",
-      "label": "SGDR: Stochastic Gradient Descent with Warm Restarts",
-      "outside_pool": true,
-      "paper_blocks": [],
-      "source": {
-        "locator": "loshchilov2017sgdr",
-        "path": "paper/refs.bib"
-      },
-      "status": {
-        "state": "present"
-      },
-      "type": "sota"
-    },
-    {
-      "cite_keys": [
-        "loshchilov2019decoupled"
-      ],
-      "detail": "",
-      "id": "sota:cite:loshchilov2019decoupled",
-      "label": "Decoupled Weight Decay Regularization",
-      "outside_pool": true,
-      "paper_blocks": [],
-      "source": {
-        "locator": "loshchilov2019decoupled",
-        "path": "paper/refs.bib"
-      },
-      "status": {
-        "state": "present"
-      },
-      "type": "sota"
-    },
-    {
-      "cite_keys": [
-        "lotte2018review"
-      ],
-      "detail": "",
-      "id": "sota:cite:lotte2018review",
-      "label": "A review of classification algorithms for {EEG}-based brain--computer interfaces: a 10 year update",
-      "outside_pool": true,
-      "paper_blocks": [],
-      "source": {
-        "locator": "lotte2018review",
         "path": "paper/refs.bib"
       },
       "status": {
@@ -995,24 +1128,6 @@
     },
     {
       "cite_keys": [
-        "ribeiro2016why"
-      ],
-      "detail": "",
-      "id": "sota:cite:ribeiro2016why",
-      "label": "``{Why} should {I} trust you?'': Explaining the predictions of any classifier",
-      "outside_pool": true,
-      "paper_blocks": [],
-      "source": {
-        "locator": "ribeiro2016why",
-        "path": "paper/refs.bib"
-      },
-      "status": {
-        "state": "present"
-      },
-      "type": "sota"
-    },
-    {
-      "cite_keys": [
         "roy2019chrononet"
       ],
       "detail": "",
@@ -1067,60 +1182,6 @@
     },
     {
       "cite_keys": [
-        "schirrmeister2017deepconvnet"
-      ],
-      "detail": "",
-      "id": "sota:cite:schirrmeister2017deepconvnet",
-      "label": "Deep learning with convolutional neural networks for {EEG} decoding and visualization",
-      "outside_pool": true,
-      "paper_blocks": [],
-      "source": {
-        "locator": "schirrmeister2017deepconvnet",
-        "path": "paper/refs.bib"
-      },
-      "status": {
-        "state": "present"
-      },
-      "type": "sota"
-    },
-    {
-      "cite_keys": [
-        "selvaraju2017gradcam"
-      ],
-      "detail": "",
-      "id": "sota:cite:selvaraju2017gradcam",
-      "label": "{Grad-CAM}: Visual explanations from deep networks via gradient-based localization",
-      "outside_pool": true,
-      "paper_blocks": [],
-      "source": {
-        "locator": "selvaraju2017gradcam",
-        "path": "paper/refs.bib"
-      },
-      "status": {
-        "state": "present"
-      },
-      "type": "sota"
-    },
-    {
-      "cite_keys": [
-        "snoek2019confounds"
-      ],
-      "detail": "",
-      "id": "sota:cite:snoek2019confounds",
-      "label": "How to control for confounds in decoding analyses of neuroimaging data",
-      "outside_pool": true,
-      "paper_blocks": [],
-      "source": {
-        "locator": "snoek2019confounds",
-        "path": "paper/refs.bib"
-      },
-      "status": {
-        "state": "present"
-      },
-      "type": "sota"
-    },
-    {
-      "cite_keys": [
         "snyder2006clinical"
       ],
       "detail": "",
@@ -1157,42 +1218,6 @@
     },
     {
       "cite_keys": [
-        "sundararajan2017axiomatic"
-      ],
-      "detail": "",
-      "id": "sota:cite:sundararajan2017axiomatic",
-      "label": "Axiomatic attribution for deep networks",
-      "outside_pool": true,
-      "paper_blocks": [],
-      "source": {
-        "locator": "sundararajan2017axiomatic",
-        "path": "paper/refs.bib"
-      },
-      "status": {
-        "state": "present"
-      },
-      "type": "sota"
-    },
-    {
-      "cite_keys": [
-        "varma2006bias"
-      ],
-      "detail": "",
-      "id": "sota:cite:varma2006bias",
-      "label": "Bias in error estimation when using cross-validation for model selection",
-      "outside_pool": true,
-      "paper_blocks": [],
-      "source": {
-        "locator": "varma2006bias",
-        "path": "paper/refs.bib"
-      },
-      "status": {
-        "state": "present"
-      },
-      "type": "sota"
-    },
-    {
-      "cite_keys": [
         "varoquaux2018cross"
       ],
       "detail": "",
@@ -1202,24 +1227,6 @@
       "paper_blocks": [],
       "source": {
         "locator": "varoquaux2018cross",
-        "path": "paper/refs.bib"
-      },
-      "status": {
-        "state": "present"
-      },
-      "type": "sota"
-    },
-    {
-      "cite_keys": [
-        "varoquaux2022machine"
-      ],
-      "detail": "",
-      "id": "sota:cite:varoquaux2022machine",
-      "label": "Machine learning for medical imaging: methodological failures and recommendations for the future",
-      "outside_pool": true,
-      "paper_blocks": [],
-      "source": {
-        "locator": "varoquaux2022machine",
         "path": "paper/refs.bib"
       },
       "status": {
@@ -1274,42 +1281,6 @@
       "paper_blocks": [],
       "source": {
         "locator": "widmann2015digital",
-        "path": "paper/refs.bib"
-      },
-      "status": {
-        "state": "present"
-      },
-      "type": "sota"
-    },
-    {
-      "cite_keys": [
-        "yarkoni2017choosing"
-      ],
-      "detail": "",
-      "id": "sota:cite:yarkoni2017choosing",
-      "label": "Choosing prediction over explanation in psychology: Lessons from machine learning",
-      "outside_pool": true,
-      "paper_blocks": [],
-      "source": {
-        "locator": "yarkoni2017choosing",
-        "path": "paper/refs.bib"
-      },
-      "status": {
-        "state": "present"
-      },
-      "type": "sota"
-    },
-    {
-      "cite_keys": [
-        "zhang2017rethinking"
-      ],
-      "detail": "",
-      "id": "sota:cite:zhang2017rethinking",
-      "label": "Understanding deep learning requires rethinking generalization",
-      "outside_pool": true,
-      "paper_blocks": [],
-      "source": {
-        "locator": "zhang2017rethinking",
         "path": "paper/refs.bib"
       },
       "status": {

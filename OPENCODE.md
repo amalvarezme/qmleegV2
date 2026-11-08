@@ -1,7 +1,7 @@
 # qmleegV2 — OpenCode Entrypoint
 
 Generated from the canonical `.claude/` agent definitions by `papersmith`
-0.65.0. Read the workspace configuration and the relevant skill before
+0.66.0. Read the workspace configuration and the relevant skill before
 changing research artifacts.
 
 ## Canonical context
@@ -39,7 +39,7 @@ changing research artifacts.
 - `redactor` — Drafts one contract block's LaTeX from exactly five inputs — the contract's own prose (verbatim), the block's evidence set, its mode, its style set (empty is valid), and its own bound source sections (empty is valid) — and hands back a binding map beside the draft, naming every sentence's source. Never invoked by any code path; `write` judges what you return, it never calls you.
 - `section-grounding-auditor` — Reads a transposition block's own bound source section, verbatim, and judges each subject sentence's support against it, returning supported/unsupported/undecidable per sentence with a quoted span for every supported. Never invoked by any code path; write re-derives both the subject sentences and the section bytes independently and reconciles your account against them, it never trusts either from you.
 - `sota-grapher` — One stretch: map the scout pool to its solar-system constellation — one system per paper grouped by family, at most 20 planets each, links running between planets of different systems — as sota-pool/atlas.json plus the single sota-pool/atlas.html, and drive the skill's own checker and renderer until both run green. Ends at the HTML plus the green runs; judges truth never, repairs nothing outside sota-pool/.
-- `sota-scout` — One stretch: scout a stated research idea across the open literature — at most 25 resolved references with verbatim abstracts, each in exactly one primary family, 3 to 5 families per pool, and a provisional plausibility note — as sota-pool/candidates.json. Ends at the pool; ingests nothing, grades nothing as final, files nothing into guidance/.
+- `sota-scout` — One stretch: scout a stated research idea across the open literature — at most 25 resolved references with verbatim abstracts, each in exactly one primary family, 3 to 7 families per pool, and a provisional plausibility note — as sota-pool/candidates.json. Ends at the pool; ingests nothing, grades nothing as final, files nothing into guidance/.
 - `style-sampler` — Resolves the equivalent block, whole, from each guidance/ folder the registry classes style-reference — and returns it verbatim, never excerpted. What you return becomes R, the only material any later overlap check may compare a styled draft against.
 - `venue-adapter` — Reads a chosen journal's author guidelines and document template and measures the manuscript against them: writes the venue's requirements (each one a quoted passage and the url it came from), alerts on sections that must be adjusted, sections the venue needs and smith lacks, and every inconsistency between smith's base template and the venue's, and proposes an adjustment plan only when one is prudent, iterating it with the operator until the operator approves its exact text. Ends at an approved plan (or an audit that needs none) and a built paper/venues/<slug>/main.tex; never changes a word of the paper, never invents a requirement, and never submits.
 
@@ -120,7 +120,7 @@ skill refuses when its input is missing.
      `sota-pool/candidates.json`, each with its reason, in
      `.papersmith/citations.json`, and shown beside the idea. This is the
      phase's fourth step, launched from its button in the stepper; `python
-     skills/_core/results/citations_cli.py check --root .` says what is owed.
+     skills/_core/results/citations_cli.py check --root .` says what is owed. Each reference the ideas cite must also be drawn in the SOTA constellation: `smith atlas coverage .` lists the ones it is not.
    - **Contribution type**: once the hypotheses are discussed and the
      mathematics and the novelty proposed, the `paper-reviewer` agent
      classifies the proposal's NeurIPS contribution type
@@ -211,7 +211,7 @@ skill refuses when its input is missing.
    `resolve --references`: it stores each cited paper's metadata and abstract
    in `paper/.paper-writing/references.json`, and `verify` fails while a cited
    key has no record there. A paper it cannot resolve, offline included, keeps
-   a record and passes with a note.
+   a record and passes with a note. Then `smith atlas coverage .` lists the cited papers the SOTA constellation draws only as placeholders: their abstracts go to the pool (`sota-scout`) and their systems to the constellation (`sota-grapher`).
 9. **Figures**: `/figure-review <figure id>` checks a compiled
    `paper/Figures/<id>.pdf`.
 10. **Paper**: compile `paper/main.tex` to `paper/main.pdf` (dashboard:
