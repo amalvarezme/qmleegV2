@@ -1,6 +1,6 @@
 version: "1"
-name: "QMLEEG"
-title: "QMLEEG"
+name: "qmleegV2"
+title: "qmleegV2"
 topic: "Quantum Machine Learning for EEG (QMLEEG)"
 venue_target: "unspecified"
 
