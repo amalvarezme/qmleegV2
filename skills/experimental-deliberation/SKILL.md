@@ -315,13 +315,17 @@ Put the declaration in the experiment's own heading. `experimental-implementatio
 ### SOTA citations of each experiment: `.papersmith/citations.json`
 
 **Every experiment of the latest protocol is justified by 2 to 5 references of
-the SOTA pool**, under the key `experiment:<id>` of the `## Experiment [exp:<id>]`
-heading, in the file the proposal's ideas use: `{"schema": 1, "ideas":
+the SOTA pool**, under the key `experiment:<id>` of the heading (any level) carrying `[exp:<id>]`,
+such as `## Experiment [exp:<id>]`, in the file the proposal's ideas use: `{"schema": 1, "ideas":
 {"experiment:E1": [{"id": "<pool identifier>", "why": "<how this reference
-supports the experiment>"}]}}`. Keep the other keys of that file as they are.
+supports the experiment>", "quote": "<the span of its abstract that holds it,
+verbatim>"}]}}`. Keep the other keys of that file as they are.
 Each `id` is a distinct `candidates[].identifier` of `sota-pool/candidates.json`;
 `why` is non-blank, at most 300 characters, and never claims more than the
-reference states. Refresh the file with each new protocol version, then run
+reference states; `quote` copies 20 to 300 characters of the reference's pool
+`abstract`, verbatim (whitespace aside), that hold the experiment's design or
+claim, and a reference whose abstract holds none, or that has no abstract, is
+not cited. Refresh the file with each new protocol version, then run
 `python skills/_core/results/citations_cli.py check --root .`, which prints what
 is owed and exits non-zero. Until every experiment is cited,
 `/proposal-implementation` and `/experimental-implementation` stay locked, the

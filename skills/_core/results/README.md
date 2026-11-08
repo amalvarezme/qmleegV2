@@ -10,10 +10,11 @@ Each product folder (`implementations/<repo>/<Name>/`) closes its proof of conce
 `citations.py` is a second contract here, for the ideas rather than the results: every pillar, hypothesis, concept-map layer, numbered equation and experiment is justified by 2 to 5 entries of `sota-pool/candidates.json` in `.papersmith/citations.json`.
 
 ```json
-{"schema": 1, "ideas": {"hypothesis:H1": [{"id": "2008.08605", "why": "How this reference supports the idea."}]}}
+{"schema": 1, "ideas": {"hypothesis:H1": [{"id": "2008.08605", "why": "How this reference supports the idea.",
+                                           "quote": "A verbatim span of the reference's abstract that holds it."}]}}
 ```
 
-`python skills/_core/results/citations_cli.py check --root .` reports what is owed and exits 1 while anything is. It proves pool membership and a stated reason, not that the reference really supports the idea.
+`python skills/_core/results/citations_cli.py check --root .` reports what is owed and exits 1 while anything is. Each citation's `quote` must appear verbatim (whitespace aside), 20 to 300 characters, starting and ending on word boundaries, in the pool record's `abstract`, so a citation is grounded in what its reference states; a reference with no abstract cannot be cited. `citations_cli.py routes --root .` prints the reverse map: each pool reference with the ideas it is cited for, their quotes and whether each is `grounded`, and `uncited`, the references no idea cites.
 
 ## CLI
 
@@ -37,7 +38,7 @@ Refusal codes: `USAGE`, `PRODUCT_ABSENT` (not a directory), `APPROVAL_ABSENT` (s
 
 ## Scaffold
 
-The stage comes from the holder (`Experimental_AGREED.md` → `full`, else `AGREED.md` → `poc`). The workspace root is `product.parents[2]`. From the latest `experiments/experiments-*-vNN.md` (highest `NN`), each `## Experiment [exp:<id>]` becomes one hypothesis `H1..Hn` (in order) with its **Hypothesis** and **Success criterion** bullets copied verbatim; `verdict` is `pending`, `observed` and `summary` are empty. `metrics` starts empty. `available_evidence` lists the figures, tables, qualitative artifacts (`Results/qualitative/**`) and significance comparisons found on disk, to help the author; it is ignored by the check. No number is ever written.
+The stage comes from the holder (`Experimental_AGREED.md` → `full`, else `AGREED.md` → `poc`). The workspace root is `product.parents[2]`. From the latest `experiments/experiments-*-vNN.md` (highest `NN`), each heading of any level carrying `[exp:<id>]` (such as `## Experiment [exp:<id>]`) becomes one hypothesis `H1..Hn` (in order) with its **Hypothesis** and **Success criterion** bullets copied verbatim; `verdict` is `pending`, `observed` and `summary` are empty. `metrics` starts empty. `available_evidence` lists the figures, tables, qualitative artifacts (`Results/qualitative/**`) and significance comparisons found on disk, to help the author; it is ignored by the check. No number is ever written.
 
 **A fresh scaffold is `invalid` on purpose** (empty `summary`, no `metrics`, no qualitative entry or reason). The author fills it, then runs `check` until it is `complete`. If no protocol exists, `protocol` is `""` and the hypotheses must be added by hand (the CLI warns).
 
@@ -69,7 +70,7 @@ The stage comes from the holder (`Experimental_AGREED.md` → `full`, else `AGRE
 }
 ```
 
-`contribution_type` is optional and is the `paper-reviewer` agent's, in its findings mode: once `check` reports `complete`, the implementation skill hands the discussion to that agent, copies the NeurIPS contribution type it returns into the top level and runs `check` again. The Novelty & Findings tab shows it right after the hypotheses matrix, preferring a `full` product over a `poc` one (`contribution_type` in `GET /api/novelty/status`). The same shape lives in `.papersmith/model_spec.json` for the proposal phase (`contribution_type.py` holds the shared contract).
+`contribution_type` is optional and is the `paper-reviewer` agent's, in its findings mode: once `check` reports `complete`, the implementation skill hands the discussion to that agent, copies the contribution type it returns into the top level and runs `check` again. The Novelty & Findings tab shows it right after the hypotheses matrix, preferring a `full` product over a `poc` one (`contribution_type` in `GET /api/novelty/status`). The same shape lives in `.papersmith/model_spec.json` for the proposal phase (`contribution_type.py` holds the shared contract).
 
 Evidence is either a path relative to the product folder or `significance:<comparison>`, matched against the `comparison` values of the product's `Results/**/significance*.json` (a list, or a dict wrapping a list under `tests`, `comparisons` or `results`).
 
@@ -88,7 +89,7 @@ Errors:
 - **At stage `full`**, a `supported`/`partially_supported`/`not_supported` verdict cites no `significance:` evidence (the hypothesis test is mandatory). At `poc` this is only a warning.
 - `novelty` is missing or not an object, its verdict is outside the enum, or a non-pending verdict has no evidence.
 - Neither a non-empty `qualitative` list nor a non-empty `qualitative_not_applicable`; a qualitative entry has a `kind` outside the enum or a `figure` that does not exist.
-- `contribution_type`, when present, is not an object, has a `type` outside the five NeurIPS types, an empty `why` or one longer than 600 characters, or a key other than `type` and `why`.
+- `contribution_type`, when present, is not an object, has a `type` outside the five contribution types, an empty `why` or one longer than 600 characters, or a key other than `type` and `why`.
 - Too many entries (200 hypotheses, 100 metrics, 100 qualitative entries, 50 evidence entries per item).
 
 Warnings (never errors): unknown keys, duplicate hypothesis ids, `discussion_type` values outside the enum, a metric `role` outside `primary`/`secondary`, and the PoC significance gap above.

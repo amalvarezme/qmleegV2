@@ -13,32 +13,32 @@
   <link rel="stylesheet" href="./vendor/xterm.css">
   <script src="./vendor/xterm.js"></script>
   <script src="./vendor/xterm-addon-fit.js"></script>
-  <script src="./i18n/en.js?v=0.66.0"></script>
-  <script src="./i18n/es.js?v=0.66.0"></script>
-  <script src="./i18n.js?v=0.66.0"></script>
-  <script src="./text-size.js?v=0.66.0"></script>
-  <script src="./section-folds.js?v=0.66.0"></script>
-  <script src="./cli-console.js?v=0.66.0"></script>
+  <script src="./i18n/en.js?v=0.67.0"></script>
+  <script src="./i18n/es.js?v=0.67.0"></script>
+  <script src="./i18n.js?v=0.67.0"></script>
+  <script src="./text-size.js?v=0.67.0"></script>
+  <script src="./section-folds.js?v=0.67.0"></script>
+  <script src="./cli-console.js?v=0.67.0"></script>
   <link rel="stylesheet" href="./vendor/katex/katex.min.css">
   <script src="./vendor/katex/katex.min.js"></script>
-  <script src="./citations.js?v=0.66.0"></script>
-  <script src="./atlas-reference.js?v=0.66.0"></script>
-  <script src="./math-panel.js?v=0.66.0"></script>
-  <script src="./contribution-affinity.js?v=0.66.0"></script>
-  <script src="./model-panel.js?v=0.66.0"></script>
-  <script src="./experiments-panel.js?v=0.66.0"></script>
-  <script src="./experiments-tutor.js?v=0.66.0"></script>
-  <script src="./novelty-panel.js?v=0.66.0"></script>
-  <script src="./agents-panel.js?v=0.66.0"></script>
-  <script src="./doctor-panel.js?v=0.66.0"></script>
-  <script src="./journals-panel.js?v=0.66.0"></script>
-  <script src="./ai-history-panel.js?v=0.66.0"></script>
-  <script src="./phase-console.js?v=0.66.0"></script>
-  <script src="./phase-run.js?v=0.66.0"></script>
-  <script src="./atlas-manuscript-panel.js?v=0.66.0"></script>
-  <script src="./manuscript-graph-panel.js?v=0.66.0"></script>
-  <script src="./paper-explorer-panel.js?v=0.66.0"></script>
-  <script src="./manuscript-qa-panel.js?v=0.66.0"></script>
+  <script src="./citations.js?v=0.67.0"></script>
+  <script src="./atlas-reference.js?v=0.67.0"></script>
+  <script src="./math-panel.js?v=0.67.0"></script>
+  <script src="./contribution-affinity.js?v=0.67.0"></script>
+  <script src="./model-panel.js?v=0.67.0"></script>
+  <script src="./experiments-panel.js?v=0.67.0"></script>
+  <script src="./experiments-tutor.js?v=0.67.0"></script>
+  <script src="./novelty-panel.js?v=0.67.0"></script>
+  <script src="./agents-panel.js?v=0.67.0"></script>
+  <script src="./doctor-panel.js?v=0.67.0"></script>
+  <script src="./journals-panel.js?v=0.67.0"></script>
+  <script src="./ai-history-panel.js?v=0.67.0"></script>
+  <script src="./phase-console.js?v=0.67.0"></script>
+  <script src="./phase-run.js?v=0.67.0"></script>
+  <script src="./atlas-manuscript-panel.js?v=0.67.0"></script>
+  <script src="./manuscript-graph-panel.js?v=0.67.0"></script>
+  <script src="./paper-explorer-panel.js?v=0.67.0"></script>
+  <script src="./manuscript-qa-panel.js?v=0.67.0"></script>
   <style>
     :root {
       --bg: #0b0f19;
@@ -2311,7 +2311,7 @@
       gap: 1rem;
       margin-top: 1rem;
     }
-    /* The NeurIPS judge's affinity per contribution type (contribution-affinity.js). */
+    /* The judge-reviewer's affinity per contribution type (contribution-affinity.js). */
     .ct-affinity { margin-top: 0.75rem; }
     .ct-affinity__title { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.04em; color: var(--text-dim); margin-bottom: 0.4rem; }
     .ct-affinity__note { font-size: 0.78rem; color: var(--text-muted); margin-bottom: 0.4rem; }
@@ -3266,7 +3266,7 @@
             <div id="modelHypothesisGrid" class="model-hypothesis-grid"></div>
           </div>
 
-          <!-- NeurIPS contribution type of the proposal, from paper-reviewer (model-panel.js) -->
+          <!-- contribution type of the proposal, from paper-reviewer (model-panel.js) -->
           <div id="modelContributionType" class="contribution-type" style="margin-top: 1.25rem;" data-fold="model:contribution" data-fold-title="contribution.title" data-fold-open></div>
         </div>
       </div>
@@ -5602,13 +5602,18 @@
         // Populate Runs Selector
         const runSel = document.getElementById('runSelector');
         runSel.innerHTML = '';
+        // Each revision shows its short run id (r07); the full file name stays
+        // its value and its tooltip, so a long name never widens the header.
+        const runId = name => (String(name).match(/r(\d+)\.md$/) || [])[0]?.replace(/\.md$/, '') || String(name);
         (data.all_runs || []).forEach(r => {
           const opt = document.createElement('option');
           opt.value = r;
-          opt.textContent = r;
-          if (r === data.active_run) opt.selected = true;
+          opt.textContent = runId(r);
+          opt.title = r;
+          if (runId(r) === data.active_run && !runSel.querySelector('option[selected]')) opt.defaultSelected = true;
           runSel.appendChild(opt);
         });
+        runSel.title = runSel.value || '';
 
         // Header Title & Totals
         const details = data.run_details || {};

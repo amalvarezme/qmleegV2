@@ -1,7 +1,7 @@
 # qmleegV2 — OpenCode Entrypoint
 
 Generated from the canonical `.claude/` agent definitions by `papersmith`
-0.66.0. Read the workspace configuration and the relevant skill before
+0.67.0. Read the workspace configuration and the relevant skill before
 changing research artifacts.
 
 ## Canonical context
@@ -35,7 +35,7 @@ changing research artifacts.
 - `novelty-screener` — One stretch of the plausibility flow: discuss the stated hypothesis against the scout pool's abstracts, grade each claim's novelty and conceptual plausibility with quoted evidence — every grade provisional until ingestion — rank the top 5 references for the later ingestion stage, and close with one plausibility paragraph on where the proposal stands. Ends at the report; publishes nothing, writes nothing, ingests nothing, and deliberates nothing.
 - `paper-ingestion` — Turn a paper into the form it can actually be used in — equations as LaTeX, tables as tables, figures as files — and arrive at a document a person can read and a later session can cite, which a PDF is not. Stages: filed, extracted, readable. Nothing here is a person's decision: ingestion asks nobody.
 - `paper-replicator` — One stretch of proposal-implementation, the `fidelity` stage for a referenced method (a comparison or baseline paper): first search for the paper's published code; when it exists, adopt it pinned to a commit and audit that it corresponds to the paper and is implemented correctly, and only when it does not, reimplement the method from the paper's ingested Markdown (and the cited papers it depends on, when ingested). Either way it ends at code inside the target repository's layout, a REPLICATION.md correspondence table, invariant tests and a toy-set smoke run. Search, then audit or plan, analyze, code, verify. Never invents a result, never claims fidelity it did not test, and never launches a remote run — it ends by reporting what it wrote and measured.
-- `paper-reviewer` — Reviews the assembled paper the way a NeurIPS 2026 main-track reviewer would: fills every field of the official review form (summary, contribution type, strengths and weaknesses on quality, clarity, significance and originality, the four 1-4 ratings, 3-5 actionable questions, limitations, overall 1-6, confidence 1-5, ethics flag, formatting concerns), backs each originality, pertinence and coherence judgement with a quoted passage from the paper and from the workspace's own SOTA pool or ingested references, and audits adjusted novelty concordance between problem, title, abstract, introduction and verified empirical findings. Ends at the review report the operator reads before revising; never edits the paper, never submits it, and never claims a lack of novelty without naming the reference that holds the idea.
+- `paper-reviewer` — Reviews the assembled paper the way a main-track reviewer of a top machine-learning conference would: fills every field of the official review form (summary, contribution type, strengths and weaknesses on quality, clarity, significance and originality, the four 1-4 ratings, 3-5 actionable questions, limitations, overall 1-6, confidence 1-5, ethics flag, formatting concerns), backs each originality, pertinence and coherence judgement with a quoted passage from the paper and from the workspace's own SOTA pool or ingested references, and audits adjusted novelty concordance between problem, title, abstract, introduction and verified empirical findings. Ends at the review report the operator reads before revising; never edits the paper, never submits it, and never claims a lack of novelty without naming the reference that holds the idea.
 - `redactor` — Drafts one contract block's LaTeX from exactly five inputs — the contract's own prose (verbatim), the block's evidence set, its mode, its style set (empty is valid), and its own bound source sections (empty is valid) — and hands back a binding map beside the draft, naming every sentence's source. Never invoked by any code path; `write` judges what you return, it never calls you.
 - `section-grounding-auditor` — Reads a transposition block's own bound source section, verbatim, and judges each subject sentence's support against it, returning supported/unsupported/undecidable per sentence with a quoted span for every supported. Never invoked by any code path; write re-derives both the subject sentences and the section bytes independently and reconciles your account against them, it never trusts either from you.
 - `sota-grapher` — One stretch: map the scout pool to its solar-system constellation — one system per paper grouped by family, at most 20 planets each, links running between planets of different systems — as sota-pool/atlas.json plus the single sota-pool/atlas.html, and drive the skill's own checker and renderer until both run green. Ends at the HTML plus the green runs; judges truth never, repairs nothing outside sota-pool/.
@@ -91,7 +91,8 @@ skill refuses when its input is missing.
    turns the accepted top 5 into Markdown under `guidance/`, with equations
    as LaTeX.
 4. **Proposal deliberation**: `/proposal-deliberation` keeps managed revisions
-   `proposals/research-concept-<slug>-rNN.md`, built in this order: the
+   `proposals/research-concept-<slug>-rNN.md` (or slugless
+   `research-concept-rNN.md`), built in this order: the
    central problem and its pillars, then the hypotheses each pillar predicts,
    then the mathematics in `$$ … \tag{N} $$` display blocks. Each step stays
    locked until the one before it exists on disk; the dashboard's
@@ -117,16 +118,20 @@ skill refuses when its input is missing.
      The fourth step stays open until both trees hold.
    - **SOTA citations**: every pillar, hypothesis, concept-map layer and
      numbered equation is justified by 2 to 5 references of
-     `sota-pool/candidates.json`, each with its reason, in
+     `sota-pool/candidates.json`, each with its reason and a verbatim quote of its abstract that holds the idea, in
      `.papersmith/citations.json`, and shown beside the idea. This is the
      phase's fourth step, launched from its button in the stepper; `python
-     skills/_core/results/citations_cli.py check --root .` says what is owed. Each reference the ideas cite must also be drawn in the SOTA constellation: `smith atlas coverage .` lists the ones it is not.
+     skills/_core/results/citations_cli.py check --root .` says what is owed. The quote is 20 to 300 characters of the pool record's
+     abstract, verbatim and starting and ending on word boundaries, so a
+     reference without an abstract cannot be cited; `python
+     skills/_core/results/citations_cli.py routes --root .` prints each
+     reference with the ideas it is cited for and their quotes. Each reference the ideas cite must also be drawn in the SOTA constellation: `smith atlas coverage .` lists the ones it is not.
    - **Contribution type**: once the hypotheses are discussed and the
      mathematics and the novelty proposed, the `paper-reviewer` agent
-     classifies the proposal's NeurIPS contribution type
+     classifies the proposal's contribution type
      (`contribution_type` in `.papersmith/model_spec.json`), shown right after
-     the hypotheses. This NeurIPS judge is the phase's fifth step: the
-     "Lanzar el juez NeurIPS" button, on that card and in the stepper, launches
+     the hypotheses. This judge-reviewer is the phase's fifth step: the
+     "Lanzar el juez-revisor" button, on that card and in the stepper, launches
      it, and Phase 5 stays locked until it records a type.
 5. **Proof of concept and experiments**, in this order:
    `/experimental-deliberation` writes the protocol in `experiments/`; a toy
@@ -145,7 +150,8 @@ skill refuses when its input is missing.
      its 2 to 5 SOTA citations in `.papersmith/citations.json`, launched from
      the Experimentos tab. Until then `/proposal-implementation` and
      `/experimental-implementation` stay locked and G-EXP-POC refuses its
-     approval (`SOTA_CITATIONS_OWED`).
+     approval (`SOTA_CITATIONS_OWED`). Then `smith atlas coverage .` lists the
+     cited references the SOTA constellation does not draw yet.
    - **Data**: `/datasets synth|search|license|qc|prepare|publish` gives both
      stages a seeded toy set always and one official dataset (agents
      `dataset-scout`, `dataset-curator`): license checked, quality measured,
@@ -189,11 +195,11 @@ skill refuses when its input is missing.
      `/remote-execution`: generate-job → submit --smoke → fetch --smoke /
      smoke record → readiness → gate → submit → status / poll → fetch.
    - **Findings and novelty**: once a stage's discussion is complete, the
-     `paper-reviewer` agent classifies the NeurIPS contribution type of its
+     `paper-reviewer` agent classifies the contribution type of its
      findings (`contribution_type` in `Results/discussion.json`). The
      Novedad & Hallazgos tab launches that judge from a button on its
      contribution-type card, and G-EXP-POC and G-NOVELTY refuse their approval
-     (`NEURIPS_JUDGE_OWED`) while a complete discussion of that stage has no
+     (`JUDGE_REVIEW_OWED`) while a complete discussion of that stage has no
      type. The tab contrasts the hypothesis verdicts with the SOTA
      pool and the operator records `G-NOVELTY` (`smith novelty approve` or
      `iterate`) before the paper is written.

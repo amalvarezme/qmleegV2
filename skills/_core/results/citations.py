@@ -73,6 +73,10 @@ RANKS_REL = "sota-pool/journal-ranks.json"
 MIN_CITATIONS = 2
 MAX_CITATIONS = 5
 MAX_WHY = 300
+#: A citation quotes the span of its reference's abstract that holds the idea
+#: (#160): verbatim, whitespace aside, between these lengths.
+MIN_QUOTE = 20
+MAX_QUOTE = 300
 MAX_TEXT = 300
 MAX_AUTHORS = 20
 MAX_EQUATIONS = 40
@@ -111,9 +115,13 @@ STAGE_KINDS = {"proposal": ("problem", "cause", "pillar", "hypothesis", "layer",
 _DOI_PREFIXES = ("https://doi.org/", "http://doi.org/", "https://dx.doi.org/", "http://dx.doi.org/", "doi:")
 _ARXIV_PREFIX = re.compile(r"^(?:https?://(?:www\.)?arxiv\.org/(?:abs|pdf)/|arxiv:)", re.IGNORECASE)
 _ARXIV_ID = re.compile(r"^(?:\d{4}\.\d{4,5}|[a-z-]+(?:\.[a-z]{2})?/\d{7})(?:v\d+)?$")
-_REVISION = re.compile(r"^research-concept-.+-r(\d+)\.md$")
+#: A managed revision, with or without a slug: research-concept-r44.md and
+#: research-concept-eeg-r07.md both are, as Phase 4 reads them.
+_REVISION = re.compile(r"^research-concept-(?:.+-)?r(\d+)\.md$")
 _PROTOCOL = re.compile(r"^experiments-.+-v(\d+)\.md$")
-_EXPERIMENT = re.compile(r"^##\s+Experiment\s+\[exp:([^\]]+)\]")
+#: An experiment declares [exp:<id>] in its own heading, at any level
+#: (skills/_core/conventions/experiments.json), as the Experiments tab reads it.
+_EXPERIMENT = re.compile(r"^#{1,6}\s+.*?\[exp:([^\]]+)\]")
 _TAG = re.compile(r"\\tag\{([^{}]*)\}")
 _FENCE = re.compile(r"^(```|~~~)")
 _CAUSE_ID = re.compile(r"^DC\d+$")
@@ -213,10 +221,9 @@ def _tags(text: str) -> list[str]:
     LaTeX, and an unclosed one ends the reading."""
     lines = text.splitlines()
     tags: list[str] = []
-    blocks = 0
     index = 0
     fence: str | None = None
-    while index < len(lines) and blocks < MAX_EQUATIONS:
+    while index < len(lines) and len(tags) < MAX_EQUATIONS:
         line = lines[index].strip()
         fence_match = _FENCE.match(line)
         if fence_match and (fence is None or fence_match.group(1) == fence):
@@ -231,10 +238,8 @@ def _tags(text: str) -> list[str]:
             break
         body = "\n".join(lines[index + 1:end]).strip()
         tag = _TAG.search(body)
-        if _TAG.sub("", body).strip():
-            blocks += 1
-            if tag:
-                tags.append(tag.group(1).strip())
+        if tag and _TAG.sub("", body).strip():
+            tags.append(tag.group(1).strip())
         index = end + 1
     return tags
 
@@ -506,8 +511,10 @@ def problems(key: str, entries: Any, pool: dict[str, dict[str, Any]],
             found.append(f"{key}: duplicate id {entry['id'].strip()!r}")
         elif identity not in pool:
             found.append(f"{key}: {entry['id'].strip()!r} is not in {POOL_REL}")
-        elif ranks is not None and key.split(":", 1)[0] in TREE_KINDS:
-            found += _journal_problems(key, entry["id"].strip(), pool[identity], ranks.get(identity))
+        else:
+            if ranks is not None and key.split(":", 1)[0] in TREE_KINDS:
+                found += _journal_problems(key, entry["id"].strip(), pool[identity], ranks.get(identity))
+            found += _quote_problems(key, position, entry, pool[identity])
         if identity:
             seen.add(identity)
         why = entry.get("why")
@@ -518,6 +525,51 @@ def problems(key: str, entries: Any, pool: dict[str, dict[str, Any]],
         elif ranks is not None and key.split(":", 1)[0] in TREE_KINDS and _reads_spanish(why):
             found.append(f"{key}: entry {position} why must be written in English")
     return found
+
+
+def _spaced(text: Any) -> str:
+    return " ".join(text.split()) if isinstance(text, str) else ""
+
+
+def _quote_problems(key: str, position: int, entry: dict[str, Any], record: dict[str, Any]) -> list[str]:
+    """Whether a citation quotes, verbatim, the abstract of its pool reference."""
+    abstract = _spaced(record.get("abstract"))
+    if not abstract:
+        return [f"{key}: {entry['id'].strip()!r} has no abstract in {POOL_REL} to quote"]
+    quote = entry.get("quote")
+    if not (isinstance(quote, str) and quote.strip()):
+        return [f"{key}: entry {position} has no quote"]
+    quote = _spaced(quote)
+    if len(quote) < MIN_QUOTE:
+        return [f"{key}: entry {position} quote is shorter than {MIN_QUOTE} characters"]
+    if len(quote) > MAX_QUOTE:
+        return [f"{key}: entry {position} quote is longer than {MAX_QUOTE} characters"]
+    if not _holds(abstract, quote):
+        return [f"{key}: entry {position} quote is not in the abstract of {entry['id'].strip()!r}"]
+    return []
+
+
+def _holds(abstract: str, quote: str) -> bool:
+    """Whether ``quote`` is a span of ``abstract`` that starts and ends on word
+    boundaries, so a fragment of a word never counts as a quote."""
+    return re.search(r"(?<!\w)" + re.escape(quote) + r"(?!\w)", abstract) is not None
+
+
+def routes(recorded: dict[str, Any], pool: dict[str, dict[str, Any]], keys: list[str]) -> list[dict[str, Any]]:
+    """The reverse map: each pool reference, in pool order, with the current
+    ideas that cite it, the quote each one takes from its abstract and whether
+    that quote is grounded (verbatim in the abstract, as ``check`` requires)."""
+    found: dict[str, list[dict[str, str]]] = {identity: [] for identity in pool}
+    for key in keys:
+        entries = recorded.get(key)
+        for entry in (entries if isinstance(entries, list) else [])[:MAX_CITATIONS]:
+            identity = normalize(entry.get("id")) if isinstance(entry, dict) else None
+            if identity in found and all(item["key"] != key for item in found[identity]):
+                quote = _spaced(entry.get("quote"))
+                grounded = bool(quote) and not _quote_problems(key, 0, entry, pool[identity])
+                found[identity].append({"key": key, "quote": _clip(quote), "grounded": grounded})
+    return [{"id": _clip(record.get("identifier")), "title": _clip(record.get("title")), "ideas": found[identity]}
+            for identity, record in pool.items()]
 
 
 def _clip(value: Any) -> str:
@@ -536,7 +588,9 @@ def _shown(entries: Any, pool: dict[str, dict[str, Any]],
         authors = record.get("authors")
         lab = _lab((ranks or {}).get(normalize(entry["id"])))
         shown.append({**({"lab": lab} if lab else {}),
-                      "id": _clip(entry["id"]), "why": _clip(entry.get("why")), "title": _clip(record.get("title")),
+                      "id": _clip(entry["id"]), "why": _clip(entry.get("why")),
+                      **({"quote": _clip(_spaced(entry["quote"]))} if _spaced(entry.get("quote")) else {}),
+                      "title": _clip(record.get("title")),
                       "year": year if isinstance(year, int) and not isinstance(year, bool) else _clip(year),
                       "authors": ([_clip(a) for a in authors[:MAX_AUTHORS]] if isinstance(authors, list)
                                   else _clip(authors)),
@@ -551,7 +605,7 @@ def state(root: Path | str) -> dict[str, Any]:
     try:
         root = Path(root).expanduser().resolve()
     except (OSError, RuntimeError):
-        return {"ideas": [], "stages": stages, "file_problems": [], "trees": []}
+        return {"ideas": [], "stages": stages, "file_problems": [], "trees": [], "routes": []}
     recorded, file_problems = _recorded(root)
     pool = _pool(root)
     ranks = _ranks(root)
@@ -570,9 +624,10 @@ def state(root: Path | str) -> dict[str, Any]:
             stage["cited"] += 1
     trees = tree_findings(_novelty(root)[1]) if stages["proposal"]["ideas"] else []
     stages["proposal"]["owed"] += trees
-    return {"ideas": ideas, "stages": stages, "file_problems": file_problems, "trees": trees}
+    return {"ideas": ideas, "stages": stages, "file_problems": file_problems, "trees": trees,
+            "routes": routes(recorded, pool, [idea["key"] for idea in ideas])}
 
 
-__all__ = ["ACCEPTED_LABS", "ACCEPTED_QUARTILES", "CITATIONS_REL", "MAX_CITATIONS", "MAX_REFERENCE_AGE", "MAX_WHY", "MIN_CITATIONS",
-           "POOL_REL", "RANKS_REL", "SCHEMA", "STAGE_KINDS", "TREE_KINDS", "normalize", "problems", "state",
+__all__ = ["ACCEPTED_LABS", "ACCEPTED_QUARTILES", "CITATIONS_REL", "MAX_CITATIONS", "MAX_QUOTE", "MAX_REFERENCE_AGE", "MAX_WHY", "MIN_CITATIONS", "MIN_QUOTE",
+           "POOL_REL", "RANKS_REL", "SCHEMA", "STAGE_KINDS", "TREE_KINDS", "normalize", "problems", "routes", "state",
            "tree_findings"]
