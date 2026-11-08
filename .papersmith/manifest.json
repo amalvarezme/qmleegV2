@@ -235,7 +235,7 @@
     "skills/_core/command_center/static/assets/index-BzVdGTFj.js": "155d83f55c266c5830c7e5d65191815e7338c7426b25329caefc1783de7464ef",
     "skills/_core/command_center/static/assets/index-DkKE3CBS.css": "5aac044dd6eca37418f2f538f74fe7829eebe29f06a96bdb42b406aaae125e32",
     "skills/_core/command_center/static/atlas-manuscript-panel.js": "2fbaea71438e175de911020b7dbdc8c75db9aaa75b649bf8ba4a0090fc694e75",
-    "skills/_core/command_center/static/atlas-reference.js": "20abeaf8d012ef04179b2aaf5f9e832f739f3b1e437dc17a84a3153ac8cba204",
+    "skills/_core/command_center/static/atlas-reference.js": "6a2519e268a27909e311d5ba30d33c0a8ffabd53a7814c4ba1c526abe5d19e57",
     "skills/_core/command_center/static/citations.js": "06eac8b9524785f3818d68e1619c690c69374fa5b108eb63e8beb79edc517516",
     "skills/_core/command_center/static/cli-console.js": "a96343a823f8cb82f8d0da5a60f4c9af63af634e01ce7a9c6f11a9e199aa2f8b",
     "skills/_core/command_center/static/contribution-affinity.js": "e29ebba814840dfc817d22a59226b7b002de5b6c76f09fa96e4d6467606d5c6c",
@@ -660,7 +660,7 @@
     "skills/plausibility/assets/atlas3d/README.md": "90a855135bdaab896bb58a9659084219283a1f66aacb6adb77ed6a03926f8f84",
     "skills/plausibility/assets/atlas3d/viewer.js": "7f1837ae04b23565b32cb69872c3360f1fcd5701d814eeb1bb4cad43e7905723",
     "skills/plausibility/scripts/check_atlas.py": "f92a54058b61831455a00e57296a3029176ee896f2f72d90902746fc375f2221",
-    "skills/plausibility/scripts/render_atlas.py": "3115f603d53090edd96ddbcfd5d66fb723a99567be8bd3327fe18b80f33f1f56",
+    "skills/plausibility/scripts/render_atlas.py": "342a85d6a10f58c84924b27b1abd4506a45cfce7ee06d1b6ba305b3b1a484317",
     "skills/proposal-deliberation/SKILL.md": "17f79d9db45d12e5b200858b73b307bdd14a3e2846ea2872417d5f7b89942c23",
     "skills/proposal-deliberation/cli.mjs": "b2270e7b6816c92d8a3dfaa9fff8dda5f55e208695be7c8c3984dfde1086f0dd",
     "skills/proposal-deliberation/preservation-math.ts": "715956f2207eadca3821f085a1fb4f3103f453cc72493e94caf2795134bc1294",
@@ -752,5 +752,5 @@
     "skills/skill-audit/scripts/audit_cli.py": "0825a24b27fe5b8f961f5883ffe8a626089c79d54e8aa68b02f873a7ef2d455f",
     "skills/upgrade-project/SKILL.md": "610808955e3367e109df138d158a75cd2e9b7296e93f7237692831cb6969dffe"
   },
-  "updated_at": "2026-11-08T03:09:13Z"
+  "updated_at": "2026-11-08T03:32:09Z"
 }

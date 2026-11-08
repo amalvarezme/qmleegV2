@@ -137,7 +137,7 @@
     "papersmith.yaml": "777ec8c07454df281360fd61ad4d899fda1b4dd6ea957c3ef6e3b10aa75c4d29",
     "proposals/research-concept-hybrid-quantum-classical-neural-network-with-data-re-uploadi-r04.md": "217f66e588d295f7b1931bb26ee165041a7e2081f12bd595ad80a7638cba5ac9",
     "proposals/research-concept-hybrid-quantum-classical-neural-network-with-data-re-uploadi-r04.sky.json": "3b4f8e820b493f3b36417068c9f11cbaf15b7c2f6de25f26f08dad258c8cdf94",
-    "sota-pool/atlas.json": "65000aeee9019099f6dc0b2bd4ab7dcc7e9084fd940dda18fd75dcf3dbb1cd16",
+    "sota-pool/atlas.json": "d9264337fd09c50cd4c7cddd8721de85c7e45484e9818a71c801a8df3493c118",
     "sota-pool/candidates.json": "be97bf1936bca2a940995bc2b5a54e5efb452bd842095c8362309938949c296d"
   },
   "nodes": [
@@ -402,6 +402,23 @@
     },
     {
       "cite_keys": [
+        "brookshire2024leakage"
+      ],
+      "detail": "",
+      "id": "sota:eeg-data-leakage",
+      "label": "Data leakage in deep learning studies of translational EEG",
+      "paper_blocks": [],
+      "source": {
+        "locator": "systems[eeg-data-leakage]",
+        "path": "sota-pool/atlas.manuscript.json"
+      },
+      "status": {
+        "state": "present"
+      },
+      "type": "sota"
+    },
+    {
+      "cite_keys": [
         "abbas2021power"
       ],
       "detail": "",
@@ -591,24 +608,6 @@
       "paper_blocks": [],
       "source": {
         "locator": "brodersen2010balanced",
-        "path": "paper/refs.bib"
-      },
-      "status": {
-        "state": "present"
-      },
-      "type": "sota"
-    },
-    {
-      "cite_keys": [
-        "brookshire2024leakage"
-      ],
-      "detail": "",
-      "id": "sota:cite:brookshire2024leakage",
-      "label": "Data leakage in deep learning studies of translational {EEG}",
-      "outside_pool": true,
-      "paper_blocks": [],
-      "source": {
-        "locator": "brookshire2024leakage",
         "path": "paper/refs.bib"
       },
       "status": {
