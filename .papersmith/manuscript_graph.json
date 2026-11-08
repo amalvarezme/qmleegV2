@@ -132,13 +132,13 @@
     "implementations/poc/QMLEEG-DRU-POC/Results/discussion.json": "7e7354fd2cd8fff139671c954e6eddab901f89d7c759fd6a77074f6c00f5668b",
     "implementations/qmleeg-dru/QMLEEG-DRU/Results/discussion.json": "7e0909eb9a30cc877d30a3304031b2870deb63c7a11a731def2441ea4e4026df",
     "paper/couplings.json": "92c7da4c2b613453cca46f7ef1d3a11fe33fe55367b11e7bbadeba0e68fdb88f",
-    "paper/main.tex": "ec45d8e3d5dd4d540554c861421bb918e80d2744d7ed14738d77ae4af2cc94e5",
-    "paper/refs.bib": "25c50e230b62911823168d3d47e6d5bcde4c9d16d1169f76b1d8ca91d0904583",
+    "paper/main.tex": "0c5ddd6ab1e0de3ea097bd5435a3ffa1abb59de2ab3bd2c0dc1f61f598b20f94",
+    "paper/refs.bib": "38389ca6052396b3ab465dd257fd961622a472bb25f2919110440c0e8212869a",
     "papersmith.yaml": "777ec8c07454df281360fd61ad4d899fda1b4dd6ea957c3ef6e3b10aa75c4d29",
     "proposals/research-concept-hybrid-quantum-classical-neural-network-with-data-re-uploadi-r04.md": "217f66e588d295f7b1931bb26ee165041a7e2081f12bd595ad80a7638cba5ac9",
     "proposals/research-concept-hybrid-quantum-classical-neural-network-with-data-re-uploadi-r04.sky.json": "3b4f8e820b493f3b36417068c9f11cbaf15b7c2f6de25f26f08dad258c8cdf94",
-    "sota-pool/atlas.json": "91379f0fd4d51f21ae02ea39c021cef0fa4ee212a14096548006b5906475ea31",
-    "sota-pool/candidates.json": "e1a0b75bbdf3b8155f857d9f1191988c309a32814a0734f177eb896a9bc91f26"
+    "sota-pool/atlas.json": "5d94b8fe4543e9450a46854aa2083924c17c35cd31836fda90b32f38dc309c94",
+    "sota-pool/candidates.json": "e3f6f5fce3ee16c62c769e7a1f7c02b5858e59c99c31bca60ef41f9e91422d47"
   },
   "nodes": [
     {
@@ -393,6 +393,23 @@
       "paper_blocks": [],
       "source": {
         "locator": "systems[saliency-maps]",
+        "path": "sota-pool/atlas.manuscript.json"
+      },
+      "status": {
+        "state": "present"
+      },
+      "type": "sota"
+    },
+    {
+      "cite_keys": [
+        "arns2013evaluating"
+      ],
+      "detail": "",
+      "id": "sota:tbr-meta-analysis",
+      "label": "A Decade of EEG Theta/Beta Ratio Research in ADHD",
+      "paper_blocks": [],
+      "source": {
+        "locator": "systems[tbr-meta-analysis]",
         "path": "sota-pool/atlas.manuscript.json"
       },
       "status": {
@@ -915,121 +932,12 @@
         "abbas2021power"
       ],
       "detail": "",
-      "id": "sota:cite:abbas2021power",
+      "id": "sota:qnn-power",
       "label": "The power of quantum neural networks",
-      "outside_pool": true,
       "paper_blocks": [],
       "source": {
-        "locator": "abbas2021power",
-        "path": "paper/refs.bib"
-      },
-      "status": {
-        "state": "present"
-      },
-      "type": "sota"
-    },
-    {
-      "cite_keys": [
-        "alsaegh2021deep"
-      ],
-      "detail": "",
-      "id": "sota:cite:alsaegh2021deep",
-      "label": "Deep learning for cognitive load classification from {EEG}",
-      "outside_pool": true,
-      "paper_blocks": [],
-      "source": {
-        "locator": "alsaegh2021deep",
-        "path": "paper/refs.bib"
-      },
-      "status": {
-        "state": "present"
-      },
-      "type": "sota"
-    },
-    {
-      "cite_keys": [
-        "arns2013evaluating"
-      ],
-      "detail": "",
-      "id": "sota:cite:arns2013evaluating",
-      "label": "Evaluating the clinical utility of the {EEG} theta/beta ratio in {ADHD}: a meta-analysis",
-      "outside_pool": true,
-      "paper_blocks": [],
-      "source": {
-        "locator": "arns2013evaluating",
-        "path": "paper/refs.bib"
-      },
-      "status": {
-        "state": "present"
-      },
-      "type": "sota"
-    },
-    {
-      "cite_keys": [
-        "banchi2021measuring"
-      ],
-      "detail": "",
-      "id": "sota:cite:banchi2021measuring",
-      "label": "Measuring analytic gradients on quantum hardware",
-      "outside_pool": true,
-      "paper_blocks": [],
-      "source": {
-        "locator": "banchi2021measuring",
-        "path": "paper/refs.bib"
-      },
-      "status": {
-        "state": "present"
-      },
-      "type": "sota"
-    },
-    {
-      "cite_keys": [
-        "barry2003eeg"
-      ],
-      "detail": "",
-      "id": "sota:cite:barry2003eeg",
-      "label": "A review of electroencephalography in attention-deficit/hyperactivity disorder: I. Qualitative and quantitative {EEG}",
-      "outside_pool": true,
-      "paper_blocks": [],
-      "source": {
-        "locator": "barry2003eeg",
-        "path": "paper/refs.bib"
-      },
-      "status": {
-        "state": "present"
-      },
-      "type": "sota"
-    },
-    {
-      "cite_keys": [
-        "dien1998issues"
-      ],
-      "detail": "",
-      "id": "sota:cite:dien1998issues",
-      "label": "Issues in the application of the average reference: Review, critiques, and recommendations",
-      "outside_pool": true,
-      "paper_blocks": [],
-      "source": {
-        "locator": "dien1998issues",
-        "path": "paper/refs.bib"
-      },
-      "status": {
-        "state": "present"
-      },
-      "type": "sota"
-    },
-    {
-      "cite_keys": [
-        "fawcett2006roc"
-      ],
-      "detail": "",
-      "id": "sota:cite:fawcett2006roc",
-      "label": "An introduction to {ROC} analysis",
-      "outside_pool": true,
-      "paper_blocks": [],
-      "source": {
-        "locator": "fawcett2006roc",
-        "path": "paper/refs.bib"
+        "locator": "systems[qnn-power]",
+        "path": "sota-pool/atlas.manuscript.json"
       },
       "status": {
         "state": "present"
@@ -1041,13 +949,12 @@
         "havlicek2019supervised"
       ],
       "detail": "",
-      "id": "sota:cite:havlicek2019supervised",
-      "label": "Supervised learning with quantum-enhanced feature spaces",
-      "outside_pool": true,
+      "id": "sota:quantum-feature-spaces",
+      "label": "Supervised learning with quantum enhanced feature spaces",
       "paper_blocks": [],
       "source": {
-        "locator": "havlicek2019supervised",
-        "path": "paper/refs.bib"
+        "locator": "systems[quantum-feature-spaces]",
+        "path": "sota-pool/atlas.manuscript.json"
       },
       "status": {
         "state": "present"
@@ -1056,16 +963,219 @@
     },
     {
       "cite_keys": [
-        "little2017pitfalls"
+        "sturm2016interpretable"
       ],
       "detail": "",
-      "id": "sota:cite:little2017pitfalls",
-      "label": "Pitfalls in machine learning for neurological biomarker discovery",
-      "outside_pool": true,
+      "id": "sota:lrp-eeg",
+      "label": "Interpretable Deep Neural Networks for Single-Trial EEG Classification",
       "paper_blocks": [],
       "source": {
-        "locator": "little2017pitfalls",
-        "path": "paper/refs.bib"
+        "locator": "systems[lrp-eeg]",
+        "path": "sota-pool/atlas.manuscript.json"
+      },
+      "status": {
+        "state": "present"
+      },
+      "type": "sota"
+    },
+    {
+      "cite_keys": [
+        "roy2019chrononet"
+      ],
+      "detail": "",
+      "id": "sota:chrononet",
+      "label": "ChronoNet: A Deep Recurrent Neural Network for Abnormal EEG Identification",
+      "paper_blocks": [],
+      "source": {
+        "locator": "systems[chrononet]",
+        "path": "sota-pool/atlas.manuscript.json"
+      },
+      "status": {
+        "state": "present"
+      },
+      "type": "sota"
+    },
+    {
+      "cite_keys": [
+        "banchi2021measuring"
+      ],
+      "detail": "",
+      "id": "sota:stochastic-parameter-shift",
+      "label": "Measuring Analytic Gradients of General Quantum Evolution with the Stochastic Parameter Shift Rule",
+      "paper_blocks": [],
+      "source": {
+        "locator": "systems[stochastic-parameter-shift]",
+        "path": "sota-pool/atlas.manuscript.json"
+      },
+      "status": {
+        "state": "present"
+      },
+      "type": "sota"
+    },
+    {
+      "cite_keys": [
+        "varoquaux2018cross"
+      ],
+      "detail": "",
+      "id": "sota:cv-error-bars",
+      "label": "Cross-validation failure: small sample sizes lead to large error bars",
+      "paper_blocks": [],
+      "source": {
+        "locator": "systems[cv-error-bars]",
+        "path": "sota-pool/atlas.manuscript.json"
+      },
+      "status": {
+        "state": "present"
+      },
+      "type": "sota"
+    },
+    {
+      "cite_keys": [
+        "snyder2006clinical"
+      ],
+      "detail": "",
+      "id": "sota:qeeg-adhd-meta",
+      "label": "A Meta-analysis of Quantitative EEG Power Associated With Attention-Deficit Hyperactivity Disorder",
+      "paper_blocks": [],
+      "source": {
+        "locator": "systems[qeeg-adhd-meta]",
+        "path": "sota-pool/atlas.manuscript.json"
+      },
+      "status": {
+        "state": "present"
+      },
+      "type": "sota"
+    },
+    {
+      "cite_keys": [
+        "saeb2017need"
+      ],
+      "detail": "",
+      "id": "sota:record-vs-subject-cv",
+      "label": "The need to approximate the use-case in clinical machine learning",
+      "paper_blocks": [],
+      "source": {
+        "locator": "systems[record-vs-subject-cv]",
+        "path": "sota-pool/atlas.manuscript.json"
+      },
+      "status": {
+        "state": "present"
+      },
+      "type": "sota"
+    },
+    {
+      "cite_keys": [
+        "scheinost2019connectome"
+      ],
+      "detail": "",
+      "id": "sota:predictive-modeling-rules",
+      "label": "Ten simple rules for predictive modeling of individual differences in neuroimaging",
+      "paper_blocks": [],
+      "source": {
+        "locator": "systems[predictive-modeling-rules]",
+        "path": "sota-pool/atlas.manuscript.json"
+      },
+      "status": {
+        "state": "present"
+      },
+      "type": "sota"
+    },
+    {
+      "cite_keys": [
+        "hanley1982meaning"
+      ],
+      "detail": "",
+      "id": "sota:auc-meaning",
+      "label": "The meaning and use of the area under a receiver operating characteristic (ROC) curve.",
+      "paper_blocks": [],
+      "source": {
+        "locator": "systems[auc-meaning]",
+        "path": "sota-pool/atlas.manuscript.json"
+      },
+      "status": {
+        "state": "present"
+      },
+      "type": "sota"
+    },
+    {
+      "cite_keys": [
+        "caruana2000overfitting"
+      ],
+      "detail": "",
+      "id": "sota:early-stopping-overfitting",
+      "label": "Overfitting in Neural Nets: Backpropagation, Conjugate Gradient, and Early Stopping",
+      "paper_blocks": [],
+      "source": {
+        "locator": "systems[early-stopping-overfitting]",
+        "path": "sota-pool/atlas.manuscript.json"
+      },
+      "status": {
+        "state": "present"
+      },
+      "type": "sota"
+    },
+    {
+      "cite_keys": [
+        "yao2019which"
+      ],
+      "detail": "",
+      "id": "sota:eeg-reference-choice",
+      "label": "Which Reference Should We Use for EEG and ERP practice?",
+      "paper_blocks": [],
+      "source": {
+        "locator": "systems[eeg-reference-choice]",
+        "path": "sota-pool/atlas.manuscript.json"
+      },
+      "status": {
+        "state": "present"
+      },
+      "type": "sota"
+    },
+    {
+      "cite_keys": [
+        "lakens2017equivalence"
+      ],
+      "detail": "",
+      "id": "sota:equivalence-tests",
+      "label": "Equivalence Tests",
+      "paper_blocks": [],
+      "source": {
+        "locator": "systems[equivalence-tests]",
+        "path": "sota-pool/atlas.manuscript.json"
+      },
+      "status": {
+        "state": "present"
+      },
+      "type": "sota"
+    },
+    {
+      "cite_keys": [
+        "bigdely2015prep"
+      ],
+      "detail": "",
+      "id": "sota:prep-pipeline",
+      "label": "The PREP pipeline: standardized preprocessing for large-scale EEG analysis",
+      "paper_blocks": [],
+      "source": {
+        "locator": "systems[prep-pipeline]",
+        "path": "sota-pool/atlas.manuscript.json"
+      },
+      "status": {
+        "state": "present"
+      },
+      "type": "sota"
+    },
+    {
+      "cite_keys": [
+        "steinmuller2022explainable"
+      ],
+      "detail": "",
+      "id": "sota:xai-qml",
+      "label": "eXplainable AI for Quantum Machine Learning",
+      "paper_blocks": [],
+      "source": {
+        "locator": "systems[xai-qml]",
+        "path": "sota-pool/atlas.manuscript.json"
       },
       "status": {
         "state": "present"
@@ -1078,7 +1188,7 @@
       ],
       "detail": "",
       "id": "sota:cite:nadeau2003inference",
-      "label": "Inference for the generalization error",
+      "label": "Inference for the Generalization Error",
       "outside_pool": true,
       "paper_blocks": [],
       "source": {
@@ -1101,186 +1211,6 @@
       "paper_blocks": [],
       "source": {
         "locator": "nasrabadi2020eeg",
-        "path": "paper/refs.bib"
-      },
-      "status": {
-        "state": "present"
-      },
-      "type": "sota"
-    },
-    {
-      "cite_keys": [
-        "prechelt1998early"
-      ],
-      "detail": "",
-      "id": "sota:cite:prechelt1998early",
-      "label": "Early Stopping - But When?",
-      "outside_pool": true,
-      "paper_blocks": [],
-      "source": {
-        "locator": "prechelt1998early",
-        "path": "paper/refs.bib"
-      },
-      "status": {
-        "state": "present"
-      },
-      "type": "sota"
-    },
-    {
-      "cite_keys": [
-        "roy2019chrononet"
-      ],
-      "detail": "",
-      "id": "sota:cite:roy2019chrononet",
-      "label": "{ChronoNet}: A deep recurrent neural network for abnormal {EEG} identification",
-      "outside_pool": true,
-      "paper_blocks": [],
-      "source": {
-        "locator": "roy2019chrononet",
-        "path": "paper/refs.bib"
-      },
-      "status": {
-        "state": "present"
-      },
-      "type": "sota"
-    },
-    {
-      "cite_keys": [
-        "saeb2017need"
-      ],
-      "detail": "",
-      "id": "sota:cite:saeb2017need",
-      "label": "The need to separate subject-level cross-validation from feature selection in digital health",
-      "outside_pool": true,
-      "paper_blocks": [],
-      "source": {
-        "locator": "saeb2017need",
-        "path": "paper/refs.bib"
-      },
-      "status": {
-        "state": "present"
-      },
-      "type": "sota"
-    },
-    {
-      "cite_keys": [
-        "scheinost2019connectome"
-      ],
-      "detail": "",
-      "id": "sota:cite:scheinost2019connectome",
-      "label": "Connectome-based predictive modeling: Methods and applications in neuroimaging",
-      "outside_pool": true,
-      "paper_blocks": [],
-      "source": {
-        "locator": "scheinost2019connectome",
-        "path": "paper/refs.bib"
-      },
-      "status": {
-        "state": "present"
-      },
-      "type": "sota"
-    },
-    {
-      "cite_keys": [
-        "snyder2006clinical"
-      ],
-      "detail": "",
-      "id": "sota:cite:snyder2006clinical",
-      "label": "Clinical utility of an objective measure of attention in children suspected of having attention-deficit/hyperactivity disorder",
-      "outside_pool": true,
-      "paper_blocks": [],
-      "source": {
-        "locator": "snyder2006clinical",
-        "path": "paper/refs.bib"
-      },
-      "status": {
-        "state": "present"
-      },
-      "type": "sota"
-    },
-    {
-      "cite_keys": [
-        "sturm2016interpretable"
-      ],
-      "detail": "",
-      "id": "sota:cite:sturm2016interpretable",
-      "label": "Interpretable deep neural networks for single-trial {EEG} classification",
-      "outside_pool": true,
-      "paper_blocks": [],
-      "source": {
-        "locator": "sturm2016interpretable",
-        "path": "paper/refs.bib"
-      },
-      "status": {
-        "state": "present"
-      },
-      "type": "sota"
-    },
-    {
-      "cite_keys": [
-        "varoquaux2018cross"
-      ],
-      "detail": "",
-      "id": "sota:cite:varoquaux2018cross",
-      "label": "Cross-validation failure: Small sample sizes lead to large error bars",
-      "outside_pool": true,
-      "paper_blocks": [],
-      "source": {
-        "locator": "varoquaux2018cross",
-        "path": "paper/refs.bib"
-      },
-      "status": {
-        "state": "present"
-      },
-      "type": "sota"
-    },
-    {
-      "cite_keys": [
-        "vidal2020input"
-      ],
-      "detail": "",
-      "id": "sota:cite:vidal2020input",
-      "label": "Input gradients and sensitivity analysis for quantum neural networks",
-      "outside_pool": true,
-      "paper_blocks": [],
-      "source": {
-        "locator": "vidal2020input",
-        "path": "paper/refs.bib"
-      },
-      "status": {
-        "state": "present"
-      },
-      "type": "sota"
-    },
-    {
-      "cite_keys": [
-        "walker2011noninferiority"
-      ],
-      "detail": "",
-      "id": "sota:cite:walker2011noninferiority",
-      "label": "Understanding Equivalence and Noninferiority Testing",
-      "outside_pool": true,
-      "paper_blocks": [],
-      "source": {
-        "locator": "walker2011noninferiority",
-        "path": "paper/refs.bib"
-      },
-      "status": {
-        "state": "present"
-      },
-      "type": "sota"
-    },
-    {
-      "cite_keys": [
-        "widmann2015digital"
-      ],
-      "detail": "",
-      "id": "sota:cite:widmann2015digital",
-      "label": "Digital filter design for electrophysiological data – a practical approach",
-      "outside_pool": true,
-      "paper_blocks": [],
-      "source": {
-        "locator": "widmann2015digital",
         "path": "paper/refs.bib"
       },
       "status": {
@@ -1867,7 +1797,7 @@
       "novelty_concept": 10,
       "pillar": 3,
       "problem": 1,
-      "sota": 58,
+      "sota": 55,
       "topic": 1
     },
     "edges": 24,
