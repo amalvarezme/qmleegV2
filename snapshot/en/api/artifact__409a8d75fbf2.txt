@@ -1,0 +1,4 @@
+arm,epoch_balancedAccuracy,epoch_sensitivity,epoch_specificity,epoch_f1,epoch_aucRoc,subject_balancedAccuracy,subject_sensitivity,subject_specificity,subject_f1,subject_aucRoc
+Hybrid DRU (L=3),1.000,1.000,1.000,1.000,1.000,1.000,1.000,1.000,1.000,1.000
+Single-shot angle (L=1),1.000,1.000,1.000,1.000,1.000,1.000,1.000,1.000,1.000,1.000
+Classical linear (4-D),1.000,1.000,1.000,1.000,1.000,1.000,1.000,1.000,1.000,1.000

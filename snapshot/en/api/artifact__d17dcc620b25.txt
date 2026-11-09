@@ -1,0 +1,6 @@
+| Endpoint | Test | Statistic | p-value | Holm-adjusted p | Effect Size | 95% CI |
+| :--- | :--- | :--- | :--- | :--- | :--- | :--- |
+| Log gradient variance against L | Page's trend test (decreasing) with OLS regression of log10 variance on L | 4831 | 9.031e-12 | 1.806e-11 | -0.061 (regression slope of log10 gradient variance per layer) | [-0.181, 0.059] |
+| Test Balanced Accuracy trend over L | Page's trend test (increasing, normal approximation) | 1064 | 0.9931 | 0.9931 | -0.264 (mean within-block Spearman rho (depth order vs. test BA)) | [-0.488, -0.031] |
+| L = 2 vs. L = 1 (test BA) | Nadeau-Bengio corrected resampled t-test | 0.2229 | 0.8255 | 1 | 0.118 (Cliff's delta) | [-0.178, 0.397] |
+| L = 2 vs. L = 3 (test BA) | Nadeau-Bengio corrected resampled t-test | 0.5161 | 0.6105 | 1 | 0.262 (Cliff's delta) | [-0.091, 0.579] |

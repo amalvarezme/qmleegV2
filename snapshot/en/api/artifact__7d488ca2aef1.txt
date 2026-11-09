@@ -1,0 +1,5 @@
+| Region of Interest | Mean Saliency Mass | Theta Band Energy | Beta Band Energy | Relative Ratio |
+| :--- | :--- | :--- | :--- | :--- |
+| Fronto-Central (Fp1, Fp2, F3, F4, Fz, Cz) | 0.05945 | 1.448e-09 | 2.037e-09 | 0.3567 |
+| Temporal-Occipital (T3, T4, T5, T6, O1, O2) | 0.04655 | 7.366e-10 | 1.239e-09 | 0.2793 |
+| Parietal (P3, P4, Pz) (descriptive) | 0.05468 | 1.113e-09 | 1.782e-09 | 0.164 |

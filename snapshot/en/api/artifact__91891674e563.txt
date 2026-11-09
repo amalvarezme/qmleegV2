@@ -1,0 +1,4 @@
+| Comparison | Test | Statistic | p-value | Holm-adjusted p | Rank-biserial | 95% CI |
+| :--- | :--- | :--- | :--- | :--- | :--- | :--- |
+| Fronto-central vs. Temporal-occipital, Theta | Wilcoxon signed-rank over subjects (one-sided, greater) | 1891 | 5.556e-12 | 1.111e-11 | 1.000 | [1.000, 1.000] |
+| Fronto-central vs. Temporal-occipital, Beta | Wilcoxon signed-rank over subjects (one-sided, greater) | 1891 | 5.556e-12 | 1.111e-11 | 1.000 | [1.000, 1.000] |

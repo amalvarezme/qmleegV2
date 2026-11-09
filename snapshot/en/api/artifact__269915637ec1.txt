@@ -1,0 +1,5 @@
+| Entanglement Scheme | Subject Balanced Acc | Subject F1-score | Validation Loss | Circuit Depth |
+| :--- | :--- | :--- | :--- | :--- |
+| Circular CNOT Ring | 0.670 ± 0.110 | 0.740 ± 0.066 | 0.6113 ± 0.0721 | 21 (12 CNOT) |
+| Linear CNOT Chain | 0.696 ± 0.099 | 0.753 ± 0.058 | 0.6148 ± 0.0682 | 16 (9 CNOT) |
+| Separable (No Entanglement) | 0.708 ± 0.070 | 0.742 ± 0.067 | 0.5965 ± 0.0821 | 9 (0 CNOT) |

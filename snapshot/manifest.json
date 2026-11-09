@@ -1,0 +1,2152 @@
+{
+ "version": 1,
+ "generated": "2026-11-09T01:28:09Z",
+ "workspace": "qmleegV2",
+ "languages": [
+  "en",
+  "es"
+ ],
+ "ai_history": true,
+ "entries": {
+  "/api/agents": {
+   "file": "snapshot/en/api/agents.json",
+   "type": "application/json",
+   "status": 200
+  },
+  "/api/agents?lang=es": {
+   "file": "snapshot/es/api/agents__0a4d7d9d82bd.json",
+   "type": "application/json",
+   "status": 200
+  },
+  "/api/ai-history": {
+   "file": "snapshot/en/api/ai-history.json",
+   "type": "application/json",
+   "status": 200
+  },
+  "/api/ai-history/session?lang=es&ref=antigravity%3A13e425ea": {
+   "file": "snapshot/en/api/ai-history/session__692c0dc9bbcc.json",
+   "type": "application/json",
+   "status": 200
+  },
+  "/api/ai-history/session?lang=es&ref=antigravity%3A5204c963": {
+   "file": "snapshot/en/api/ai-history/session__1fcd515383d2.json",
+   "type": "application/json",
+   "status": 200
+  },
+  "/api/ai-history/session?lang=es&ref=antigravity%3A53a16471": {
+   "file": "snapshot/en/api/ai-history/session__03d7f677b950.json",
+   "type": "application/json",
+   "status": 200
+  },
+  "/api/ai-history/session?lang=es&ref=antigravity%3A7278592f": {
+   "file": "snapshot/en/api/ai-history/session__7d6a18155ca8.json",
+   "type": "application/json",
+   "status": 200
+  },
+  "/api/ai-history/session?lang=es&ref=claude-code%3A07d32089": {
+   "file": "snapshot/en/api/ai-history/session__2c9cbba25df0.json",
+   "type": "application/json",
+   "status": 200
+  },
+  "/api/ai-history/session?lang=es&ref=claude-code%3A0e5256cd": {
+   "file": "snapshot/en/api/ai-history/session__2d8cd7b36643.json",
+   "type": "application/json",
+   "status": 200
+  },
+  "/api/ai-history/session?lang=es&ref=claude-code%3A180c161d": {
+   "file": "snapshot/en/api/ai-history/session__a7cab673725e.json",
+   "type": "application/json",
+   "status": 200
+  },
+  "/api/ai-history/session?lang=es&ref=claude-code%3A2310a746": {
+   "file": "snapshot/en/api/ai-history/session__76936aa34ce9.json",
+   "type": "application/json",
+   "status": 200
+  },
+  "/api/ai-history/session?lang=es&ref=claude-code%3A27dcab58": {
+   "file": "snapshot/en/api/ai-history/session__3b0a898dc6e7.json",
+   "type": "application/json",
+   "status": 200
+  },
+  "/api/ai-history/session?lang=es&ref=claude-code%3A41541b9c": {
+   "file": "snapshot/en/api/ai-history/session__5b37b78b6029.json",
+   "type": "application/json",
+   "status": 200
+  },
+  "/api/ai-history/session?lang=es&ref=claude-code%3A63d8f763": {
+   "file": "snapshot/en/api/ai-history/session__71ad4d8fb044.json",
+   "type": "application/json",
+   "status": 200
+  },
+  "/api/ai-history/session?lang=es&ref=claude-code%3A7dc6d42b": {
+   "file": "snapshot/en/api/ai-history/session__3b4b0038f78d.json",
+   "type": "application/json",
+   "status": 200
+  },
+  "/api/ai-history/session?ref=antigravity%3A13e425ea": {
+   "file": "snapshot/en/api/ai-history/session__692c0dc9bbcc.json",
+   "type": "application/json",
+   "status": 200
+  },
+  "/api/ai-history/session?ref=antigravity%3A5204c963": {
+   "file": "snapshot/en/api/ai-history/session__1fcd515383d2.json",
+   "type": "application/json",
+   "status": 200
+  },
+  "/api/ai-history/session?ref=antigravity%3A53a16471": {
+   "file": "snapshot/en/api/ai-history/session__03d7f677b950.json",
+   "type": "application/json",
+   "status": 200
+  },
+  "/api/ai-history/session?ref=antigravity%3A7278592f": {
+   "file": "snapshot/en/api/ai-history/session__7d6a18155ca8.json",
+   "type": "application/json",
+   "status": 200
+  },
+  "/api/ai-history/session?ref=claude-code%3A07d32089": {
+   "file": "snapshot/en/api/ai-history/session__2c9cbba25df0.json",
+   "type": "application/json",
+   "status": 200
+  },
+  "/api/ai-history/session?ref=claude-code%3A0e5256cd": {
+   "file": "snapshot/en/api/ai-history/session__2d8cd7b36643.json",
+   "type": "application/json",
+   "status": 200
+  },
+  "/api/ai-history/session?ref=claude-code%3A180c161d": {
+   "file": "snapshot/en/api/ai-history/session__a7cab673725e.json",
+   "type": "application/json",
+   "status": 200
+  },
+  "/api/ai-history/session?ref=claude-code%3A2310a746": {
+   "file": "snapshot/en/api/ai-history/session__76936aa34ce9.json",
+   "type": "application/json",
+   "status": 200
+  },
+  "/api/ai-history/session?ref=claude-code%3A27dcab58": {
+   "file": "snapshot/en/api/ai-history/session__3b0a898dc6e7.json",
+   "type": "application/json",
+   "status": 200
+  },
+  "/api/ai-history/session?ref=claude-code%3A41541b9c": {
+   "file": "snapshot/en/api/ai-history/session__5b37b78b6029.json",
+   "type": "application/json",
+   "status": 200
+  },
+  "/api/ai-history/session?ref=claude-code%3A63d8f763": {
+   "file": "snapshot/en/api/ai-history/session__71ad4d8fb044.json",
+   "type": "application/json",
+   "status": 200
+  },
+  "/api/ai-history/session?ref=claude-code%3A7dc6d42b": {
+   "file": "snapshot/en/api/ai-history/session__3b4b0038f78d.json",
+   "type": "application/json",
+   "status": 200
+  },
+  "/api/ai-history?lang=es": {
+   "file": "snapshot/es/api/ai-history__0a4d7d9d82bd.json",
+   "type": "application/json",
+   "status": 200
+  },
+  "/api/artifact?lang=es&path=datasets%2Fsearch-2026-10-27.json": {
+   "file": "snapshot/en/api/artifact__79f4e4777288.json",
+   "type": "application/json",
+   "status": 200
+  },
+  "/api/artifact?lang=es&path=experiments%2Fexperiments-hybrid-quantum-classical-neural-network-with-data-re-uploadi-v01.md": {
+   "file": "snapshot/en/api/artifact__04e156adc227.txt",
+   "type": "text/plain",
+   "status": 200
+  },
+  "/api/artifact?lang=es&path=experiments%2Fexperiments-hybrid-quantum-classical-neural-network-with-data-re-uploadi-v02.md": {
+   "file": "snapshot/en/api/artifact__c205ab6e5e53.txt",
+   "type": "text/plain",
+   "status": 200
+  },
+  "/api/artifact?lang=es&path=experiments%2Fexperiments-hybrid-quantum-classical-neural-network-with-data-re-uploadi-v03.md": {
+   "file": "snapshot/en/api/artifact__c0e6770f7f50.txt",
+   "type": "text/plain",
+   "status": 200
+  },
+  "/api/artifact?lang=es&path=experiments%2Fexperiments-hybrid-quantum-classical-neural-network-with-data-re-uploadi-v04.md": {
+   "file": "snapshot/en/api/artifact__3ac77c188594.txt",
+   "type": "text/plain",
+   "status": 200
+  },
+  "/api/artifact?lang=es&path=experiments%2Fexperiments-hybrid-quantum-classical-neural-network-with-data-re-uploadi-v05.md": {
+   "file": "snapshot/en/api/artifact__048c8ad45e20.txt",
+   "type": "text/plain",
+   "status": 200
+  },
+  "/api/artifact?lang=es&path=experiments%2Fexperiments-hybrid-quantum-classical-neural-network-with-data-re-uploadi-v06.md": {
+   "file": "snapshot/en/api/artifact__bd0c84c44ee9.txt",
+   "type": "text/plain",
+   "status": 200
+  },
+  "/api/artifact?lang=es&path=experiments%2Fexperiments-hybrid-quantum-classical-neural-network-with-data-re-uploadi-v07.md": {
+   "file": "snapshot/en/api/artifact__a9d49bea4831.txt",
+   "type": "text/plain",
+   "status": 200
+  },
+  "/api/artifact?lang=es&path=experiments%2Fexperiments-hybrid-quantum-classical-neural-network-with-data-re-uploadi-v08.md": {
+   "file": "snapshot/en/api/artifact__dbaf124243c6.txt",
+   "type": "text/plain",
+   "status": 200
+  },
+  "/api/artifact?lang=es&path=experiments%2Fexperiments-hybrid-quantum-classical-neural-network-with-data-re-uploadi-v09.md": {
+   "file": "snapshot/en/api/artifact__41a2dbc77b17.txt",
+   "type": "text/plain",
+   "status": 200
+  },
+  "/api/artifact?lang=es&path=experiments%2Fexperiments-hybrid-quantum-classical-neural-network-with-data-re-uploadi-v10.md": {
+   "file": "snapshot/en/api/artifact__ec1b6ddbf4fa.txt",
+   "type": "text/plain",
+   "status": 200
+  },
+  "/api/artifact?lang=es&path=implementations%2Fpoc%2FQMLEEG-DRU-POC%2FResults%2Fdiscussion.json": {
+   "file": "snapshot/en/api/artifact__2badfa6e98be.json",
+   "type": "application/json",
+   "status": 200
+  },
+  "/api/artifact?lang=es&path=implementations%2Fpoc%2FQMLEEG-DRU-POC%2FResults%2Ffigures%2Fpoc_convergence.png": {
+   "file": "snapshot/en/api/artifact__954795427317.png",
+   "type": "image/png",
+   "status": 200
+  },
+  "/api/artifact?lang=es&path=implementations%2Fpoc%2FQMLEEG-DRU-POC%2FResults%2Fpoc%2Fhistory_hybrid_dru_L3.json": {
+   "file": "snapshot/en/api/artifact__369bc0e9464f.json",
+   "type": "application/json",
+   "status": 200
+  },
+  "/api/artifact?lang=es&path=implementations%2Fpoc%2FQMLEEG-DRU-POC%2FResults%2Fpoc%2Fhistory_linear_probe.json": {
+   "file": "snapshot/en/api/artifact__a1ce192446fe.json",
+   "type": "application/json",
+   "status": 200
+  },
+  "/api/artifact?lang=es&path=implementations%2Fpoc%2FQMLEEG-DRU-POC%2FResults%2Fpoc%2Fhistory_single_shot_L1.json": {
+   "file": "snapshot/en/api/artifact__84c17a2af250.json",
+   "type": "application/json",
+   "status": 200
+  },
+  "/api/artifact?lang=es&path=implementations%2Fpoc%2FQMLEEG-DRU-POC%2FResults%2Fsummary.json": {
+   "file": "snapshot/en/api/artifact__4a1382d78492.json",
+   "type": "application/json",
+   "status": 200
+  },
+  "/api/artifact?lang=es&path=implementations%2Fqmleeg-dru%2FQMLEEG-DRU%2FResults%2Fdiscussion.json": {
+   "file": "snapshot/en/api/artifact__88a3bc816a4f.json",
+   "type": "application/json",
+   "status": 200
+  },
+  "/api/artifact?lang=es&path=implementations%2Fqmleeg-dru%2FQMLEEG-DRU%2FResults%2Fe1%2Ffigures%2Fe1-convergence.png": {
+   "file": "snapshot/en/api/artifact__f372517fc6b6.png",
+   "type": "image/png",
+   "status": 200
+  },
+  "/api/artifact?lang=es&path=implementations%2Fqmleeg-dru%2FQMLEEG-DRU%2FResults%2Fe1%2Fhistory-adhdeepnet.jsonl": {
+   "file": "snapshot/en/api/artifact__3e7c5257ef12.txt",
+   "type": "text/plain",
+   "status": 200
+  },
+  "/api/artifact?lang=es&path=implementations%2Fqmleeg-dru%2FQMLEEG-DRU%2FResults%2Fe1%2Fhistory-eegnet.jsonl": {
+   "file": "snapshot/en/api/artifact__4923c9b32368.txt",
+   "type": "text/plain",
+   "status": 200
+  },
+  "/api/artifact?lang=es&path=implementations%2Fqmleeg-dru%2FQMLEEG-DRU%2FResults%2Fe1%2Fhistory-hybrid_dru_L3.jsonl": {
+   "file": "snapshot/en/api/artifact__17e72a162890.txt",
+   "type": "text/plain",
+   "status": 200
+  },
+  "/api/artifact?lang=es&path=implementations%2Fqmleeg-dru%2FQMLEEG-DRU%2FResults%2Fe1%2Fhistory-linear_probe.jsonl": {
+   "file": "snapshot/en/api/artifact__6dd0b32033ac.txt",
+   "type": "text/plain",
+   "status": 200
+  },
+  "/api/artifact?lang=es&path=implementations%2Fqmleeg-dru%2FQMLEEG-DRU%2FResults%2Fe1%2Fhistory-single_shot_L1.jsonl": {
+   "file": "snapshot/en/api/artifact__6804f2956ecc.txt",
+   "type": "text/plain",
+   "status": 200
+  },
+  "/api/artifact?lang=es&path=implementations%2Fqmleeg-dru%2FQMLEEG-DRU%2FResults%2Fe1%2Fsignificance.json": {
+   "file": "snapshot/en/api/artifact__3983acd4ac20.json",
+   "type": "application/json",
+   "status": 200
+  },
+  "/api/artifact?lang=es&path=implementations%2Fqmleeg-dru%2FQMLEEG-DRU%2FResults%2Fe1%2Fsummary.json": {
+   "file": "snapshot/en/api/artifact__fedc2785fcab.json",
+   "type": "application/json",
+   "status": 200
+  },
+  "/api/artifact?lang=es&path=implementations%2Fqmleeg-dru%2FQMLEEG-DRU%2FResults%2Fe1%2Ftables%2Fe1-report.md": {
+   "file": "snapshot/en/api/artifact__42c4970a6b71.txt",
+   "type": "text/plain",
+   "status": 200
+  },
+  "/api/artifact?lang=es&path=implementations%2Fqmleeg-dru%2FQMLEEG-DRU%2FResults%2Fe1%2Ftables%2Fe1-significance.md": {
+   "file": "snapshot/en/api/artifact__37e041080ee9.txt",
+   "type": "text/plain",
+   "status": 200
+  },
+  "/api/artifact?lang=es&path=implementations%2Fqmleeg-dru%2FQMLEEG-DRU%2FResults%2Fe2%2Ffigures%2Fe2-critical-difference.png": {
+   "file": "snapshot/en/api/artifact__7919f582879d.png",
+   "type": "image/png",
+   "status": 200
+  },
+  "/api/artifact?lang=es&path=implementations%2Fqmleeg-dru%2FQMLEEG-DRU%2FResults%2Fe2%2Fhistory-e2.jsonl": {
+   "file": "snapshot/en/api/artifact__80c60c1bb0d2.txt",
+   "type": "text/plain",
+   "status": 200
+  },
+  "/api/artifact?lang=es&path=implementations%2Fqmleeg-dru%2FQMLEEG-DRU%2FResults%2Fe2%2Fsignificance.json": {
+   "file": "snapshot/en/api/artifact__c625bd248fe0.json",
+   "type": "application/json",
+   "status": 200
+  },
+  "/api/artifact?lang=es&path=implementations%2Fqmleeg-dru%2FQMLEEG-DRU%2FResults%2Fe2%2Fsummary.json": {
+   "file": "snapshot/en/api/artifact__c983e450122c.json",
+   "type": "application/json",
+   "status": 200
+  },
+  "/api/artifact?lang=es&path=implementations%2Fqmleeg-dru%2FQMLEEG-DRU%2FResults%2Fe2%2Ftables%2Fe2-report.md": {
+   "file": "snapshot/en/api/artifact__269915637ec1.txt",
+   "type": "text/plain",
+   "status": 200
+  },
+  "/api/artifact?lang=es&path=implementations%2Fqmleeg-dru%2FQMLEEG-DRU%2FResults%2Fe2%2Ftables%2Fe2-significance.md": {
+   "file": "snapshot/en/api/artifact__ab017492a578.txt",
+   "type": "text/plain",
+   "status": 200
+  },
+  "/api/artifact?lang=es&path=implementations%2Fqmleeg-dru%2FQMLEEG-DRU%2FResults%2Fe3%2Ffigures%2Fe3-convergence.png": {
+   "file": "snapshot/en/api/artifact__c0eebdd97aa5.png",
+   "type": "image/png",
+   "status": 200
+  },
+  "/api/artifact?lang=es&path=implementations%2Fqmleeg-dru%2FQMLEEG-DRU%2FResults%2Fe3%2Ffigures%2Fe3-gradient-variance.png": {
+   "file": "snapshot/en/api/artifact__3bf720862ad8.png",
+   "type": "image/png",
+   "status": 200
+  },
+  "/api/artifact?lang=es&path=implementations%2Fqmleeg-dru%2FQMLEEG-DRU%2FResults%2Fe3%2Fhistory-e3.jsonl": {
+   "file": "snapshot/en/api/artifact__16508ddde3ac.txt",
+   "type": "text/plain",
+   "status": 200
+  },
+  "/api/artifact?lang=es&path=implementations%2Fqmleeg-dru%2FQMLEEG-DRU%2FResults%2Fe3%2Fsignificance.json": {
+   "file": "snapshot/en/api/artifact__69dc3f5397b7.json",
+   "type": "application/json",
+   "status": 200
+  },
+  "/api/artifact?lang=es&path=implementations%2Fqmleeg-dru%2FQMLEEG-DRU%2FResults%2Fe3%2Fsummary.json": {
+   "file": "snapshot/en/api/artifact__e1d69a3bf938.json",
+   "type": "application/json",
+   "status": 200
+  },
+  "/api/artifact?lang=es&path=implementations%2Fqmleeg-dru%2FQMLEEG-DRU%2FResults%2Fe3%2Ftables%2Fe3-report.md": {
+   "file": "snapshot/en/api/artifact__0d5dd20ab42b.txt",
+   "type": "text/plain",
+   "status": 200
+  },
+  "/api/artifact?lang=es&path=implementations%2Fqmleeg-dru%2FQMLEEG-DRU%2FResults%2Fe3%2Ftables%2Fe3-significance.md": {
+   "file": "snapshot/en/api/artifact__d17dcc620b25.txt",
+   "type": "text/plain",
+   "status": 200
+  },
+  "/api/artifact?lang=es&path=implementations%2Fqmleeg-dru%2FQMLEEG-DRU%2FResults%2Fe4%2Ffigures%2Fe4-saliency-topomap.png": {
+   "file": "snapshot/en/api/artifact__2fe3865ac798.png",
+   "type": "image/png",
+   "status": 200
+  },
+  "/api/artifact?lang=es&path=implementations%2Fqmleeg-dru%2FQMLEEG-DRU%2FResults%2Fe4%2Fsignificance-biomarkers.json": {
+   "file": "snapshot/en/api/artifact__a585c78b4a30.json",
+   "type": "application/json",
+   "status": 200
+  },
+  "/api/artifact?lang=es&path=implementations%2Fqmleeg-dru%2FQMLEEG-DRU%2FResults%2Fe4%2Fsignificance.json": {
+   "file": "snapshot/en/api/artifact__57efb820fc6b.json",
+   "type": "application/json",
+   "status": 200
+  },
+  "/api/artifact?lang=es&path=implementations%2Fqmleeg-dru%2FQMLEEG-DRU%2FResults%2Fe4%2Fsummary.json": {
+   "file": "snapshot/en/api/artifact__1ee41859b683.json",
+   "type": "application/json",
+   "status": 200
+  },
+  "/api/artifact?lang=es&path=implementations%2Fqmleeg-dru%2FQMLEEG-DRU%2FResults%2Fe4%2Ftables%2Fe4-biomarkers.md": {
+   "file": "snapshot/en/api/artifact__a2c892121cdb.txt",
+   "type": "text/plain",
+   "status": 200
+  },
+  "/api/artifact?lang=es&path=implementations%2Fqmleeg-dru%2FQMLEEG-DRU%2FResults%2Fe4%2Ftables%2Fe4-regions.md": {
+   "file": "snapshot/en/api/artifact__7d488ca2aef1.txt",
+   "type": "text/plain",
+   "status": 200
+  },
+  "/api/artifact?lang=es&path=implementations%2Fqmleeg-dru%2FQMLEEG-DRU%2FResults%2Fe4%2Ftables%2Fe4-significance.md": {
+   "file": "snapshot/en/api/artifact__91891674e563.txt",
+   "type": "text/plain",
+   "status": 200
+  },
+  "/api/artifact?lang=es&path=implementations%2Fqmleeg-dru%2FQMLEEG-DRU%2FResults%2Fe5%2Ffigures%2Fe5-convergence.png": {
+   "file": "snapshot/en/api/artifact__65adcc432079.png",
+   "type": "image/png",
+   "status": 200
+  },
+  "/api/artifact?lang=es&path=implementations%2Fqmleeg-dru%2FQMLEEG-DRU%2FResults%2Fe5%2Ffigures%2Fe5-label-noise.png": {
+   "file": "snapshot/en/api/artifact__53a7f04abcbe.png",
+   "type": "image/png",
+   "status": 200
+  },
+  "/api/artifact?lang=es&path=implementations%2Fqmleeg-dru%2FQMLEEG-DRU%2FResults%2Fe5%2Fsummary.json": {
+   "file": "snapshot/en/api/artifact__54a7d19f66ac.json",
+   "type": "application/json",
+   "status": 200
+  },
+  "/api/artifact?lang=es&path=implementations%2Fqmleeg-dru%2FQMLEEG-DRU%2FResults%2Fe5%2Ftables%2Fe5-significance.md": {
+   "file": "snapshot/en/api/artifact__a1ed0bcd2190.txt",
+   "type": "text/plain",
+   "status": 200
+  },
+  "/api/artifact?lang=es&path=implementations%2Fqmleeg-dru%2FQMLEEG-DRU%2FResults%2Fe5%2Fv05%2Ftables%2Fe5-significance.md": {
+   "file": "snapshot/en/api/artifact__b47343563555.txt",
+   "type": "text/plain",
+   "status": 200
+  },
+  "/api/artifact?lang=es&path=implementations%2Fqmleeg-dru%2FQMLEEG-DRU%2FResults%2Fhpo%2Fhybrid_dru_L3-fold1%2Fsummary.json": {
+   "file": "snapshot/en/api/artifact__2a26276bd2c2.json",
+   "type": "application/json",
+   "status": 200
+  },
+  "/api/artifact?lang=es&path=implementations%2Fqmleeg-dru%2FQMLEEG-DRU%2FResults%2Fhpo%2Fhybrid_dru_L3-fold2%2Fsummary.json": {
+   "file": "snapshot/en/api/artifact__15392b0f86e7.json",
+   "type": "application/json",
+   "status": 200
+  },
+  "/api/artifact?lang=es&path=implementations%2Fqmleeg-dru%2FQMLEEG-DRU%2FResults%2Fhpo%2Fhybrid_dru_L3-fold3%2Fsummary.json": {
+   "file": "snapshot/en/api/artifact__f7688c097bdb.json",
+   "type": "application/json",
+   "status": 200
+  },
+  "/api/artifact?lang=es&path=implementations%2Fqmleeg-dru%2FQMLEEG-DRU%2FResults%2Fhpo%2Fhybrid_dru_L3-fold4%2Fsummary.json": {
+   "file": "snapshot/en/api/artifact__2c73eca0531e.json",
+   "type": "application/json",
+   "status": 200
+  },
+  "/api/artifact?lang=es&path=implementations%2Fqmleeg-dru%2FQMLEEG-DRU%2FResults%2Fhpo%2Fhybrid_dru_L3-fold5%2Fsummary.json": {
+   "file": "snapshot/en/api/artifact__298f3ed926fe.json",
+   "type": "application/json",
+   "status": 200
+  },
+  "/api/artifact?lang=es&path=implementations%2Fqmleeg-dru%2FQMLEEG-DRU%2FResults%2Fpoc%2Fhistory_hybrid_dru_L3.json": {
+   "file": "snapshot/en/api/artifact__369bc0e9464f.json",
+   "type": "application/json",
+   "status": 200
+  },
+  "/api/artifact?lang=es&path=implementations%2Fqmleeg-dru%2FQMLEEG-DRU%2FResults%2Fpoc%2Fhistory_linear_probe.json": {
+   "file": "snapshot/en/api/artifact__a1ce192446fe.json",
+   "type": "application/json",
+   "status": 200
+  },
+  "/api/artifact?lang=es&path=implementations%2Fqmleeg-dru%2FQMLEEG-DRU%2FResults%2Fpoc%2Fhistory_single_shot_L1.json": {
+   "file": "snapshot/en/api/artifact__84c17a2af250.json",
+   "type": "application/json",
+   "status": 200
+  },
+  "/api/artifact?lang=es&path=implementations%2Fqmleeg-dru%2FQMLEEG-DRU%2FResults%2Freviewer_report.json": {
+   "file": "snapshot/en/api/artifact__d6293409660d.json",
+   "type": "application/json",
+   "status": 200
+  },
+  "/api/artifact?lang=es&path=implementations%2Fqmleeg-dru%2FQMLEEG-DRU%2FResults%2Fsummary.json": {
+   "file": "snapshot/en/api/artifact__4a1382d78492.json",
+   "type": "application/json",
+   "status": 200
+  },
+  "/api/artifact?lang=es&path=implementations%2Fqmleeg-dru%2FQMLEEG-DRU%2FResults%2Ftables%2Fpoc_test_metrics.csv": {
+   "file": "snapshot/en/api/artifact__409a8d75fbf2.txt",
+   "type": "text/plain",
+   "status": 200
+  },
+  "/api/artifact?lang=es&path=implementations%2Fqmleeg-dru%2FQMLEEG-DRU%2FResults%2Ftiming.json": {
+   "file": "snapshot/en/api/artifact__87b43f275ce2.json",
+   "type": "application/json",
+   "status": 200
+  },
+  "/api/artifact?lang=es&path=implementations%2Fqmleeg-dru%2FQMLEEG-DRU%2Fdiagrams%2Fexperiments.png": {
+   "file": "snapshot/en/api/artifact__a6199eb86c82.png",
+   "type": "image/png",
+   "status": 200
+  },
+  "/api/artifact?lang=es&path=implementations%2Fqmleeg-dru%2FQMLEEG-DRU%2Fdiagrams%2Fpoc.png": {
+   "file": "snapshot/en/api/artifact__959cd4f6c771.png",
+   "type": "image/png",
+   "status": 200
+  },
+  "/api/artifact?lang=es&path=implementations%2Fqmleeg-dru%2FREADME.md": {
+   "file": "snapshot/en/api/artifact__75c1ad41ca06.txt",
+   "type": "text/plain",
+   "status": 200
+  },
+  "/api/artifact?lang=es&path=paper%2FFigures%2Ffig-acquisition-protocol.pdf": {
+   "file": "snapshot/en/api/artifact__fc5f26eb519c.pdf",
+   "type": "application/pdf",
+   "status": 200
+  },
+  "/api/artifact?lang=es&path=paper%2FFigures%2Ffig-contribution-summary.pdf": {
+   "file": "snapshot/en/api/artifact__c3cf9d9fe725.pdf",
+   "type": "application/pdf",
+   "status": 200
+  },
+  "/api/artifact?lang=es&path=paper%2FFigures%2Ffig-e1-convergence.pdf": {
+   "file": "snapshot/en/api/artifact__3985d5257dd7.pdf",
+   "type": "application/pdf",
+   "status": 200
+  },
+  "/api/artifact?lang=es&path=paper%2FFigures%2Ffig-e2-critical-difference.pdf": {
+   "file": "snapshot/en/api/artifact__cc31f85cc95d.pdf",
+   "type": "application/pdf",
+   "status": 200
+  },
+  "/api/artifact?lang=es&path=paper%2FFigures%2Ffig-e3-gradient-variance.pdf": {
+   "file": "snapshot/en/api/artifact__44b03f5364fe.pdf",
+   "type": "application/pdf",
+   "status": 200
+  },
+  "/api/artifact?lang=es&path=paper%2FFigures%2Ffig-e4-saliency-topomap.pdf": {
+   "file": "snapshot/en/api/artifact__448fc29f8a96.pdf",
+   "type": "application/pdf",
+   "status": 200
+  },
+  "/api/artifact?lang=es&path=paper%2FFigures%2Ffig-experimental-design.pdf": {
+   "file": "snapshot/en/api/artifact__7ae01e427c18.pdf",
+   "type": "application/pdf",
+   "status": 200
+  },
+  "/api/artifact?lang=es&path=paper%2FFigures%2Ffig-poc-pipeline.pdf": {
+   "file": "snapshot/en/api/artifact__ba5126f569a9.pdf",
+   "type": "application/pdf",
+   "status": 200
+  },
+  "/api/artifact?lang=es&path=paper%2Fmain.pdf": {
+   "file": "snapshot/en/api/pdf.pdf",
+   "type": "application/pdf",
+   "status": 200
+  },
+  "/api/artifact?lang=es&path=paper%2Fmain.tex": {
+   "file": "snapshot/en/api/artifact__1ef44ebe2108.txt",
+   "type": "text/plain",
+   "status": 200
+  },
+  "/api/artifact?lang=es&path=papersmith.yaml": {
+   "file": "snapshot/en/api/artifact__24b6d9e062f2.txt",
+   "type": "text/plain",
+   "status": 200
+  },
+  "/api/artifact?lang=es&path=proposals%2Fresearch-concept-hybrid-quantum-classical-neural-network-with-data-re-uploadi-r01.md": {
+   "file": "snapshot/en/api/artifact__766027d7f9ec.txt",
+   "type": "text/plain",
+   "status": 200
+  },
+  "/api/artifact?lang=es&path=proposals%2Fresearch-concept-hybrid-quantum-classical-neural-network-with-data-re-uploadi-r01.sky.json": {
+   "file": "snapshot/en/api/artifact__e814e47e0ec9.json",
+   "type": "application/json",
+   "status": 200
+  },
+  "/api/artifact?lang=es&path=proposals%2Fresearch-concept-hybrid-quantum-classical-neural-network-with-data-re-uploadi-r02.md": {
+   "file": "snapshot/en/api/artifact__0dbfafa5f701.txt",
+   "type": "text/plain",
+   "status": 200
+  },
+  "/api/artifact?lang=es&path=proposals%2Fresearch-concept-hybrid-quantum-classical-neural-network-with-data-re-uploadi-r02.sky.json": {
+   "file": "snapshot/en/api/artifact__e814e47e0ec9.json",
+   "type": "application/json",
+   "status": 200
+  },
+  "/api/artifact?lang=es&path=proposals%2Fresearch-concept-hybrid-quantum-classical-neural-network-with-data-re-uploadi-r03.md": {
+   "file": "snapshot/en/api/artifact__49e67f6b89ac.txt",
+   "type": "text/plain",
+   "status": 200
+  },
+  "/api/artifact?lang=es&path=proposals%2Fresearch-concept-hybrid-quantum-classical-neural-network-with-data-re-uploadi-r03.sky.json": {
+   "file": "snapshot/en/api/artifact__e814e47e0ec9.json",
+   "type": "application/json",
+   "status": 200
+  },
+  "/api/artifact?lang=es&path=proposals%2Fresearch-concept-hybrid-quantum-classical-neural-network-with-data-re-uploadi-r04.md": {
+   "file": "snapshot/en/api/artifact__5ba2c301f06c.txt",
+   "type": "text/plain",
+   "status": 200
+  },
+  "/api/artifact?lang=es&path=proposals%2Fresearch-concept-hybrid-quantum-classical-neural-network-with-data-re-uploadi-r04.sky.json": {
+   "file": "snapshot/en/api/artifact__e814e47e0ec9.json",
+   "type": "application/json",
+   "status": 200
+  },
+  "/api/artifact?lang=es&path=sections%2F01-materials-and-methods.md": {
+   "file": "snapshot/en/api/artifact__4975c549cc90.txt",
+   "type": "text/plain",
+   "status": 200
+  },
+  "/api/artifact?lang=es&path=sections%2F02-experimental-setup.md": {
+   "file": "snapshot/en/api/artifact__af9fba9ce514.txt",
+   "type": "text/plain",
+   "status": 200
+  },
+  "/api/artifact?lang=es&path=sections%2F03-results-and-discussion.md": {
+   "file": "snapshot/en/api/artifact__2e3e0781f5d5.txt",
+   "type": "text/plain",
+   "status": 200
+  },
+  "/api/artifact?lang=es&path=sections%2F04-limitations.md": {
+   "file": "snapshot/en/api/artifact__bbd17d5e9c19.txt",
+   "type": "text/plain",
+   "status": 200
+  },
+  "/api/artifact?lang=es&path=sections%2F05-related-work.md": {
+   "file": "snapshot/en/api/artifact__0c3e4d8ecff7.txt",
+   "type": "text/plain",
+   "status": 200
+  },
+  "/api/artifact?lang=es&path=sections%2F06-introduction.md": {
+   "file": "snapshot/en/api/artifact__723a6e0d1f87.txt",
+   "type": "text/plain",
+   "status": 200
+  },
+  "/api/artifact?lang=es&path=sections%2F07-conclusions.md": {
+   "file": "snapshot/en/api/artifact__43c58f9e7765.txt",
+   "type": "text/plain",
+   "status": 200
+  },
+  "/api/artifact?lang=es&path=sections%2F08-abstract.md": {
+   "file": "snapshot/en/api/artifact__da7003ea9733.txt",
+   "type": "text/plain",
+   "status": 200
+  },
+  "/api/artifact?lang=es&path=sections%2F09-title-and-keywords.md": {
+   "file": "snapshot/en/api/artifact__49a05f806313.txt",
+   "type": "text/plain",
+   "status": 200
+  },
+  "/api/artifact?lang=es&path=sections%2F10-back-matter.md": {
+   "file": "snapshot/en/api/artifact__335eb307b2af.txt",
+   "type": "text/plain",
+   "status": 200
+  },
+  "/api/artifact?lang=es&path=sota-pool%2Fatlas.json": {
+   "file": "snapshot/en/api/artifact__8c3a94cfe6e5.json",
+   "type": "application/json",
+   "status": 200
+  },
+  "/api/artifact?lang=es&path=sota-pool%2Fcandidates.json": {
+   "file": "snapshot/en/api/artifact__af7a2d0390ad.json",
+   "type": "application/json",
+   "status": 200
+  },
+  "/api/artifact?path=datasets%2Fsearch-2026-10-27.json": {
+   "file": "snapshot/en/api/artifact__79f4e4777288.json",
+   "type": "application/json",
+   "status": 200
+  },
+  "/api/artifact?path=experiments%2Fexperiments-hybrid-quantum-classical-neural-network-with-data-re-uploadi-v01.md": {
+   "file": "snapshot/en/api/artifact__04e156adc227.txt",
+   "type": "text/plain",
+   "status": 200
+  },
+  "/api/artifact?path=experiments%2Fexperiments-hybrid-quantum-classical-neural-network-with-data-re-uploadi-v02.md": {
+   "file": "snapshot/en/api/artifact__c205ab6e5e53.txt",
+   "type": "text/plain",
+   "status": 200
+  },
+  "/api/artifact?path=experiments%2Fexperiments-hybrid-quantum-classical-neural-network-with-data-re-uploadi-v03.md": {
+   "file": "snapshot/en/api/artifact__c0e6770f7f50.txt",
+   "type": "text/plain",
+   "status": 200
+  },
+  "/api/artifact?path=experiments%2Fexperiments-hybrid-quantum-classical-neural-network-with-data-re-uploadi-v04.md": {
+   "file": "snapshot/en/api/artifact__3ac77c188594.txt",
+   "type": "text/plain",
+   "status": 200
+  },
+  "/api/artifact?path=experiments%2Fexperiments-hybrid-quantum-classical-neural-network-with-data-re-uploadi-v05.md": {
+   "file": "snapshot/en/api/artifact__048c8ad45e20.txt",
+   "type": "text/plain",
+   "status": 200
+  },
+  "/api/artifact?path=experiments%2Fexperiments-hybrid-quantum-classical-neural-network-with-data-re-uploadi-v06.md": {
+   "file": "snapshot/en/api/artifact__bd0c84c44ee9.txt",
+   "type": "text/plain",
+   "status": 200
+  },
+  "/api/artifact?path=experiments%2Fexperiments-hybrid-quantum-classical-neural-network-with-data-re-uploadi-v07.md": {
+   "file": "snapshot/en/api/artifact__a9d49bea4831.txt",
+   "type": "text/plain",
+   "status": 200
+  },
+  "/api/artifact?path=experiments%2Fexperiments-hybrid-quantum-classical-neural-network-with-data-re-uploadi-v08.md": {
+   "file": "snapshot/en/api/artifact__dbaf124243c6.txt",
+   "type": "text/plain",
+   "status": 200
+  },
+  "/api/artifact?path=experiments%2Fexperiments-hybrid-quantum-classical-neural-network-with-data-re-uploadi-v09.md": {
+   "file": "snapshot/en/api/artifact__41a2dbc77b17.txt",
+   "type": "text/plain",
+   "status": 200
+  },
+  "/api/artifact?path=experiments%2Fexperiments-hybrid-quantum-classical-neural-network-with-data-re-uploadi-v10.md": {
+   "file": "snapshot/en/api/artifact__ec1b6ddbf4fa.txt",
+   "type": "text/plain",
+   "status": 200
+  },
+  "/api/artifact?path=implementations%2Fpoc%2FQMLEEG-DRU-POC%2FResults%2Fdiscussion.json": {
+   "file": "snapshot/en/api/artifact__2badfa6e98be.json",
+   "type": "application/json",
+   "status": 200
+  },
+  "/api/artifact?path=implementations%2Fpoc%2FQMLEEG-DRU-POC%2FResults%2Ffigures%2Fpoc_convergence.png": {
+   "file": "snapshot/en/api/artifact__954795427317.png",
+   "type": "image/png",
+   "status": 200
+  },
+  "/api/artifact?path=implementations%2Fpoc%2FQMLEEG-DRU-POC%2FResults%2Fpoc%2Fhistory_hybrid_dru_L3.json": {
+   "file": "snapshot/en/api/artifact__369bc0e9464f.json",
+   "type": "application/json",
+   "status": 200
+  },
+  "/api/artifact?path=implementations%2Fpoc%2FQMLEEG-DRU-POC%2FResults%2Fpoc%2Fhistory_linear_probe.json": {
+   "file": "snapshot/en/api/artifact__a1ce192446fe.json",
+   "type": "application/json",
+   "status": 200
+  },
+  "/api/artifact?path=implementations%2Fpoc%2FQMLEEG-DRU-POC%2FResults%2Fpoc%2Fhistory_single_shot_L1.json": {
+   "file": "snapshot/en/api/artifact__84c17a2af250.json",
+   "type": "application/json",
+   "status": 200
+  },
+  "/api/artifact?path=implementations%2Fpoc%2FQMLEEG-DRU-POC%2FResults%2Fsummary.json": {
+   "file": "snapshot/en/api/artifact__4a1382d78492.json",
+   "type": "application/json",
+   "status": 200
+  },
+  "/api/artifact?path=implementations%2Fqmleeg-dru%2FQMLEEG-DRU%2FResults%2Fdiscussion.json": {
+   "file": "snapshot/en/api/artifact__88a3bc816a4f.json",
+   "type": "application/json",
+   "status": 200
+  },
+  "/api/artifact?path=implementations%2Fqmleeg-dru%2FQMLEEG-DRU%2FResults%2Fe1%2Ffigures%2Fe1-convergence.png": {
+   "file": "snapshot/en/api/artifact__f372517fc6b6.png",
+   "type": "image/png",
+   "status": 200
+  },
+  "/api/artifact?path=implementations%2Fqmleeg-dru%2FQMLEEG-DRU%2FResults%2Fe1%2Fhistory-adhdeepnet.jsonl": {
+   "file": "snapshot/en/api/artifact__3e7c5257ef12.txt",
+   "type": "text/plain",
+   "status": 200
+  },
+  "/api/artifact?path=implementations%2Fqmleeg-dru%2FQMLEEG-DRU%2FResults%2Fe1%2Fhistory-eegnet.jsonl": {
+   "file": "snapshot/en/api/artifact__4923c9b32368.txt",
+   "type": "text/plain",
+   "status": 200
+  },
+  "/api/artifact?path=implementations%2Fqmleeg-dru%2FQMLEEG-DRU%2FResults%2Fe1%2Fhistory-hybrid_dru_L3.jsonl": {
+   "file": "snapshot/en/api/artifact__17e72a162890.txt",
+   "type": "text/plain",
+   "status": 200
+  },
+  "/api/artifact?path=implementations%2Fqmleeg-dru%2FQMLEEG-DRU%2FResults%2Fe1%2Fhistory-linear_probe.jsonl": {
+   "file": "snapshot/en/api/artifact__6dd0b32033ac.txt",
+   "type": "text/plain",
+   "status": 200
+  },
+  "/api/artifact?path=implementations%2Fqmleeg-dru%2FQMLEEG-DRU%2FResults%2Fe1%2Fhistory-single_shot_L1.jsonl": {
+   "file": "snapshot/en/api/artifact__6804f2956ecc.txt",
+   "type": "text/plain",
+   "status": 200
+  },
+  "/api/artifact?path=implementations%2Fqmleeg-dru%2FQMLEEG-DRU%2FResults%2Fe1%2Fsignificance.json": {
+   "file": "snapshot/en/api/artifact__3983acd4ac20.json",
+   "type": "application/json",
+   "status": 200
+  },
+  "/api/artifact?path=implementations%2Fqmleeg-dru%2FQMLEEG-DRU%2FResults%2Fe1%2Fsummary.json": {
+   "file": "snapshot/en/api/artifact__fedc2785fcab.json",
+   "type": "application/json",
+   "status": 200
+  },
+  "/api/artifact?path=implementations%2Fqmleeg-dru%2FQMLEEG-DRU%2FResults%2Fe1%2Ftables%2Fe1-report.md": {
+   "file": "snapshot/en/api/artifact__42c4970a6b71.txt",
+   "type": "text/plain",
+   "status": 200
+  },
+  "/api/artifact?path=implementations%2Fqmleeg-dru%2FQMLEEG-DRU%2FResults%2Fe1%2Ftables%2Fe1-significance.md": {
+   "file": "snapshot/en/api/artifact__37e041080ee9.txt",
+   "type": "text/plain",
+   "status": 200
+  },
+  "/api/artifact?path=implementations%2Fqmleeg-dru%2FQMLEEG-DRU%2FResults%2Fe2%2Ffigures%2Fe2-critical-difference.png": {
+   "file": "snapshot/en/api/artifact__7919f582879d.png",
+   "type": "image/png",
+   "status": 200
+  },
+  "/api/artifact?path=implementations%2Fqmleeg-dru%2FQMLEEG-DRU%2FResults%2Fe2%2Fhistory-e2.jsonl": {
+   "file": "snapshot/en/api/artifact__80c60c1bb0d2.txt",
+   "type": "text/plain",
+   "status": 200
+  },
+  "/api/artifact?path=implementations%2Fqmleeg-dru%2FQMLEEG-DRU%2FResults%2Fe2%2Fsignificance.json": {
+   "file": "snapshot/en/api/artifact__c625bd248fe0.json",
+   "type": "application/json",
+   "status": 200
+  },
+  "/api/artifact?path=implementations%2Fqmleeg-dru%2FQMLEEG-DRU%2FResults%2Fe2%2Fsummary.json": {
+   "file": "snapshot/en/api/artifact__c983e450122c.json",
+   "type": "application/json",
+   "status": 200
+  },
+  "/api/artifact?path=implementations%2Fqmleeg-dru%2FQMLEEG-DRU%2FResults%2Fe2%2Ftables%2Fe2-report.md": {
+   "file": "snapshot/en/api/artifact__269915637ec1.txt",
+   "type": "text/plain",
+   "status": 200
+  },
+  "/api/artifact?path=implementations%2Fqmleeg-dru%2FQMLEEG-DRU%2FResults%2Fe2%2Ftables%2Fe2-significance.md": {
+   "file": "snapshot/en/api/artifact__ab017492a578.txt",
+   "type": "text/plain",
+   "status": 200
+  },
+  "/api/artifact?path=implementations%2Fqmleeg-dru%2FQMLEEG-DRU%2FResults%2Fe3%2Ffigures%2Fe3-convergence.png": {
+   "file": "snapshot/en/api/artifact__c0eebdd97aa5.png",
+   "type": "image/png",
+   "status": 200
+  },
+  "/api/artifact?path=implementations%2Fqmleeg-dru%2FQMLEEG-DRU%2FResults%2Fe3%2Ffigures%2Fe3-gradient-variance.png": {
+   "file": "snapshot/en/api/artifact__3bf720862ad8.png",
+   "type": "image/png",
+   "status": 200
+  },
+  "/api/artifact?path=implementations%2Fqmleeg-dru%2FQMLEEG-DRU%2FResults%2Fe3%2Fhistory-e3.jsonl": {
+   "file": "snapshot/en/api/artifact__16508ddde3ac.txt",
+   "type": "text/plain",
+   "status": 200
+  },
+  "/api/artifact?path=implementations%2Fqmleeg-dru%2FQMLEEG-DRU%2FResults%2Fe3%2Fsignificance.json": {
+   "file": "snapshot/en/api/artifact__69dc3f5397b7.json",
+   "type": "application/json",
+   "status": 200
+  },
+  "/api/artifact?path=implementations%2Fqmleeg-dru%2FQMLEEG-DRU%2FResults%2Fe3%2Fsummary.json": {
+   "file": "snapshot/en/api/artifact__e1d69a3bf938.json",
+   "type": "application/json",
+   "status": 200
+  },
+  "/api/artifact?path=implementations%2Fqmleeg-dru%2FQMLEEG-DRU%2FResults%2Fe3%2Ftables%2Fe3-report.md": {
+   "file": "snapshot/en/api/artifact__0d5dd20ab42b.txt",
+   "type": "text/plain",
+   "status": 200
+  },
+  "/api/artifact?path=implementations%2Fqmleeg-dru%2FQMLEEG-DRU%2FResults%2Fe3%2Ftables%2Fe3-significance.md": {
+   "file": "snapshot/en/api/artifact__d17dcc620b25.txt",
+   "type": "text/plain",
+   "status": 200
+  },
+  "/api/artifact?path=implementations%2Fqmleeg-dru%2FQMLEEG-DRU%2FResults%2Fe4%2Ffigures%2Fe4-saliency-topomap.png": {
+   "file": "snapshot/en/api/artifact__2fe3865ac798.png",
+   "type": "image/png",
+   "status": 200
+  },
+  "/api/artifact?path=implementations%2Fqmleeg-dru%2FQMLEEG-DRU%2FResults%2Fe4%2Fsignificance-biomarkers.json": {
+   "file": "snapshot/en/api/artifact__a585c78b4a30.json",
+   "type": "application/json",
+   "status": 200
+  },
+  "/api/artifact?path=implementations%2Fqmleeg-dru%2FQMLEEG-DRU%2FResults%2Fe4%2Fsignificance.json": {
+   "file": "snapshot/en/api/artifact__57efb820fc6b.json",
+   "type": "application/json",
+   "status": 200
+  },
+  "/api/artifact?path=implementations%2Fqmleeg-dru%2FQMLEEG-DRU%2FResults%2Fe4%2Fsummary.json": {
+   "file": "snapshot/en/api/artifact__1ee41859b683.json",
+   "type": "application/json",
+   "status": 200
+  },
+  "/api/artifact?path=implementations%2Fqmleeg-dru%2FQMLEEG-DRU%2FResults%2Fe4%2Ftables%2Fe4-biomarkers.md": {
+   "file": "snapshot/en/api/artifact__a2c892121cdb.txt",
+   "type": "text/plain",
+   "status": 200
+  },
+  "/api/artifact?path=implementations%2Fqmleeg-dru%2FQMLEEG-DRU%2FResults%2Fe4%2Ftables%2Fe4-regions.md": {
+   "file": "snapshot/en/api/artifact__7d488ca2aef1.txt",
+   "type": "text/plain",
+   "status": 200
+  },
+  "/api/artifact?path=implementations%2Fqmleeg-dru%2FQMLEEG-DRU%2FResults%2Fe4%2Ftables%2Fe4-significance.md": {
+   "file": "snapshot/en/api/artifact__91891674e563.txt",
+   "type": "text/plain",
+   "status": 200
+  },
+  "/api/artifact?path=implementations%2Fqmleeg-dru%2FQMLEEG-DRU%2FResults%2Fe5%2Ffigures%2Fe5-convergence.png": {
+   "file": "snapshot/en/api/artifact__65adcc432079.png",
+   "type": "image/png",
+   "status": 200
+  },
+  "/api/artifact?path=implementations%2Fqmleeg-dru%2FQMLEEG-DRU%2FResults%2Fe5%2Ffigures%2Fe5-label-noise.png": {
+   "file": "snapshot/en/api/artifact__53a7f04abcbe.png",
+   "type": "image/png",
+   "status": 200
+  },
+  "/api/artifact?path=implementations%2Fqmleeg-dru%2FQMLEEG-DRU%2FResults%2Fe5%2Fsummary.json": {
+   "file": "snapshot/en/api/artifact__54a7d19f66ac.json",
+   "type": "application/json",
+   "status": 200
+  },
+  "/api/artifact?path=implementations%2Fqmleeg-dru%2FQMLEEG-DRU%2FResults%2Fe5%2Ftables%2Fe5-significance.md": {
+   "file": "snapshot/en/api/artifact__a1ed0bcd2190.txt",
+   "type": "text/plain",
+   "status": 200
+  },
+  "/api/artifact?path=implementations%2Fqmleeg-dru%2FQMLEEG-DRU%2FResults%2Fe5%2Fv05%2Ftables%2Fe5-significance.md": {
+   "file": "snapshot/en/api/artifact__b47343563555.txt",
+   "type": "text/plain",
+   "status": 200
+  },
+  "/api/artifact?path=implementations%2Fqmleeg-dru%2FQMLEEG-DRU%2FResults%2Fhpo%2Fhybrid_dru_L3-fold1%2Fsummary.json": {
+   "file": "snapshot/en/api/artifact__2a26276bd2c2.json",
+   "type": "application/json",
+   "status": 200
+  },
+  "/api/artifact?path=implementations%2Fqmleeg-dru%2FQMLEEG-DRU%2FResults%2Fhpo%2Fhybrid_dru_L3-fold2%2Fsummary.json": {
+   "file": "snapshot/en/api/artifact__15392b0f86e7.json",
+   "type": "application/json",
+   "status": 200
+  },
+  "/api/artifact?path=implementations%2Fqmleeg-dru%2FQMLEEG-DRU%2FResults%2Fhpo%2Fhybrid_dru_L3-fold3%2Fsummary.json": {
+   "file": "snapshot/en/api/artifact__f7688c097bdb.json",
+   "type": "application/json",
+   "status": 200
+  },
+  "/api/artifact?path=implementations%2Fqmleeg-dru%2FQMLEEG-DRU%2FResults%2Fhpo%2Fhybrid_dru_L3-fold4%2Fsummary.json": {
+   "file": "snapshot/en/api/artifact__2c73eca0531e.json",
+   "type": "application/json",
+   "status": 200
+  },
+  "/api/artifact?path=implementations%2Fqmleeg-dru%2FQMLEEG-DRU%2FResults%2Fhpo%2Fhybrid_dru_L3-fold5%2Fsummary.json": {
+   "file": "snapshot/en/api/artifact__298f3ed926fe.json",
+   "type": "application/json",
+   "status": 200
+  },
+  "/api/artifact?path=implementations%2Fqmleeg-dru%2FQMLEEG-DRU%2FResults%2Fpoc%2Fhistory_hybrid_dru_L3.json": {
+   "file": "snapshot/en/api/artifact__369bc0e9464f.json",
+   "type": "application/json",
+   "status": 200
+  },
+  "/api/artifact?path=implementations%2Fqmleeg-dru%2FQMLEEG-DRU%2FResults%2Fpoc%2Fhistory_linear_probe.json": {
+   "file": "snapshot/en/api/artifact__a1ce192446fe.json",
+   "type": "application/json",
+   "status": 200
+  },
+  "/api/artifact?path=implementations%2Fqmleeg-dru%2FQMLEEG-DRU%2FResults%2Fpoc%2Fhistory_single_shot_L1.json": {
+   "file": "snapshot/en/api/artifact__84c17a2af250.json",
+   "type": "application/json",
+   "status": 200
+  },
+  "/api/artifact?path=implementations%2Fqmleeg-dru%2FQMLEEG-DRU%2FResults%2Freviewer_report.json": {
+   "file": "snapshot/en/api/artifact__d6293409660d.json",
+   "type": "application/json",
+   "status": 200
+  },
+  "/api/artifact?path=implementations%2Fqmleeg-dru%2FQMLEEG-DRU%2FResults%2Fsummary.json": {
+   "file": "snapshot/en/api/artifact__4a1382d78492.json",
+   "type": "application/json",
+   "status": 200
+  },
+  "/api/artifact?path=implementations%2Fqmleeg-dru%2FQMLEEG-DRU%2FResults%2Ftables%2Fpoc_test_metrics.csv": {
+   "file": "snapshot/en/api/artifact__409a8d75fbf2.txt",
+   "type": "text/plain",
+   "status": 200
+  },
+  "/api/artifact?path=implementations%2Fqmleeg-dru%2FQMLEEG-DRU%2FResults%2Ftiming.json": {
+   "file": "snapshot/en/api/artifact__87b43f275ce2.json",
+   "type": "application/json",
+   "status": 200
+  },
+  "/api/artifact?path=implementations%2Fqmleeg-dru%2FQMLEEG-DRU%2Fdiagrams%2Fexperiments.png": {
+   "file": "snapshot/en/api/artifact__a6199eb86c82.png",
+   "type": "image/png",
+   "status": 200
+  },
+  "/api/artifact?path=implementations%2Fqmleeg-dru%2FQMLEEG-DRU%2Fdiagrams%2Fpoc.png": {
+   "file": "snapshot/en/api/artifact__959cd4f6c771.png",
+   "type": "image/png",
+   "status": 200
+  },
+  "/api/artifact?path=implementations%2Fqmleeg-dru%2FREADME.md": {
+   "file": "snapshot/en/api/artifact__75c1ad41ca06.txt",
+   "type": "text/plain",
+   "status": 200
+  },
+  "/api/artifact?path=paper%2FFigures%2Ffig-acquisition-protocol.pdf": {
+   "file": "snapshot/en/api/artifact__fc5f26eb519c.pdf",
+   "type": "application/pdf",
+   "status": 200
+  },
+  "/api/artifact?path=paper%2FFigures%2Ffig-contribution-summary.pdf": {
+   "file": "snapshot/en/api/artifact__c3cf9d9fe725.pdf",
+   "type": "application/pdf",
+   "status": 200
+  },
+  "/api/artifact?path=paper%2FFigures%2Ffig-e1-convergence.pdf": {
+   "file": "snapshot/en/api/artifact__3985d5257dd7.pdf",
+   "type": "application/pdf",
+   "status": 200
+  },
+  "/api/artifact?path=paper%2FFigures%2Ffig-e2-critical-difference.pdf": {
+   "file": "snapshot/en/api/artifact__cc31f85cc95d.pdf",
+   "type": "application/pdf",
+   "status": 200
+  },
+  "/api/artifact?path=paper%2FFigures%2Ffig-e3-gradient-variance.pdf": {
+   "file": "snapshot/en/api/artifact__44b03f5364fe.pdf",
+   "type": "application/pdf",
+   "status": 200
+  },
+  "/api/artifact?path=paper%2FFigures%2Ffig-e4-saliency-topomap.pdf": {
+   "file": "snapshot/en/api/artifact__448fc29f8a96.pdf",
+   "type": "application/pdf",
+   "status": 200
+  },
+  "/api/artifact?path=paper%2FFigures%2Ffig-experimental-design.pdf": {
+   "file": "snapshot/en/api/artifact__7ae01e427c18.pdf",
+   "type": "application/pdf",
+   "status": 200
+  },
+  "/api/artifact?path=paper%2FFigures%2Ffig-poc-pipeline.pdf": {
+   "file": "snapshot/en/api/artifact__ba5126f569a9.pdf",
+   "type": "application/pdf",
+   "status": 200
+  },
+  "/api/artifact?path=paper%2Fmain.pdf": {
+   "file": "snapshot/en/api/pdf.pdf",
+   "type": "application/pdf",
+   "status": 200
+  },
+  "/api/artifact?path=paper%2Fmain.tex": {
+   "file": "snapshot/en/api/artifact__1ef44ebe2108.txt",
+   "type": "text/plain",
+   "status": 200
+  },
+  "/api/artifact?path=papersmith.yaml": {
+   "file": "snapshot/en/api/artifact__24b6d9e062f2.txt",
+   "type": "text/plain",
+   "status": 200
+  },
+  "/api/artifact?path=proposals%2Fresearch-concept-hybrid-quantum-classical-neural-network-with-data-re-uploadi-r01.md": {
+   "file": "snapshot/en/api/artifact__766027d7f9ec.txt",
+   "type": "text/plain",
+   "status": 200
+  },
+  "/api/artifact?path=proposals%2Fresearch-concept-hybrid-quantum-classical-neural-network-with-data-re-uploadi-r01.sky.json": {
+   "file": "snapshot/en/api/artifact__e814e47e0ec9.json",
+   "type": "application/json",
+   "status": 200
+  },
+  "/api/artifact?path=proposals%2Fresearch-concept-hybrid-quantum-classical-neural-network-with-data-re-uploadi-r02.md": {
+   "file": "snapshot/en/api/artifact__0dbfafa5f701.txt",
+   "type": "text/plain",
+   "status": 200
+  },
+  "/api/artifact?path=proposals%2Fresearch-concept-hybrid-quantum-classical-neural-network-with-data-re-uploadi-r02.sky.json": {
+   "file": "snapshot/en/api/artifact__e814e47e0ec9.json",
+   "type": "application/json",
+   "status": 200
+  },
+  "/api/artifact?path=proposals%2Fresearch-concept-hybrid-quantum-classical-neural-network-with-data-re-uploadi-r03.md": {
+   "file": "snapshot/en/api/artifact__49e67f6b89ac.txt",
+   "type": "text/plain",
+   "status": 200
+  },
+  "/api/artifact?path=proposals%2Fresearch-concept-hybrid-quantum-classical-neural-network-with-data-re-uploadi-r03.sky.json": {
+   "file": "snapshot/en/api/artifact__e814e47e0ec9.json",
+   "type": "application/json",
+   "status": 200
+  },
+  "/api/artifact?path=proposals%2Fresearch-concept-hybrid-quantum-classical-neural-network-with-data-re-uploadi-r04.md": {
+   "file": "snapshot/en/api/artifact__5ba2c301f06c.txt",
+   "type": "text/plain",
+   "status": 200
+  },
+  "/api/artifact?path=proposals%2Fresearch-concept-hybrid-quantum-classical-neural-network-with-data-re-uploadi-r04.sky.json": {
+   "file": "snapshot/en/api/artifact__e814e47e0ec9.json",
+   "type": "application/json",
+   "status": 200
+  },
+  "/api/artifact?path=sections%2F01-materials-and-methods.md": {
+   "file": "snapshot/en/api/artifact__4975c549cc90.txt",
+   "type": "text/plain",
+   "status": 200
+  },
+  "/api/artifact?path=sections%2F02-experimental-setup.md": {
+   "file": "snapshot/en/api/artifact__af9fba9ce514.txt",
+   "type": "text/plain",
+   "status": 200
+  },
+  "/api/artifact?path=sections%2F03-results-and-discussion.md": {
+   "file": "snapshot/en/api/artifact__2e3e0781f5d5.txt",
+   "type": "text/plain",
+   "status": 200
+  },
+  "/api/artifact?path=sections%2F04-limitations.md": {
+   "file": "snapshot/en/api/artifact__bbd17d5e9c19.txt",
+   "type": "text/plain",
+   "status": 200
+  },
+  "/api/artifact?path=sections%2F05-related-work.md": {
+   "file": "snapshot/en/api/artifact__0c3e4d8ecff7.txt",
+   "type": "text/plain",
+   "status": 200
+  },
+  "/api/artifact?path=sections%2F06-introduction.md": {
+   "file": "snapshot/en/api/artifact__723a6e0d1f87.txt",
+   "type": "text/plain",
+   "status": 200
+  },
+  "/api/artifact?path=sections%2F07-conclusions.md": {
+   "file": "snapshot/en/api/artifact__43c58f9e7765.txt",
+   "type": "text/plain",
+   "status": 200
+  },
+  "/api/artifact?path=sections%2F08-abstract.md": {
+   "file": "snapshot/en/api/artifact__da7003ea9733.txt",
+   "type": "text/plain",
+   "status": 200
+  },
+  "/api/artifact?path=sections%2F09-title-and-keywords.md": {
+   "file": "snapshot/en/api/artifact__49a05f806313.txt",
+   "type": "text/plain",
+   "status": 200
+  },
+  "/api/artifact?path=sections%2F10-back-matter.md": {
+   "file": "snapshot/en/api/artifact__335eb307b2af.txt",
+   "type": "text/plain",
+   "status": 200
+  },
+  "/api/artifact?path=sota-pool%2Fatlas.json": {
+   "file": "snapshot/en/api/artifact__8c3a94cfe6e5.json",
+   "type": "application/json",
+   "status": 200
+  },
+  "/api/artifact?path=sota-pool%2Fcandidates.json": {
+   "file": "snapshot/en/api/artifact__af7a2d0390ad.json",
+   "type": "application/json",
+   "status": 200
+  },
+  "/api/atlas/candidates/view": {
+   "file": "snapshot/en/api/atlas/candidates/view.html",
+   "type": "text/html",
+   "status": 200
+  },
+  "/api/atlas/candidates/view?lang=es": {
+   "file": "snapshot/es/api/atlas/candidates/view__0a4d7d9d82bd.html",
+   "type": "text/html",
+   "status": 200
+  },
+  "/api/atlas/cited-papers": {
+   "file": "snapshot/en/api/atlas/cited-papers.json",
+   "type": "application/json",
+   "status": 200
+  },
+  "/api/atlas/cited-papers?lang=es": {
+   "file": "snapshot/en/api/atlas/cited-papers.json",
+   "type": "application/json",
+   "status": 200
+  },
+  "/api/atlas/coverage": {
+   "file": "snapshot/en/api/atlas/coverage.json",
+   "type": "application/json",
+   "status": 200
+  },
+  "/api/atlas/coverage?lang=es": {
+   "file": "snapshot/en/api/atlas/coverage.json",
+   "type": "application/json",
+   "status": 200
+  },
+  "/api/atlas/manuscript": {
+   "file": "snapshot/en/api/atlas/manuscript.json",
+   "type": "application/json",
+   "status": 200
+  },
+  "/api/atlas/manuscript-graph": {
+   "file": "snapshot/en/api/atlas/manuscript-graph.json",
+   "type": "application/json",
+   "status": 200
+  },
+  "/api/atlas/manuscript-graph/view": {
+   "file": "snapshot/en/api/atlas/manuscript-graph/view.html",
+   "type": "text/html",
+   "status": 200
+  },
+  "/api/atlas/manuscript-graph/view?lang=es": {
+   "file": "snapshot/es/api/atlas/manuscript-graph/view__0a4d7d9d82bd.html",
+   "type": "text/html",
+   "status": 200
+  },
+  "/api/atlas/manuscript-graph?lang=es": {
+   "file": "snapshot/en/api/atlas/manuscript-graph.json",
+   "type": "application/json",
+   "status": 200
+  },
+  "/api/atlas/manuscript?lang=es": {
+   "file": "snapshot/en/api/atlas/manuscript.json",
+   "type": "application/json",
+   "status": 200
+  },
+  "/api/atlas/novelty/view": {
+   "file": "snapshot/en/api/atlas/novelty/view.html",
+   "type": "text/html",
+   "status": 200
+  },
+  "/api/atlas/novelty/view?lang=es": {
+   "file": "snapshot/es/api/atlas/novelty/view__0a4d7d9d82bd.html",
+   "type": "text/html",
+   "status": 200
+  },
+  "/api/atlas/reference?id=10.1007%2Fs11265-025-01979-2": {
+   "file": "snapshot/en/api/atlas/reference__df22967ef937.json",
+   "type": "application/json",
+   "status": 200
+  },
+  "/api/atlas/reference?id=10.1007%2Fs11265-025-01979-2&lang=es": {
+   "file": "snapshot/en/api/atlas/reference__df22967ef937.json",
+   "type": "application/json",
+   "status": 200
+  },
+  "/api/atlas/reference?id=10.1007%2Fs11571-023-10028-2": {
+   "file": "snapshot/en/api/atlas/reference__8bb3f65c13be.json",
+   "type": "application/json",
+   "status": 200
+  },
+  "/api/atlas/reference?id=10.1007%2Fs11571-023-10028-2&lang=es": {
+   "file": "snapshot/en/api/atlas/reference__8bb3f65c13be.json",
+   "type": "application/json",
+   "status": 200
+  },
+  "/api/atlas/reference?id=10.1007%2Fs42484-024-00144-5": {
+   "file": "snapshot/en/api/atlas/reference__b2032c06fa69.json",
+   "type": "application/json",
+   "status": 200
+  },
+  "/api/atlas/reference?id=10.1007%2Fs42484-024-00144-5&lang=es": {
+   "file": "snapshot/en/api/atlas/reference__b2032c06fa69.json",
+   "type": "application/json",
+   "status": 200
+  },
+  "/api/atlas/reference?id=10.1007%2Fs42484-024-00152-5": {
+   "file": "snapshot/en/api/atlas/reference__6b98d4168dca.json",
+   "type": "application/json",
+   "status": 200
+  },
+  "/api/atlas/reference?id=10.1007%2Fs42484-024-00152-5&lang=es": {
+   "file": "snapshot/en/api/atlas/reference__6b98d4168dca.json",
+   "type": "application/json",
+   "status": 200
+  },
+  "/api/atlas/reference?id=10.1016%2Fj.dcn.2022.101096": {
+   "file": "snapshot/en/api/atlas/reference__724e7d73956f.json",
+   "type": "application/json",
+   "status": 200
+  },
+  "/api/atlas/reference?id=10.1016%2Fj.dcn.2022.101096&lang=es": {
+   "file": "snapshot/en/api/atlas/reference__724e7d73956f.json",
+   "type": "application/json",
+   "status": 200
+  },
+  "/api/atlas/reference?id=10.1016%2Fj.mayocp.2026.04.017": {
+   "file": "snapshot/en/api/atlas/reference__a83d843d7cfb.json",
+   "type": "application/json",
+   "status": 200
+  },
+  "/api/atlas/reference?id=10.1016%2Fj.mayocp.2026.04.017&lang=es": {
+   "file": "snapshot/en/api/atlas/reference__a83d843d7cfb.json",
+   "type": "application/json",
+   "status": 200
+  },
+  "/api/atlas/reference?id=10.1038%2Fs41467-021-21728-w": {
+   "file": "snapshot/en/api/atlas/reference__b0cece7ea5c1.json",
+   "type": "application/json",
+   "status": 200
+  },
+  "/api/atlas/reference?id=10.1038%2Fs41467-021-21728-w&lang=es": {
+   "file": "snapshot/en/api/atlas/reference__b0cece7ea5c1.json",
+   "type": "application/json",
+   "status": 200
+  },
+  "/api/atlas/reference?id=10.1038%2Fs41467-024-49909-3": {
+   "file": "snapshot/en/api/atlas/reference__d32c2f2b6cc7.json",
+   "type": "application/json",
+   "status": 200
+  },
+  "/api/atlas/reference?id=10.1038%2Fs41467-024-49909-3&lang=es": {
+   "file": "snapshot/en/api/atlas/reference__d32c2f2b6cc7.json",
+   "type": "application/json",
+   "status": 200
+  },
+  "/api/atlas/reference?id=10.1038%2Fs41598-024-81436-5": {
+   "file": "snapshot/en/api/atlas/reference__21aac75bbba2.json",
+   "type": "application/json",
+   "status": 200
+  },
+  "/api/atlas/reference?id=10.1038%2Fs41598-024-81436-5&lang=es": {
+   "file": "snapshot/en/api/atlas/reference__21aac75bbba2.json",
+   "type": "application/json",
+   "status": 200
+  },
+  "/api/atlas/reference?id=10.1038%2Fs41598-026-58874-4": {
+   "file": "snapshot/en/api/atlas/reference__9c2c6bd10776.json",
+   "type": "application/json",
+   "status": 200
+  },
+  "/api/atlas/reference?id=10.1038%2Fs41598-026-58874-4&lang=es": {
+   "file": "snapshot/en/api/atlas/reference__9c2c6bd10776.json",
+   "type": "application/json",
+   "status": 200
+  },
+  "/api/atlas/reference?id=10.1038%2Fs41598-026-70417-5": {
+   "file": "snapshot/en/api/atlas/reference__b4e475927397.json",
+   "type": "application/json",
+   "status": 200
+  },
+  "/api/atlas/reference?id=10.1038%2Fs41598-026-70417-5&lang=es": {
+   "file": "snapshot/en/api/atlas/reference__b4e475927397.json",
+   "type": "application/json",
+   "status": 200
+  },
+  "/api/atlas/reference?id=10.1088%2F2058-9565%2Fad80be": {
+   "file": "snapshot/en/api/atlas/reference__a208380f4a46.json",
+   "type": "application/json",
+   "status": 200
+  },
+  "/api/atlas/reference?id=10.1088%2F2058-9565%2Fad80be&lang=es": {
+   "file": "snapshot/en/api/atlas/reference__a208380f4a46.json",
+   "type": "application/json",
+   "status": 200
+  },
+  "/api/atlas/reference?id=10.1103%2Fphysreva.106.012411": {
+   "file": "snapshot/en/api/atlas/reference__4d402662dbe7.json",
+   "type": "application/json",
+   "status": 200
+  },
+  "/api/atlas/reference?id=10.1103%2Fphysreva.106.012411&lang=es": {
+   "file": "snapshot/en/api/atlas/reference__4d402662dbe7.json",
+   "type": "application/json",
+   "status": 200
+  },
+  "/api/atlas/reference?id=10.1103%2Fphysrevresearch.7.023151": {
+   "file": "snapshot/en/api/atlas/reference__620b7f3b9ca2.json",
+   "type": "application/json",
+   "status": 200
+  },
+  "/api/atlas/reference?id=10.1103%2Fphysrevresearch.7.023151&lang=es": {
+   "file": "snapshot/en/api/atlas/reference__620b7f3b9ca2.json",
+   "type": "application/json",
+   "status": 200
+  },
+  "/api/atlas/reference?id=10.1103%2Fprxquantum.3.010313": {
+   "file": "snapshot/en/api/atlas/reference__fcf01b99c2c1.json",
+   "type": "application/json",
+   "status": 200
+  },
+  "/api/atlas/reference?id=10.1103%2Fprxquantum.3.010313&lang=es": {
+   "file": "snapshot/en/api/atlas/reference__fcf01b99c2c1.json",
+   "type": "application/json",
+   "status": 200
+  },
+  "/api/atlas/reference?id=10.1162%2Fimag.a.1033": {
+   "file": "snapshot/en/api/atlas/reference__f029f186a301.json",
+   "type": "application/json",
+   "status": 200
+  },
+  "/api/atlas/reference?id=10.1162%2Fimag.a.1033&lang=es": {
+   "file": "snapshot/en/api/atlas/reference__f029f186a301.json",
+   "type": "application/json",
+   "status": 200
+  },
+  "/api/atlas/reference?id=10.1177%2F1087054712460087": {
+   "file": "snapshot/en/api/atlas/reference__8214d89cafc0.json",
+   "type": "application/json",
+   "status": 200
+  },
+  "/api/atlas/reference?id=10.1177%2F1087054712460087&lang=es": {
+   "file": "snapshot/en/api/atlas/reference__8214d89cafc0.json",
+   "type": "application/json",
+   "status": 200
+  },
+  "/api/atlas/reference?id=10.22331%2Fq-2024-11-14-1523": {
+   "file": "snapshot/en/api/atlas/reference__47d855f6ac49.json",
+   "type": "application/json",
+   "status": 200
+  },
+  "/api/atlas/reference?id=10.22331%2Fq-2024-11-14-1523&lang=es": {
+   "file": "snapshot/en/api/atlas/reference__47d855f6ac49.json",
+   "type": "application/json",
+   "status": 200
+  },
+  "/api/atlas/reference?id=10.22331%2Fq-2025-09-03-1847": {
+   "file": "snapshot/en/api/atlas/reference__39fb2f19a740.json",
+   "type": "application/json",
+   "status": 200
+  },
+  "/api/atlas/reference?id=10.22331%2Fq-2025-09-03-1847&lang=es": {
+   "file": "snapshot/en/api/atlas/reference__39fb2f19a740.json",
+   "type": "application/json",
+   "status": 200
+  },
+  "/api/atlas/reference?id=10.3389%2Ffnins.2024.1373515": {
+   "file": "snapshot/en/api/atlas/reference__a87ed5a43573.json",
+   "type": "application/json",
+   "status": 200
+  },
+  "/api/atlas/reference?id=10.3389%2Ffnins.2024.1373515&lang=es": {
+   "file": "snapshot/en/api/atlas/reference__a87ed5a43573.json",
+   "type": "application/json",
+   "status": 200
+  },
+  "/api/atlas/reference?id=10.3389%2Ffnins.2026.1925266": {
+   "file": "snapshot/en/api/atlas/reference__56e37c96e93f.json",
+   "type": "application/json",
+   "status": 200
+  },
+  "/api/atlas/reference?id=10.3389%2Ffnins.2026.1925266&lang=es": {
+   "file": "snapshot/en/api/atlas/reference__56e37c96e93f.json",
+   "type": "application/json",
+   "status": 200
+  },
+  "/api/atlas/reference?id=10.3389%2Ffpsyt.2025.1475936": {
+   "file": "snapshot/en/api/atlas/reference__b31fc6fcfc72.json",
+   "type": "application/json",
+   "status": 200
+  },
+  "/api/atlas/reference?id=10.3389%2Ffpsyt.2025.1475936&lang=es": {
+   "file": "snapshot/en/api/atlas/reference__b31fc6fcfc72.json",
+   "type": "application/json",
+   "status": 200
+  },
+  "/api/atlas/reference?id=10.3390%2Fmath11224698": {
+   "file": "snapshot/en/api/atlas/reference__392405dcbcee.json",
+   "type": "application/json",
+   "status": 200
+  },
+  "/api/atlas/reference?id=10.3390%2Fmath11224698&lang=es": {
+   "file": "snapshot/en/api/atlas/reference__392405dcbcee.json",
+   "type": "application/json",
+   "status": 200
+  },
+  "/api/atlas/reference?id=10.3390%2Fmath13244026": {
+   "file": "snapshot/en/api/atlas/reference__4b98b76b61f3.json",
+   "type": "application/json",
+   "status": 200
+  },
+  "/api/atlas/reference?id=10.3390%2Fmath13244026&lang=es": {
+   "file": "snapshot/en/api/atlas/reference__4b98b76b61f3.json",
+   "type": "application/json",
+   "status": 200
+  },
+  "/api/atlas/reference?id=10.3390%2Fs26175684": {
+   "file": "snapshot/en/api/atlas/reference__a0c524b4436f.json",
+   "type": "application/json",
+   "status": 200
+  },
+  "/api/atlas/reference?id=10.3390%2Fs26175684&lang=es": {
+   "file": "snapshot/en/api/atlas/reference__a0c524b4436f.json",
+   "type": "application/json",
+   "status": 200
+  },
+  "/api/atlas/reference?id=10.3390%2Ftechnologies14070392": {
+   "file": "snapshot/en/api/atlas/reference__976e0ec88078.json",
+   "type": "application/json",
+   "status": 200
+  },
+  "/api/atlas/reference?id=10.3390%2Ftechnologies14070392&lang=es": {
+   "file": "snapshot/en/api/atlas/reference__976e0ec88078.json",
+   "type": "application/json",
+   "status": 200
+  },
+  "/api/atlas/reference?id=10.48550%2Farxiv.1711.05101": {
+   "file": "snapshot/en/api/atlas/reference__20cdf583a87f.json",
+   "type": "application/json",
+   "status": 200
+  },
+  "/api/atlas/reference?id=10.48550%2Farxiv.1711.05101&lang=es": {
+   "file": "snapshot/en/api/atlas/reference__20cdf583a87f.json",
+   "type": "application/json",
+   "status": 200
+  },
+  "/api/atlas/reference?id=1312.6034": {
+   "file": "snapshot/en/api/atlas/reference__c05242a8b56f.json",
+   "type": "application/json",
+   "status": 200
+  },
+  "/api/atlas/reference?id=1312.6034&lang=es": {
+   "file": "snapshot/en/api/atlas/reference__c05242a8b56f.json",
+   "type": "application/json",
+   "status": 200
+  },
+  "/api/atlas/reference?id=1611.08024": {
+   "file": "snapshot/en/api/atlas/reference__d9a0834ac566.json",
+   "type": "application/json",
+   "status": 200
+  },
+  "/api/atlas/reference?id=1611.08024&lang=es": {
+   "file": "snapshot/en/api/atlas/reference__d9a0834ac566.json",
+   "type": "application/json",
+   "status": 200
+  },
+  "/api/atlas/reference?id=1803.00745": {
+   "file": "snapshot/en/api/atlas/reference__258296c02daa.json",
+   "type": "application/json",
+   "status": 200
+  },
+  "/api/atlas/reference?id=1803.00745&lang=es": {
+   "file": "snapshot/en/api/atlas/reference__258296c02daa.json",
+   "type": "application/json",
+   "status": 200
+  },
+  "/api/atlas/reference?id=1803.11173": {
+   "file": "snapshot/en/api/atlas/reference__2c536191460c.json",
+   "type": "application/json",
+   "status": 200
+  },
+  "/api/atlas/reference?id=1803.11173&lang=es": {
+   "file": "snapshot/en/api/atlas/reference__2c536191460c.json",
+   "type": "application/json",
+   "status": 200
+  },
+  "/api/atlas/reference?id=1811.11184": {
+   "file": "snapshot/en/api/atlas/reference__b5f0e34d0e3d.json",
+   "type": "application/json",
+   "status": 200
+  },
+  "/api/atlas/reference?id=1811.11184&lang=es": {
+   "file": "snapshot/en/api/atlas/reference__b5f0e34d0e3d.json",
+   "type": "application/json",
+   "status": 200
+  },
+  "/api/atlas/reference?id=1907.02085": {
+   "file": "snapshot/en/api/atlas/reference__a65b56f9b505.json",
+   "type": "application/json",
+   "status": 200
+  },
+  "/api/atlas/reference?id=1907.02085&lang=es": {
+   "file": "snapshot/en/api/atlas/reference__a65b56f9b505.json",
+   "type": "application/json",
+   "status": 200
+  },
+  "/api/atlas/reference?id=1912.08278": {
+   "file": "snapshot/en/api/atlas/reference__eed08747f845.json",
+   "type": "application/json",
+   "status": 200
+  },
+  "/api/atlas/reference?id=1912.08278&lang=es": {
+   "file": "snapshot/en/api/atlas/reference__eed08747f845.json",
+   "type": "application/json",
+   "status": 200
+  },
+  "/api/atlas/reference?id=2008.08605": {
+   "file": "snapshot/en/api/atlas/reference__aa9a154ac4fc.json",
+   "type": "application/json",
+   "status": 200
+  },
+  "/api/atlas/reference?id=2008.08605&lang=es": {
+   "file": "snapshot/en/api/atlas/reference__aa9a154ac4fc.json",
+   "type": "application/json",
+   "status": 200
+  },
+  "/api/atlas/reference?id=2403.07059": {
+   "file": "snapshot/en/api/atlas/reference__ecc2bd2d3faa.json",
+   "type": "application/json",
+   "status": 200
+  },
+  "/api/atlas/reference?id=2403.07059&lang=es": {
+   "file": "snapshot/en/api/atlas/reference__ecc2bd2d3faa.json",
+   "type": "application/json",
+   "status": 200
+  },
+  "/api/atlas/reference?id=2505.20337": {
+   "file": "snapshot/en/api/atlas/reference__3ced30cf3265.json",
+   "type": "application/json",
+   "status": 200
+  },
+  "/api/atlas/reference?id=2505.20337&lang=es": {
+   "file": "snapshot/en/api/atlas/reference__3ced30cf3265.json",
+   "type": "application/json",
+   "status": 200
+  },
+  "/api/atlas/reference?id=2509.08779": {
+   "file": "snapshot/en/api/atlas/reference__decfe1382a95.json",
+   "type": "application/json",
+   "status": 200
+  },
+  "/api/atlas/reference?id=2509.08779&lang=es": {
+   "file": "snapshot/en/api/atlas/reference__decfe1382a95.json",
+   "type": "application/json",
+   "status": 200
+  },
+  "/api/atlas/reference?id=2603.28122": {
+   "file": "snapshot/en/api/atlas/reference__00db05838853.json",
+   "type": "application/json",
+   "status": 200
+  },
+  "/api/atlas/reference?id=2603.28122&lang=es": {
+   "file": "snapshot/en/api/atlas/reference__00db05838853.json",
+   "type": "application/json",
+   "status": 200
+  },
+  "/api/atlas/reference?id=quant-ph%2F0005013": {
+   "file": "snapshot/en/api/atlas/reference__c21e90c4b7b4.json",
+   "type": "application/json",
+   "status": 200
+  },
+  "/api/atlas/reference?id=quant-ph%2F0005013&lang=es": {
+   "file": "snapshot/en/api/atlas/reference__c21e90c4b7b4.json",
+   "type": "application/json",
+   "status": 200
+  },
+  "/api/atlas/view": {
+   "file": "snapshot/en/api/atlas/view.html",
+   "type": "text/html",
+   "status": 200
+  },
+  "/api/atlas/view?lang=es": {
+   "file": "snapshot/en/api/atlas/view.html",
+   "type": "text/html",
+   "status": 200
+  },
+  "/api/candidates": {
+   "file": "snapshot/en/api/candidates.json",
+   "type": "application/json",
+   "status": 200
+  },
+  "/api/candidates?lang=es": {
+   "file": "snapshot/en/api/candidates.json",
+   "type": "application/json",
+   "status": 200
+  },
+  "/api/citations": {
+   "file": "snapshot/en/api/citations.json",
+   "type": "application/json",
+   "status": 200
+  },
+  "/api/citations?lang=es": {
+   "file": "snapshot/en/api/citations.json",
+   "type": "application/json",
+   "status": 200
+  },
+  "/api/experiments": {
+   "file": "snapshot/en/api/experiments.json",
+   "type": "application/json",
+   "status": 200
+  },
+  "/api/experiments?lang=es": {
+   "file": "snapshot/es/api/experiments__0a4d7d9d82bd.json",
+   "type": "application/json",
+   "status": 200
+  },
+  "/api/flow": {
+   "file": "snapshot/en/api/flow.html",
+   "type": "text/html",
+   "status": 200
+  },
+  "/api/flow?lang=es": {
+   "file": "snapshot/en/api/flow.html",
+   "type": "text/html",
+   "status": 200
+  },
+  "/api/journals": {
+   "file": "snapshot/en/api/journals.json",
+   "type": "application/json",
+   "status": 200
+  },
+  "/api/journals?lang=es": {
+   "file": "snapshot/en/api/journals.json",
+   "type": "application/json",
+   "status": 200
+  },
+  "/api/model": {
+   "file": "snapshot/en/api/model.json",
+   "type": "application/json",
+   "status": 200
+  },
+  "/api/model/math": {
+   "file": "snapshot/en/api/model/math.json",
+   "type": "application/json",
+   "status": 200
+  },
+  "/api/model/math?lang=es": {
+   "file": "snapshot/en/api/model/math.json",
+   "type": "application/json",
+   "status": 200
+  },
+  "/api/model/steps": {
+   "file": "snapshot/en/api/model/steps.json",
+   "type": "application/json",
+   "status": 200
+  },
+  "/api/model/steps?lang=es": {
+   "file": "snapshot/en/api/model/steps.json",
+   "type": "application/json",
+   "status": 200
+  },
+  "/api/model?lang=es": {
+   "file": "snapshot/es/api/model__0a4d7d9d82bd.json",
+   "type": "application/json",
+   "status": 200
+  },
+  "/api/novelty/status": {
+   "file": "snapshot/en/api/novelty/status.json",
+   "type": "application/json",
+   "status": 200
+  },
+  "/api/novelty/status?lang=es": {
+   "file": "snapshot/en/api/novelty/status.json",
+   "type": "application/json",
+   "status": 200
+  },
+  "/api/paper/qa": {
+   "file": "snapshot/en/api/paper/qa.json",
+   "type": "application/json",
+   "status": 200
+  },
+  "/api/paper/qa/page?lang=es&n=1": {
+   "file": "snapshot/en/api/paper/qa/page__a269f7e0d4a2.png",
+   "type": "image/png",
+   "status": 200
+  },
+  "/api/paper/qa/page?lang=es&n=10": {
+   "file": "snapshot/en/api/paper/qa/page__3f2502489c10.png",
+   "type": "image/png",
+   "status": 200
+  },
+  "/api/paper/qa/page?lang=es&n=11": {
+   "file": "snapshot/en/api/paper/qa/page__a6daadde72f5.png",
+   "type": "image/png",
+   "status": 200
+  },
+  "/api/paper/qa/page?lang=es&n=12": {
+   "file": "snapshot/en/api/paper/qa/page__b28e7ae4a8ea.png",
+   "type": "image/png",
+   "status": 200
+  },
+  "/api/paper/qa/page?lang=es&n=13": {
+   "file": "snapshot/en/api/paper/qa/page__b417c604decf.png",
+   "type": "image/png",
+   "status": 200
+  },
+  "/api/paper/qa/page?lang=es&n=14": {
+   "file": "snapshot/en/api/paper/qa/page__820de46676ea.png",
+   "type": "image/png",
+   "status": 200
+  },
+  "/api/paper/qa/page?lang=es&n=15": {
+   "file": "snapshot/en/api/paper/qa/page__c07f07024c9b.png",
+   "type": "image/png",
+   "status": 200
+  },
+  "/api/paper/qa/page?lang=es&n=16": {
+   "file": "snapshot/en/api/paper/qa/page__47e937ac4ccf.png",
+   "type": "image/png",
+   "status": 200
+  },
+  "/api/paper/qa/page?lang=es&n=17": {
+   "file": "snapshot/en/api/paper/qa/page__13b9c23492ca.png",
+   "type": "image/png",
+   "status": 200
+  },
+  "/api/paper/qa/page?lang=es&n=18": {
+   "file": "snapshot/en/api/paper/qa/page__c775b932d888.png",
+   "type": "image/png",
+   "status": 200
+  },
+  "/api/paper/qa/page?lang=es&n=19": {
+   "file": "snapshot/en/api/paper/qa/page__59aadc103a2d.png",
+   "type": "image/png",
+   "status": 200
+  },
+  "/api/paper/qa/page?lang=es&n=2": {
+   "file": "snapshot/en/api/paper/qa/page__2bc7593146fc.png",
+   "type": "image/png",
+   "status": 200
+  },
+  "/api/paper/qa/page?lang=es&n=20": {
+   "file": "snapshot/en/api/paper/qa/page__e2a0cc91e95f.png",
+   "type": "image/png",
+   "status": 200
+  },
+  "/api/paper/qa/page?lang=es&n=21": {
+   "file": "snapshot/en/api/paper/qa/page__a9ce6a959137.png",
+   "type": "image/png",
+   "status": 200
+  },
+  "/api/paper/qa/page?lang=es&n=22": {
+   "file": "snapshot/en/api/paper/qa/page__5bb99982786a.png",
+   "type": "image/png",
+   "status": 200
+  },
+  "/api/paper/qa/page?lang=es&n=23": {
+   "file": "snapshot/en/api/paper/qa/page__7a0538345ded.png",
+   "type": "image/png",
+   "status": 200
+  },
+  "/api/paper/qa/page?lang=es&n=24": {
+   "file": "snapshot/en/api/paper/qa/page__fbe477320a83.png",
+   "type": "image/png",
+   "status": 200
+  },
+  "/api/paper/qa/page?lang=es&n=25": {
+   "file": "snapshot/en/api/paper/qa/page__4e66cd9eb083.png",
+   "type": "image/png",
+   "status": 200
+  },
+  "/api/paper/qa/page?lang=es&n=26": {
+   "file": "snapshot/en/api/paper/qa/page__7e33a80435fa.png",
+   "type": "image/png",
+   "status": 200
+  },
+  "/api/paper/qa/page?lang=es&n=27": {
+   "file": "snapshot/en/api/paper/qa/page__0ebfd92f70b7.png",
+   "type": "image/png",
+   "status": 200
+  },
+  "/api/paper/qa/page?lang=es&n=28": {
+   "file": "snapshot/en/api/paper/qa/page__3d603dfbe489.png",
+   "type": "image/png",
+   "status": 200
+  },
+  "/api/paper/qa/page?lang=es&n=29": {
+   "file": "snapshot/en/api/paper/qa/page__eee6528cb929.png",
+   "type": "image/png",
+   "status": 200
+  },
+  "/api/paper/qa/page?lang=es&n=3": {
+   "file": "snapshot/en/api/paper/qa/page__93a5ba357345.png",
+   "type": "image/png",
+   "status": 200
+  },
+  "/api/paper/qa/page?lang=es&n=30": {
+   "file": "snapshot/en/api/paper/qa/page__4e241c1b43dc.png",
+   "type": "image/png",
+   "status": 200
+  },
+  "/api/paper/qa/page?lang=es&n=31": {
+   "file": "snapshot/en/api/paper/qa/page__f786aded75ad.png",
+   "type": "image/png",
+   "status": 200
+  },
+  "/api/paper/qa/page?lang=es&n=32": {
+   "file": "snapshot/en/api/paper/qa/page__d54d521ad962.png",
+   "type": "image/png",
+   "status": 200
+  },
+  "/api/paper/qa/page?lang=es&n=33": {
+   "file": "snapshot/en/api/paper/qa/page__53e256fa7dfb.png",
+   "type": "image/png",
+   "status": 200
+  },
+  "/api/paper/qa/page?lang=es&n=34": {
+   "file": "snapshot/en/api/paper/qa/page__2acdca2d4f4e.png",
+   "type": "image/png",
+   "status": 200
+  },
+  "/api/paper/qa/page?lang=es&n=4": {
+   "file": "snapshot/en/api/paper/qa/page__d0345dcbf56b.png",
+   "type": "image/png",
+   "status": 200
+  },
+  "/api/paper/qa/page?lang=es&n=5": {
+   "file": "snapshot/en/api/paper/qa/page__a01dd16ab61f.png",
+   "type": "image/png",
+   "status": 200
+  },
+  "/api/paper/qa/page?lang=es&n=6": {
+   "file": "snapshot/en/api/paper/qa/page__34d7e3525413.png",
+   "type": "image/png",
+   "status": 200
+  },
+  "/api/paper/qa/page?lang=es&n=7": {
+   "file": "snapshot/en/api/paper/qa/page__11decbdef895.png",
+   "type": "image/png",
+   "status": 200
+  },
+  "/api/paper/qa/page?lang=es&n=8": {
+   "file": "snapshot/en/api/paper/qa/page__4e9853ad08f4.png",
+   "type": "image/png",
+   "status": 200
+  },
+  "/api/paper/qa/page?lang=es&n=9": {
+   "file": "snapshot/en/api/paper/qa/page__ae941be941d5.png",
+   "type": "image/png",
+   "status": 200
+  },
+  "/api/paper/qa/page?n=1": {
+   "file": "snapshot/en/api/paper/qa/page__a269f7e0d4a2.png",
+   "type": "image/png",
+   "status": 200
+  },
+  "/api/paper/qa/page?n=10": {
+   "file": "snapshot/en/api/paper/qa/page__3f2502489c10.png",
+   "type": "image/png",
+   "status": 200
+  },
+  "/api/paper/qa/page?n=11": {
+   "file": "snapshot/en/api/paper/qa/page__a6daadde72f5.png",
+   "type": "image/png",
+   "status": 200
+  },
+  "/api/paper/qa/page?n=12": {
+   "file": "snapshot/en/api/paper/qa/page__b28e7ae4a8ea.png",
+   "type": "image/png",
+   "status": 200
+  },
+  "/api/paper/qa/page?n=13": {
+   "file": "snapshot/en/api/paper/qa/page__b417c604decf.png",
+   "type": "image/png",
+   "status": 200
+  },
+  "/api/paper/qa/page?n=14": {
+   "file": "snapshot/en/api/paper/qa/page__820de46676ea.png",
+   "type": "image/png",
+   "status": 200
+  },
+  "/api/paper/qa/page?n=15": {
+   "file": "snapshot/en/api/paper/qa/page__c07f07024c9b.png",
+   "type": "image/png",
+   "status": 200
+  },
+  "/api/paper/qa/page?n=16": {
+   "file": "snapshot/en/api/paper/qa/page__47e937ac4ccf.png",
+   "type": "image/png",
+   "status": 200
+  },
+  "/api/paper/qa/page?n=17": {
+   "file": "snapshot/en/api/paper/qa/page__13b9c23492ca.png",
+   "type": "image/png",
+   "status": 200
+  },
+  "/api/paper/qa/page?n=18": {
+   "file": "snapshot/en/api/paper/qa/page__c775b932d888.png",
+   "type": "image/png",
+   "status": 200
+  },
+  "/api/paper/qa/page?n=19": {
+   "file": "snapshot/en/api/paper/qa/page__59aadc103a2d.png",
+   "type": "image/png",
+   "status": 200
+  },
+  "/api/paper/qa/page?n=2": {
+   "file": "snapshot/en/api/paper/qa/page__2bc7593146fc.png",
+   "type": "image/png",
+   "status": 200
+  },
+  "/api/paper/qa/page?n=20": {
+   "file": "snapshot/en/api/paper/qa/page__e2a0cc91e95f.png",
+   "type": "image/png",
+   "status": 200
+  },
+  "/api/paper/qa/page?n=21": {
+   "file": "snapshot/en/api/paper/qa/page__a9ce6a959137.png",
+   "type": "image/png",
+   "status": 200
+  },
+  "/api/paper/qa/page?n=22": {
+   "file": "snapshot/en/api/paper/qa/page__5bb99982786a.png",
+   "type": "image/png",
+   "status": 200
+  },
+  "/api/paper/qa/page?n=23": {
+   "file": "snapshot/en/api/paper/qa/page__7a0538345ded.png",
+   "type": "image/png",
+   "status": 200
+  },
+  "/api/paper/qa/page?n=24": {
+   "file": "snapshot/en/api/paper/qa/page__fbe477320a83.png",
+   "type": "image/png",
+   "status": 200
+  },
+  "/api/paper/qa/page?n=25": {
+   "file": "snapshot/en/api/paper/qa/page__4e66cd9eb083.png",
+   "type": "image/png",
+   "status": 200
+  },
+  "/api/paper/qa/page?n=26": {
+   "file": "snapshot/en/api/paper/qa/page__7e33a80435fa.png",
+   "type": "image/png",
+   "status": 200
+  },
+  "/api/paper/qa/page?n=27": {
+   "file": "snapshot/en/api/paper/qa/page__0ebfd92f70b7.png",
+   "type": "image/png",
+   "status": 200
+  },
+  "/api/paper/qa/page?n=28": {
+   "file": "snapshot/en/api/paper/qa/page__3d603dfbe489.png",
+   "type": "image/png",
+   "status": 200
+  },
+  "/api/paper/qa/page?n=29": {
+   "file": "snapshot/en/api/paper/qa/page__eee6528cb929.png",
+   "type": "image/png",
+   "status": 200
+  },
+  "/api/paper/qa/page?n=3": {
+   "file": "snapshot/en/api/paper/qa/page__93a5ba357345.png",
+   "type": "image/png",
+   "status": 200
+  },
+  "/api/paper/qa/page?n=30": {
+   "file": "snapshot/en/api/paper/qa/page__4e241c1b43dc.png",
+   "type": "image/png",
+   "status": 200
+  },
+  "/api/paper/qa/page?n=31": {
+   "file": "snapshot/en/api/paper/qa/page__f786aded75ad.png",
+   "type": "image/png",
+   "status": 200
+  },
+  "/api/paper/qa/page?n=32": {
+   "file": "snapshot/en/api/paper/qa/page__d54d521ad962.png",
+   "type": "image/png",
+   "status": 200
+  },
+  "/api/paper/qa/page?n=33": {
+   "file": "snapshot/en/api/paper/qa/page__53e256fa7dfb.png",
+   "type": "image/png",
+   "status": 200
+  },
+  "/api/paper/qa/page?n=34": {
+   "file": "snapshot/en/api/paper/qa/page__2acdca2d4f4e.png",
+   "type": "image/png",
+   "status": 200
+  },
+  "/api/paper/qa/page?n=4": {
+   "file": "snapshot/en/api/paper/qa/page__d0345dcbf56b.png",
+   "type": "image/png",
+   "status": 200
+  },
+  "/api/paper/qa/page?n=5": {
+   "file": "snapshot/en/api/paper/qa/page__a01dd16ab61f.png",
+   "type": "image/png",
+   "status": 200
+  },
+  "/api/paper/qa/page?n=6": {
+   "file": "snapshot/en/api/paper/qa/page__34d7e3525413.png",
+   "type": "image/png",
+   "status": 200
+  },
+  "/api/paper/qa/page?n=7": {
+   "file": "snapshot/en/api/paper/qa/page__11decbdef895.png",
+   "type": "image/png",
+   "status": 200
+  },
+  "/api/paper/qa/page?n=8": {
+   "file": "snapshot/en/api/paper/qa/page__4e9853ad08f4.png",
+   "type": "image/png",
+   "status": 200
+  },
+  "/api/paper/qa/page?n=9": {
+   "file": "snapshot/en/api/paper/qa/page__ae941be941d5.png",
+   "type": "image/png",
+   "status": 200
+  },
+  "/api/paper/qa?lang=es": {
+   "file": "snapshot/en/api/paper/qa.json",
+   "type": "application/json",
+   "status": 200
+  },
+  "/api/pdf": {
+   "file": "snapshot/en/api/pdf.pdf",
+   "type": "application/pdf",
+   "status": 200
+  },
+  "/api/pdf/annotations": {
+   "file": "snapshot/en/api/pdf/annotations.json",
+   "type": "application/json",
+   "status": 200
+  },
+  "/api/pdf/annotations?lang=es": {
+   "file": "snapshot/en/api/pdf/annotations.json",
+   "type": "application/json",
+   "status": 200
+  },
+  "/api/pdf?lang=es": {
+   "file": "snapshot/en/api/pdf.pdf",
+   "type": "application/pdf",
+   "status": 200
+  },
+  "/api/section-translation?file=01-materials-and-methods.md&lang=es": {
+   "file": "snapshot/es/api/section-translation__89dffa3b1b1a.txt",
+   "type": "text/plain",
+   "status": 200
+  },
+  "/api/section-translation?file=02-experimental-setup.md&lang=es": {
+   "file": "snapshot/es/api/section-translation__90124568da6f.txt",
+   "type": "text/plain",
+   "status": 200
+  },
+  "/api/section-translation?file=03-results-and-discussion.md&lang=es": {
+   "file": "snapshot/es/api/section-translation__62078028c72e.txt",
+   "type": "text/plain",
+   "status": 200
+  },
+  "/api/section-translation?file=04-limitations.md&lang=es": {
+   "file": "snapshot/es/api/section-translation__4bf8814d069b.txt",
+   "type": "text/plain",
+   "status": 200
+  },
+  "/api/section-translation?file=05-related-work.md&lang=es": {
+   "file": "snapshot/es/api/section-translation__9ae4580de6ff.txt",
+   "type": "text/plain",
+   "status": 200
+  },
+  "/api/section-translation?file=06-introduction.md&lang=es": {
+   "file": "snapshot/es/api/section-translation__25c8f80062b5.txt",
+   "type": "text/plain",
+   "status": 200
+  },
+  "/api/section-translation?file=07-conclusions.md&lang=es": {
+   "file": "snapshot/es/api/section-translation__c2b4c1be78c4.txt",
+   "type": "text/plain",
+   "status": 200
+  },
+  "/api/section-translation?file=08-abstract.md&lang=es": {
+   "file": "snapshot/es/api/section-translation__0cf9643d8d0a.txt",
+   "type": "text/plain",
+   "status": 200
+  },
+  "/api/section-translation?file=09-title-and-keywords.md&lang=es": {
+   "file": "snapshot/es/api/section-translation__532e030d5ee3.txt",
+   "type": "text/plain",
+   "status": 200
+  },
+  "/api/section-translation?file=10-back-matter.md&lang=es": {
+   "file": "snapshot/es/api/section-translation__5858c1cbabe0.txt",
+   "type": "text/plain",
+   "status": 200
+  },
+  "/api/status": {
+   "file": "snapshot/en/api/status.json",
+   "type": "application/json",
+   "status": 200
+  },
+  "/api/status?lang=es": {
+   "file": "snapshot/es/api/status__0a4d7d9d82bd.json",
+   "type": "application/json",
+   "status": 200
+  },
+  "/api/venues": {
+   "file": "snapshot/en/api/venues.json",
+   "type": "application/json",
+   "status": 200
+  },
+  "/api/venues?lang=es": {
+   "file": "snapshot/en/api/venues.json",
+   "type": "application/json",
+   "status": 200
+  }
+ }
+}

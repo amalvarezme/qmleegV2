@@ -1,0 +1,281 @@
+<!-- proposal-workspace:artifact:v1 -->
+# Hybrid Quantum-Classical Neural Network with Data Re-uploading for EEG-based ADHD Classification
+
+## Experimental Protocol and Empirical Validation Plan
+
+Hybrid Quantum-Classical Neural Network with Data Re-uploading for EEG-based ADHD Classification.
+
+Experimental Protocol and Empirical Validation Plan.
+
+**Dataset:** IEEE DataPort ADHD Dataset (120 pediatric subjects, 19 channels at 128 Hz, 2.0s 50% overlap epochs, subject-independent stratified split)
+
+**Validation scheme:** Stratified 5-fold group cross-validation with 5 random seeds (42, 123, 456, 789, 1024) and 5 repetitions, evaluated via paired Wilcoxon signed-rank test (significance threshold p < 0.05)
+
+### Executive Summary and Scope
+This document defines the formal experimental protocol to validate the hybrid quantum-classical neural network with data re-uploading (DRU) proposed in [research-concept-hybrid-quantum-classical-neural-network-with-data-re-uploadi-r02.md](proposals/research-concept-hybrid-quantum-classical-neural-network-with-data-re-uploadi-r02.md). The plan tests whether interleaving classical spatial-temporal feature extraction with a multi-layer parameterized quantum circuit provides superior non-linear classification and physiological interpretability on pediatric EEG data without suffering from barren plateaus or data leakage.
+
+## Experiment [exp:E1] — Hybrid Classification and Fourier Expressivity
+
+- **Claims Sustained:** [claims:2] [claims:3] [claims:7] [claims:8]
+- **Hypothesis:** The hybrid architecture combining classical convolutional embedding with circular data re-uploading (L=3, 4 qubits) provides superior non-linear representation compared to single-shot angle encoding and to a classical linear baseline operating on the identical 4-dimensional latent vector.
+- **Independent Variables:** Classifier architecture (Hybrid DRU L=3 vs. Single-shot angle encoding vs. Classical linear probe).
+- **Dependent Variables:** Subject-level and epoch-level classification performance (Balanced Accuracy, Sensitivity, Specificity, F1-score, AUC-ROC).
+- **Controlled Variables:** Preprocessing pipeline, channel montage (19 channels, CAR, 0.5-60 Hz), epoch length (2.0 s, 256 samples), training folds, optimizer (Adam, learning rate 0.001, batch size 64).
+- **Protocol:** Models are trained using regularized binary cross-entropy on the training folds. Evaluation is performed strictly on unseen subjects across the 5 stratified folds. Epoch predictions are aggregated to subject-level decisions via mean posterior probability thresholding.
+- **Success criterion:** Balanced Accuracy on subject-level test evaluation reaches at least 0.85 and is statistically superior (paired Wilcoxon signed-rank test p < 0.05) compared to single-shot angle encoding and linear classical classification.
+- **Priority:** core
+- **Estimated Cost:** 12 GPU hours on NVIDIA A100 / Tesla T4.
+
+### Expected Report: Experiment E1
+
+| Model Variant | Subject Balanced Acc | Subject Sensitivity | Subject Specificity | Subject F1-score | Epoch Balanced Acc |
+| :--- | :--- | :--- | :--- | :--- | :--- |
+| Hybrid DRU (L=3, 4 qubits) | | | | | |
+| Single-shot Angle (L=1) | | | | | |
+| Classical Linear (Latent 4D) | | | | | |
+
+## Experiment [exp:E2] — Entanglement Topology Ablation
+
+- **Claims Sustained:** [claims:5]
+- **Hypothesis:** Circular CNOT entanglement topology provides maximum non-local bipartite state connectivity across the 4-qubit register, yielding higher diagnostic discriminability than linear nearest-neighbor entanglement or separable non-entangled single-qubit rotations.
+- **Independent Variables:** Entanglement circuit topology (Circular CNOT ring vs. Linear open chain vs. Separable identity V_ent = I).
+- **Dependent Variables:** Validation loss convergence, subject-level Balanced Accuracy, and F1-score.
+- **Controlled Variables:** Identical classical feature extractor weights, L=3 layers, 4 qubits, identical initialization seeds.
+- **Protocol:** Each topological variant is trained on the same 5-fold cross-validation splits. Significance of performance differences is evaluated pairwise.
+- **Success criterion:** Circular entanglement topology demonstrates a higher subject-level F1-score by at least 0.03 compared to the separable non-entangled circuit (p < 0.05).
+- **Priority:** ablation
+- **Estimated Cost:** 6 GPU hours.
+
+### Expected Report: Experiment E2
+
+| Entanglement Scheme | Subject Balanced Acc | Subject F1-score | Validation Loss | Circuit Depth |
+| :--- | :--- | :--- | :--- | :--- |
+| Circular CNOT Ring | | | | |
+| Linear CNOT Chain | | | | |
+| Separable (No Entanglement) | | | | |
+
+## Experiment [exp:E3] — Re-uploading Depth and Barren Plateau Analysis
+
+- **Claims Sustained:** [claims:2] [claims:8]
+- **Hypothesis:** Expressivity in the accessible Fourier spectrum increases with re-uploading depth L up to an optimal bound, beyond which gradient variance decays (barren plateau effect) and causes training stagnation or overfitting on validation folds.
+- **Independent Variables:** Re-uploading depth L in {1, 2, 3, 4, 6}.
+- **Dependent Variables:** Sample gradient variance of circuit parameters Var[grad_theta L], training epochs to convergence, test Balanced Accuracy.
+- **Controlled Variables:** 4 qubits, circular entanglement, learning rate 0.001, identical fold splits.
+- **Protocol:** The gradient variance is estimated across the initialization landscape over 100 random parameter initializations. Models are then trained and evaluated on the stratified folds.
+- **Success criterion:** The optimal re-uploading depth L identifies the trade-off point where validation loss reaches a minimum before gradient variance decays by more than one order of magnitude.
+- **Priority:** ablation
+- **Estimated Cost:** 8 GPU hours.
+
+### Expected Report: Experiment E3
+
+| Re-uploading Layers | Gradient Variance | Training Loss | Val Balanced Acc | Test Balanced Acc |
+| :--- | :--- | :--- | :--- | :--- |
+| L = 1 | | | | |
+| L = 2 | | | | |
+| L = 3 | | | | |
+| L = 4 | | | | |
+| L = 6 | | | | |
+
+## Experiment [exp:E4] — Clinical Interpretability via Analytical Gradients
+
+- **Claims Sustained:** [claims:9]
+- **Hypothesis:** Analytical gradient saliency derived from the classical backbone and quantum parameter-shift rule concentrates its mass on electrophysiologically relevant fronto-central channels and Theta/Beta frequency components rather than posterior noise.
+- **Independent Variables:** Region of interest electrode groups (Fronto-central: Fp1, Fp2, F3, F4, Fz, Cz vs. Temporal-occipital: T3, T4, T5, T6, O1, O2).
+- **Dependent Variables:** Relative saliency ratio and spectral band energy distribution of the saliency tensor I(c, t).
+- **Controlled Variables:** Trained Hybrid DRU model (L=3), input epochs correctly classified as ADHD.
+- **Protocol:** The saliency map I(c, t) is computed via exact chain rule across the quantum expectation values and classical feature maps for all test epochs. Relative saliency mass across regions is compared using non-parametric paired tests.
+- **Success criterion:** The mean analytical gradient saliency allocated to fronto-central electrode channels (Fp1, Fp2, F3, F4, Fz, Cz) in the Theta and Beta frequency bands is statistically greater (paired Wilcoxon test p < 0.01) than the saliency allocated to posterior temporal-occipital channels.
+- **Priority:** core
+- **Estimated Cost:** 4 GPU hours.
+
+### Expected Report: Experiment E4
+
+| Region of Interest | Mean Saliency Mass | Theta Band Energy | Beta Band Energy | Relative Ratio |
+| :--- | :--- | :--- | :--- | :--- |
+| Fronto-Central (Fp1, Fp2, F3, F4, Fz, Cz) | | | | |
+| Temporal-Occipital (T3, T4, T5, T6, O1, O2) | | | | |
+| Parietal (P3, P4, Pz) | | | | |
+
+## Baselines and Comparative Framework
+
+| Baseline | Venue Year | Repository URL | Architectural Family | Relevance |
+| :--- | :--- | :--- | :--- | :--- |
+| SVM-RBF (TBR features) | 2020 | https://github.com/eeg-adhd-benchmark/svm-rbf [pending-verification] | Classical shallow ML | Baseline for handcrafted spectral biomarkers (Theta/Beta ratio) |
+| EEGNet | 2018 | https://github.com/vlawhern/arl-eegmodels [pending-verification] | Classical CNN | Standard compact deep learning benchmark for multichannel EEG |
+| QEEGNet | 2024 | https://github.com/quantum-eeg/qeegnet [pending-verification] | Quantum Neural Network | Variational quantum baseline without circular re-uploading |
+
+## Hyperparameters and Experimental Settings
+
+| Parameter | Setting | Description |
+| :--- | :--- | :--- |
+| Quantum Register Qubits | 4 | Dimension matching latent representation d = 4 |
+| Core Re-uploading Depth L | 3 | Trade-off between Fourier expressivity and gradient trainability |
+| Classical Backbone | Conv2D-Depthwise | Compact spatial-temporal filter bank |
+| Optimization Algorithm | Adam | First-order gradient optimization |
+| Learning Rate | 0.001 | Initial step size with cosine annealing decay |
+| Mini-batch Size | 64 | Balanced sample batches across folds |
+| Regularization Penalty Lambda | 0.0001 | L2 weight decay on variational circuit parameters |
+
+## Threats to Validity and Mitigation
+- **Subject Correlation (Data Leakage):** Mitigated by strict StratifiedGroupKFold on subject IDs. Adjacent overlapping epochs of the same child never cross split partitions.
+- **Quantum Circuit Noise / Simulation Artifacts:** Verified in state-vector simulation mode; subsequent noise-model evaluation accounts for depolarization and readout errors.
+- **Class Imbalance:** Retained 120 subjects present an exactly balanced 60/60 distribution, preventing majority-class diagnostic bias.
+
+## Excluded Alternatives
+- **Random Epoch Splitting:** Excluded because it violates clinical validation standards and artificially inflates metrics due to intra-subject autocorrelation.
+- **Single-qubit Quantum Classifiers:** Excluded due to restricted Hilbert space dimensionality and inability to model multipartite feature entanglement.
+
+## Reference Sources
+
+### guidance/data-paper/ieee-dataport-adhd/ieee-dataport-adhd.md
+
+# IEEE DataPort ADHD EEG Dataset Specification
+
+## 1. Dataset Overview and Clinical Cohort
+- **Name:** EEG Data for ADHD / Control Children
+- **Repository / Source:** IEEE DataPort (DOI: 10.21227/rzpv-9r35)
+- **Primary Authors:** Ali Motie Nasrabadi et al. (2020)
+- **Cohort Composition:** 121 children (ages 7 to 12 years).
+  - 61 children with Attention Deficit Hyperactivity Disorder (ADHD), clinically diagnosed by experienced pediatric psychiatrists using DSM-IV criteria.
+  - 60 typically developing healthy control children with no reported psychiatric or neurological history.
+- **Recording Task:** Visually guided attention task (counting cartoon characters presented on a screen).
+
+## 2. Electrophysiological Acquisition Parameters
+- **Electrode Montage:** 19 scalp channels placed according to the International 10-20 standard system:
+  `Fp1, Fp2, F3, F4, C3, C4, P3, P4, O1, O2, F7, F8, T3, T4, T5, T6, Fz, Cz, Pz`
+- **Sampling Frequency:** 128 Hz.
+- **Reference:** Acquired with physical earlobe reference; standardized to Common Average Reference (CAR) in preprocessing.
+
+## 3. Standard Preprocessing Protocol
+- **Filtering:** 
+  - 50 Hz notch filter for power-line interference suppression.
+  - 0.5–60 Hz zero-phase band-pass filter (Butterworth 4th order) to isolate physiological rhythms (Delta, Theta, Alpha, Beta) and suppress low-frequency drift and high-frequency muscular noise.
+- **Artifact Screening and Quality Control:**
+  - Subject `v56p` is removed due to persistent fronto-polar contamination on Fp1 and Fp2 channels.
+  - Retained cohort: 120 subjects (60 ADHD, 60 Control), providing an exactly balanced subject cohort.
+- **Epoching and Segmentation:**
+  - Window length: 2.0 seconds ($T = 256$ samples at 128 Hz).
+  - Overlap: 50% step (1.0 second stride).
+  - Epoch tensor dimension: $(C, T) = (19, 256)$.
+  - Total volume: 16,640 segmented epochs across the 120 valid subjects.
+
+## 4. Methodological Bounds and Experimental Constraints
+- **Subject-Independent Partitioning:** All epochs from a single subject must reside exclusively within either the training set, the validation set, or the test set. Random epoch-level shuffling constitutes data leakage due to high intra-subject correlation across overlapping epochs.
+- **Evaluation Level:** Evaluation must be reported at both the epoch level and the aggregated subject level (majority voting or soft posterior probability averaging across all epochs of each subject).
+
+### proposals/research-concept-hybrid-quantum-classical-neural-network-with-data-re-uploadi-r01.md
+
+# Hybrid Quantum-Classical Neural Network with Data Re-uploading for EEG-based ADHD Classification
+
+## Exploring quantum data re-uploading circuits integrated with classical feature extraction to classify ADHD from electroencephalography signals while preserving interpretability
+
+Hybrid Quantum-Classical Neural Network with Data Re-uploading for EEG-based ADHD Classification. Exploring quantum data re-uploading circuits integrated with classical feature extraction to classify ADHD from electroencephalography signals while preserving interpretability.
+
+### proposals/research-concept-hybrid-quantum-classical-neural-network-with-data-re-uploadi-r02.md
+
+# Hybrid Quantum-Classical Neural Network with Data Re-uploading for EEG-based ADHD Classification
+
+## 1. Problem Formulation and Clinical Scope
+
+Attention Deficit Hyperactivity Disorder (ADHD) diagnosis traditionally relies on behavioral questionnaires, which are subject to clinical observer bias. Electroencephalography (EEG) provides a high-temporal-resolution physiological measurement of brain electrical activity. Under the international 10-20 standard montage, multichannel recordings capture rhythmic oscillations across standardized frequency bands: Delta (0.5-4 Hz), Theta (4-8 Hz), Alpha (8-12 Hz), and Beta (12-30 Hz). In pediatric ADHD, elevated Theta power alongside reduced Beta activity in fronto-central electrodes constitutes the established Theta/Beta ratio (TBR) biomarker.
+
+However, multichannel EEG suffers from substantial inter-subject variability, low signal-to-noise ratio, and volume conduction artifacts. This proposal formulates a hybrid quantum-classical learning architecture wherein a classical convolutional backbone condenses spatial-temporal correlations into a compact latent vector, and a parameterized quantum circuit with circular Data Re-uploading (DRU) operates as an expressive non-linear classifier.
+
+## 2. Classical Spatial-Temporal Feature Extraction
+
+Let $X \in \mathbb{R}^{C \times T}$ denote a raw EEG epoch segment comprising $C$ recording channels (with $C = 19$ under the 10-20 system) and $T$ discrete temporal sampling points. The classical feature extraction backbone $f_{\phi}: \mathbb{R}^{C \times T} \to \mathbb{R}^d$ maps the continuous EEG epoch into a low-dimensional feature representation matching the qubit width of the quantum register:
+
+$$
+x = f_{\phi}(X) \in [-\pi, \pi]^d, \quad \text{with } d = N_q = 4
+\tag{1}
+$$
+
+The dimension $d$ is deliberately constrained to $N_q = 4$ to permit direct qubit allocation without barren plateaus. The four latent dimensions correspond to distinct physiological features: frontal Theta power, central Beta power, global Theta/Beta ratio, and inter-hemispheric frontal coherence.
+
+## 3. Quantum Data Re-uploading Classifier Architecture
+
+### 3.1 Data Re-uploading Unitary Operator
+
+Rather than employing a single-shot state preparation circuit, the quantum classifier interleaves data encoding blocks with trainable variational transformations across $L$ successive layers. The global unitary evolution operator $U(x, \theta)$ acting on the reference state $|0^{\otimes N_q}\rangle$ is defined as:
+
+$$
+U(x, \theta) = \prod_{l=1}^L W_l(\theta_l) \, S_l(x)
+\tag{2}
+$$
+
+The data encoding operator $S_l(x)$ applies single-qubit rotations parameterized by affine transformations of the input vector $x$, where $\alpha_{l,j}$ and $\beta_{l,j}$ are layer-specific scaling and bias parameters:
+
+$$
+S_l(x) = \bigotimes_{j=1}^{N_q} R_y(\alpha_{l,j} x_j + \beta_{l,j})
+\tag{3}
+$$
+
+Each variational layer $W_l(\theta_l)$ applies parameterized single-qubit rotations followed by an entangling operation:
+
+$$
+W_l(\theta_l) = V_{\text{ent}} \cdot \bigotimes_{j=1}^{N_q} R_z(\theta_{l,j}^{(2)}) R_y(\theta_{l,j}^{(1)})
+\tag{4}
+$$
+
+### 3.2 Circular Entanglement Topology
+
+To ensure non-local correlations and maximum bipartite entanglement across the 4-qubit register while preventing boundary asymmetry, $V_{\text{ent}}$ is configured with a closed periodic boundary (circular CNOT ring):
+
+$$
+V_{\text{ent}} = \left( \prod_{j=1}^{N_q - 1} \text{CNOT}_{j, j+1} \right) \cdot \text{CNOT}_{N_q, 1}
+\tag{5}
+$$
+
+By virtue of the $L$-fold re-uploading defined in (Ec. 2), the quantum circuit acts as a truncated Fourier series whose accessible spectrum extends up to harmonic degree $L$.
+
+### 3.3 Measurement and Decision Boundary
+
+Expectation values of the Pauli-$Z$ observable are measured individually on each qubit $j \in \{1, \dots, N_q\}$:
+
+$$
+\langle Z_j \rangle(x, \theta) = \langle 0^{\otimes N_q} | U^\dagger(x, \theta) \, Z_j \, U(x, \theta) | 0^{\otimes N_q} \rangle \in [-1, 1]
+\tag{6}
+$$
+
+The vector of expectation values $\langle Z \rangle = [\langle Z_1 \rangle, \dots, \langle Z_{N_q} \rangle]^T$ is projected onto a binary diagnostic decision through a classical linear combination followed by the logistic sigmoid activation:
+
+$$
+\hat{y} = \sigma\left( \sum_{j=1}^{N_q} w_j \langle Z_j \rangle(x, \theta) + b \right)
+\tag{7}
+$$
+
+where $\hat{y} \in (0, 1)$ represents the predicted posterior probability of ADHD diagnosis ($y = 1$) versus healthy control ($y = 0$).
+
+## 4. Loss Function and Parameter Optimization
+
+The joint parameters of the hybrid network, including the classical weights $\phi$, the quantum rotation parameters $\theta = \{\theta_l\}_{l=1}^L$, the encoding scales $\alpha, \beta$, and the output weights $w, b$, are trained end-to-end via regularized binary cross-entropy:
+
+$$
+\mathcal{L}(\phi, \theta, w, b) = -\frac{1}{N} \sum_{i=1}^N \left[ y^{(i)} \log \hat{y}^{(i)} + (1 - y^{(i)}) \log(1 - \hat{y}^{(i)}) \right] + \lambda \|\theta\|_2^2
+\tag{8}
+$$
+
+Optimization proceeds using classical gradient descent with the parameter-shift rule applied to obtain exact analytical gradients for all quantum circuit parameters.
+
+## 5. Clinical Interpretability via Analytical Gradients
+
+To verify clinical validity, the decision saliency with respect to the input EEG signal is derived analytically using the chain rule across the classical and quantum layers:
+
+$$
+\mathcal{I}(c, t) = \left| \sum_{k=1}^{N_q} \frac{\partial \hat{y}}{\partial x_k} \frac{\partial f_{\phi}(X)_k}{\partial X_{c,t}} \right|
+\tag{9}
+$$
+
+Because the partial derivatives $\frac{\partial \hat{y}}{\partial x_k}$ are computed via (Ec. 7) and the parameter-shift rule on (Ec. 6), the saliency map $\mathcal{I}(c, t)$ exposes the precise contribution of each electrode $c$ and time sample $t$. This provides a direct clinical audit mechanism to confirm that the hybrid model leverages physiologically established fronto-central regions (Fp1, Fp2, F3, F4, Fz, Cz) rather than background noise artifacts.
+
+## 6. SOTA Constellation Grounding
+
+This proposal is positioned in the literature atlas alongside its foundational predecessors:
+- Constellation graph: [research-concept-hybrid-quantum-classical-neural-network-with-data-re-uploadi-r02.graph.html](research-concept-hybrid-quantum-classical-neural-network-with-data-re-uploadi-r02.graph.html)
+- Reference benchmark: IEEE Dataport ADHD Dataset (121 pediatric subjects, 19 channels at 128 Hz).
+
+## Changes
+
+**What:** Initial revision.
+
+**Why:** First published version.

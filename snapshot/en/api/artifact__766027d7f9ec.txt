@@ -1,0 +1,6 @@
+<!-- proposal-workspace:artifact:v1 -->
+# Hybrid Quantum-Classical Neural Network with Data Re-uploading for EEG-based ADHD Classification
+
+## Exploring quantum data re-uploading circuits integrated with classical feature extraction to classify ADHD from electroencephalography signals while preserving interpretability
+
+Hybrid Quantum-Classical Neural Network with Data Re-uploading for EEG-based ADHD Classification. Exploring quantum data re-uploading circuits integrated with classical feature extraction to classify ADHD from electroencephalography signals while preserving interpretability.

@@ -1,0 +1,108 @@
+<!-- proposal-workspace:artifact:v1 -->
+# Hybrid Quantum-Classical Neural Network with Data Re-uploading for EEG-based ADHD Classification
+
+## 1. Problem Formulation and Clinical Scope
+
+Attention Deficit Hyperactivity Disorder (ADHD) diagnosis traditionally relies on behavioral questionnaires, which are subject to clinical observer bias. Electroencephalography (EEG) provides a high-temporal-resolution physiological measurement of brain electrical activity. Under the international 10-20 standard montage, multichannel recordings capture rhythmic oscillations across standardized frequency bands: Delta (0.5-4 Hz), Theta (4-8 Hz), Alpha (8-12 Hz), and Beta (12-30 Hz). In pediatric ADHD, elevated Theta power alongside reduced Beta activity in fronto-central electrodes constitutes the established Theta/Beta ratio (TBR) biomarker.
+
+However, multichannel EEG suffers from substantial inter-subject variability, low signal-to-noise ratio, and volume conduction artifacts. This proposal formulates a hybrid quantum-classical learning architecture wherein a classical convolutional backbone condenses spatial-temporal correlations into a compact latent vector, and a parameterized quantum circuit with circular Data Re-uploading (DRU) operates as an expressive non-linear classifier.
+
+## 2. Classical Spatial-Temporal Feature Extraction
+
+Let $X \in \mathbb{R}^{C \times T}$ denote a raw EEG epoch segment comprising $C$ recording channels (with $C = 19$ under the 10-20 system) and $T$ discrete temporal sampling points. The classical feature extraction backbone $f_{\phi}: \mathbb{R}^{C \times T} \to [-\pi, \pi]^d$ maps the continuous EEG epoch into a low-dimensional feature representation matching the qubit width of the quantum register, its output bounded to the rotation domain by a scaled hyperbolic tangent:
+
+$$
+x = f_{\phi}(X) \in [-\pi, \pi]^d, \quad \text{with } d = N_q = 4
+\tag{1}
+$$
+
+The dimension $d$ is constrained to $N_q = 4$ so that each feature is allocated to one qubit and the register stays small enough for its gradient variance to be measured directly (Experiment E3). The four features are learned generically by backpropagation of the loss in (Ec. 8): no physiological meaning is imposed on them by the architecture or by the loss. Whether they come to track the biomarkers the ADHD literature reports (frontal Theta power, central Beta power, the Theta/Beta ratio and inter-hemispheric frontal coherence) is a post-hoc question, answered after training by contrasting each learned feature with those biomarkers computed from the raw signal.
+
+## 3. Quantum Data Re-uploading Classifier Architecture
+
+### 3.1 Data Re-uploading Unitary Operator
+
+Rather than employing a single-shot state preparation circuit, the quantum classifier interleaves data encoding blocks with trainable variational transformations across $L$ successive layers. The global unitary evolution operator $U(x, \theta)$ acting on the reference state $|0^{\otimes N_q}\rangle$ is defined as:
+
+$$
+U(x, \theta) = \prod_{l=1}^L W_l(\theta_l) \, S_l(x)
+\tag{2}
+$$
+
+The data encoding operator $S_l(x)$ applies single-qubit rotations to the input vector $x$ with unit scale, shifted by a layer-specific trainable bias $\beta_{l,j}$:
+
+$$
+S_l(x) = \bigotimes_{j=1}^{N_q} R_y(x_j + \beta_{l,j})
+\tag{3}
+$$
+
+The scale of every encoding rotation is fixed to one rather than trained. A trainable scale would multiply the frequencies the circuit can represent, so that the spectrum stated in Section 3.2 would no longer hold; the bias only shifts the phase of each frequency and leaves the spectrum unchanged.
+
+Each variational layer $W_l(\theta_l)$ applies parameterized single-qubit rotations followed by an entangling operation:
+
+$$
+W_l(\theta_l) = V_{\text{ent}} \cdot \bigotimes_{j=1}^{N_q} R_z(\theta_{l,j}^{(2)}) R_y(\theta_{l,j}^{(1)})
+\tag{4}
+$$
+
+### 3.2 Circular Entanglement Topology
+
+To ensure non-local correlations and maximum bipartite entanglement across the 4-qubit register while preventing boundary asymmetry, $V_{\text{ent}}$ is configured with a closed periodic boundary (circular CNOT ring):
+
+$$
+V_{\text{ent}} = \left( \prod_{j=1}^{N_q - 1} \text{CNOT}_{j, j+1} \right) \cdot \text{CNOT}_{N_q, 1}
+\tag{5}
+$$
+
+Because each feature $x_j$ enters the circuit once per layer through a rotation $R_y(x_j + \beta_{l,j}) = \exp(-\tfrac{i}{2}(x_j + \beta_{l,j}) Y)$ with unit scale (Ec. 3), the $L$-fold re-uploading of (Ec. 2) makes every expectation value a truncated Fourier series in $x$ whose frequencies per feature are the integers $\omega_j \in \{-L, \dots, L\}$ (Schuld, Sweke and Meyer, Physical Review A 103, 032430, 2021). The trainable parameters $\theta$, $\beta$ and the entanglement topology determine the coefficients of that series, never its accessible frequencies.
+
+### 3.3 Measurement and Decision Boundary
+
+Expectation values of the Pauli-$Z$ observable are measured individually on each qubit $j \in \{1, \dots, N_q\}$:
+
+$$
+\langle Z_j \rangle(x, \theta) = \langle 0^{\otimes N_q} | U^\dagger(x, \theta) \, Z_j \, U(x, \theta) | 0^{\otimes N_q} \rangle \in [-1, 1]
+\tag{6}
+$$
+
+The vector of expectation values $\langle Z \rangle = [\langle Z_1 \rangle, \dots, \langle Z_{N_q} \rangle]^T$ is projected onto a binary diagnostic decision through a classical linear combination followed by the logistic sigmoid activation:
+
+$$
+\hat{y} = \sigma\left( \sum_{j=1}^{N_q} w_j \langle Z_j \rangle(x, \theta) + b \right)
+\tag{7}
+$$
+
+where $\hat{y} \in (0, 1)$ represents the predicted posterior probability of ADHD diagnosis ($y = 1$) versus healthy control ($y = 0$).
+
+## 4. Loss Function and Parameter Optimization
+
+The joint parameters of the hybrid network, including the classical weights $\phi$, the quantum rotation parameters $\theta = \{\theta_l\}_{l=1}^L$, the encoding biases $\beta$, and the output weights $w, b$, are trained end-to-end. With the readout logit $z^{(i)} = \sum_{j=1}^{N_q} w_j \langle Z_j \rangle(x^{(i)}, \theta) + b$ of (Ec. 7), the loss is a binary cross-entropy in which every subject weighs the same, whatever the number of epochs it contributes:
+
+$$
+\mathcal{L}(\phi, \theta, w, b) = \frac{1}{S} \sum_{s=1}^{S} \frac{1}{n_s} \sum_{i \in \mathcal{I}_s} \left[ \log\left(1 + e^{z^{(i)}}\right) - y_s z^{(i)} \right] + \lambda_w \|w\|_2^2
+\tag{8}
+$$
+
+Here $S$ is the number of training subjects, $\mathcal{I}_s$ the set of epochs of subject $s$, $n_s = |\mathcal{I}_s|$, and $y_s \in \{0, 1\}$ the subject's diagnosis shared by all its epochs. The bracket is the binary cross-entropy of $\sigma(z^{(i)})$ written on the logit, which is its numerically stable form. Weighting each epoch by $1 / n_s$ aligns the loss with the subject-level decision the protocol evaluates.
+
+No penalty is placed on the rotation angles $\theta$: a rotation is periodic in its angle, so a squared norm on $\theta$ would penalize two identical circuits differently and would not bound the complexity of the function the circuit represents. The penalty $\lambda_w \|w\|_2^2$ bounds the readout, since $|z^{(i)}| \leq \|w\|_1 + |b|$ for expectation values in $[-1, 1]$. The classical weights $\phi$ carry most of the parameters and most of the risk of overfitting; they are regularized by decoupled weight decay with coefficient $\lambda_\phi$ in the optimizer rather than by a term of $\mathcal{L}$. Training stops early on validation subjects drawn from the training subjects of each fold, disjoint from both the subjects the loss is fitted on and the subjects the model is tested on.
+
+In state-vector simulation, gradients with respect to every parameter are computed exactly by backpropagation through the simulated circuit. For the rotations of (Ec. 3) and (Ec. 4) the parameter-shift rule yields the same exact gradient, and it is the rule used where the circuit is executed on quantum hardware.
+
+## 5. Clinical Interpretability via Analytical Gradients
+
+To verify clinical validity, the decision saliency with respect to the input EEG signal is derived analytically using the chain rule across the classical and quantum layers:
+
+$$
+\mathcal{I}(c, t) = \left| \sum_{k=1}^{N_q} \frac{\partial \hat{y}}{\partial x_k} \frac{\partial f_{\phi}(X)_k}{\partial X_{c,t}} \right|
+\tag{9}
+$$
+
+Because the partial derivatives $\frac{\partial \hat{y}}{\partial x_k}$ are computed via (Ec. 7) and the parameter-shift rule on (Ec. 6), the saliency map $\mathcal{I}(c, t)$ exposes the precise contribution of each electrode $c$ and time sample $t$. This provides a direct clinical audit mechanism to confirm that the hybrid model leverages physiologically established fronto-central regions (Fp1, Fp2, F3, F4, Fz, Cz) rather than background noise artifacts.
+
+## 6. SOTA Constellation Grounding
+
+This proposal is positioned in the literature atlas alongside its foundational predecessors:
+- Constellation graph: [research-concept-hybrid-quantum-classical-neural-network-with-data-re-uploadi-r03.graph.html](research-concept-hybrid-quantum-classical-neural-network-with-data-re-uploadi-r03.graph.html)
+- Reference benchmark: IEEE Dataport ADHD Dataset (121 pediatric subjects, 19 channels at 128 Hz).
+

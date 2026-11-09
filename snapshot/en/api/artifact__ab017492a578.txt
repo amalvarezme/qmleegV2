@@ -1,0 +1,10 @@
+| Comparison | Test | Statistic | p-value | Holm-adjusted p | Cliff's Delta | 95% CI |
+| :--- | :--- | :--- | :--- | :--- | :--- | :--- |
+| Friedman across the three topologies (subject F1) | Friedman | 0.7045 | 0.7031 |  |  |  |
+| Circular vs. Separable (subject F1) | Demsar rank z-test after Friedman | 0.495 | 0.6206 | 1 | -0.027 | [-0.286, 0.230] |
+| Circular vs. Linear (subject F1) | Demsar rank z-test after Friedman | 0.7778 | 0.4367 | 1 | -0.126 | [-0.398, 0.130] |
+| Linear vs. Separable (subject F1) | Demsar rank z-test after Friedman | 0.2828 | 0.7773 | 1 | 0.120 | [-0.197, 0.424] |
+| Friedman across the three topologies (subject BA) | Friedman | 1.156 | 0.5611 |  |  |  |
+| Circular vs. Separable (subject BA) | Demsar rank z-test after Friedman | 0.9899 | 0.3222 | 0.9666 | -0.158 | [-0.470, 0.173] |
+| Circular vs. Linear (subject BA) | Demsar rank z-test after Friedman | 0.7071 | 0.4795 | 0.9666 | -0.110 | [-0.389, 0.147] |
+| Linear vs. Separable (subject BA) | Demsar rank z-test after Friedman | 0.2828 | 0.7773 | 0.9666 | -0.037 | [-0.373, 0.299] |

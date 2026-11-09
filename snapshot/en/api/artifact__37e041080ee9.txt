@@ -1,0 +1,8 @@
+| Comparison | Test | Statistic | p-value | Holm-adjusted p | Effect Size | 95% CI |
+| :--- | :--- | :--- | :--- | :--- | :--- | :--- |
+| Friedman across the three arms | Friedman over the fold-by-seed blocks | 4.085 | 0.1297 | — (not corrected) | Kendall's W = 0.082 | — |
+| Hybrid DRU vs. Single-shot Angle | corrected resampled t-test (Nadeau-Bengio, two-sided) | -0.448 | 0.6583 | 1.0000 | Cohen's d = -0.241 | [-1.353, 0.870] |
+| Hybrid DRU vs. Classical Linear | corrected resampled t-test (Nadeau-Bengio, two-sided) | -0.085 | 0.9333 | 1.0000 | Cohen's d = -0.046 | [-1.157, 1.066] |
+| McNemar, Hybrid DRU vs. Classical Linear | McNemar (exact binomial) on subject out-of-fold decisions, posteriors averaged over the 5 repetitions | 6.000 | 1.0000 | 1.0000 | paired accuracy difference = -0.008 | [-0.067, 0.051] |
+| DeLong AUC, Hybrid DRU vs. Classical Linear | DeLong (two-sided) on subject out-of-fold posteriors averaged over the 5 repetitions | 1.108 | 0.2677 | 0.5355 | AUC difference = 0.026 | [-0.020, 0.072] |
+| Non-inferiority, Hybrid DRU vs. EEGNet (margin 0.03) | one-sided corrected resampled t-test (non-inferiority, margin 0.03) | 0.304 | 0.3819 | — (not corrected) | mean BA difference (DRU - EEGNet) = -0.011 | [-0.119, +inf] |

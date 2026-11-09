@@ -1,0 +1,6 @@
+| Comparison | Test | Statistic | p-value | Holm-adjusted p | Rank-biserial | 95% CI |
+| :--- | :--- | :--- | :--- | :--- | :--- | :--- |
+| Hybrid DRU vs. Single-shot Angle, frequency-two, 0% label noise | Wilcoxon signed-rank (exact, two-sided) | 36 | 0.007812 | 0.01562 | 1.000 | [0.118, 0.237] |
+| Hybrid DRU vs. Single-shot Angle, frequency-two, 20% label noise | Wilcoxon signed-rank (exact, two-sided) | 33 | 0.03906 | 0.03906 | 0.833 | [0.040, 0.166] |
+| hybrid_dru_L3 vs. Classical Linear, interaction (exploratory) | Wilcoxon signed-rank (exact, two-sided) | 33.5 | 0.03125 | 0.03125 | 0.861 | [0.067, 0.319] |
+| single_shot_L1 vs. Classical Linear, interaction (exploratory) | Wilcoxon signed-rank (exact, two-sided) | 36 | 0.007812 | 0.01562 | 1.000 | [0.211, 0.343] |

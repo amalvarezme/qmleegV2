@@ -1,0 +1,37 @@
+# qmleeg-dru
+
+Implementation of the hybrid quantum-classical data re-uploading classifier for EEG-based ADHD classification (papersmith workspace QMLEEG).
+
+## Proof-of-concept pilot (experiments v02, E1)
+
+`src/QMLEEG_DRU/pilot.py` and `pilot_data.py` run the local pilot: three arms
+(hybrid DRU L=3, single-shot angle L=1, classical linear probe) on fold 0 of
+the official toy preparation, one seed. Outputs are marked `PILOT`.
+
+Data is never copied into this repository. It is read from the directory
+named by `QMLEEG_DRU_DATA_DIR`, or by default from the workspace's
+`datasets/qmleeg-toy-eeg/` (two levels above this repository), which holds
+`qmleeg-toy-eeg.csv` and `splits.json`. Remote runs point the variable at the
+mounted published dataset.
+
+The pilot's declared steps (`time_probe`, `poc_train`, `poc_report`) run
+through the forge's `implementation_cli.py step`, each executing its own
+notebook under `QMLEEG-DRU/Notebooks/`. `QMLEEG_DRU_DEVICE` forces a device;
+by default mps is tried and falls back to cpu, because the state-vector
+simulation computes in complex128/float64.
+
+## Hyperparameter search (experiments v09, step `hpo_search`)
+
+`src/QMLEEG_DRU/hpo.py` searches only the Hybrid DRU: 30 TPE trials per outer
+fold (seed-42 repetition), each trial trained once and scored on the fold's
+one inner validation split. Each fold's trials run as two 15-trial
+sub-studies, `dru-fold<k>-a` and `dru-fold<k>-b` (one per Kaggle account,
+sampler seeds 42 and 43). These are also the campaign's unit ids
+(`FORGE_RUN_UNITS`, `partial.json`). Each sub-study is an Optuna journal at
+`QMLEEG-DRU/hpo/studies/dru-fold<k>-<s>.log`. A session runs one trial process
+per visible GPU, and on CPU or a single GPU it runs one. Once both sub-studies
+of every fold are complete, the step merges them into
+`hybrid_dru_L3-fold<k>` in `hpo/studies.db` and writes `hpo/frozen.json` for
+every E1 network arm. The Single-shot arm and the linear probe reuse the Hybrid
+DRU's values. EEGNet and ADHDeepNet keep the published settings in
+`arms.PUBLISHED`, which cite `QMLEEG-DRU/replication/*/REPLICATION.md`.

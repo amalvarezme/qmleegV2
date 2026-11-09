@@ -1,0 +1,1027 @@
+\documentclass[11pt,onecolumn,a4paper]{article}
+\usepackage[utf8]{inputenc}
+\usepackage{amsmath,amssymb,amsfonts,amsthm}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{tabularx}
+\newcolumntype{Y}{>{\raggedright\arraybackslash\hspace{0pt}}X}
+\usepackage{multirow}
+\usepackage{hyperref}
+\usepackage{cite}
+\usepackage[protrusion=false]{microtype}
+\usepackage{geometry}
+\usepackage{setspace}
+\onehalfspacing
+% Table text is \footnotesize (9 pt); keep its sub/superscripts at 8 pt so they print within 0.70-0.90 x body.
+\DeclareMathSizes{9}{9}{8}{8}
+\geometry{top=2.5cm,bottom=2.5cm,left=2.5cm,right=2.5cm}
+
+\hypersetup{
+    colorlinks=true,
+    linkcolor=blue,
+    citecolor=blue,
+    urlcolor=blue
+}
+
+%% paper-writing block title-and-keywords.title begin sha256=d9eda5c6eee5f2153e61d424803bb145418a7d6dbece0dfac171abcb80c38323
+\title{\Large\textbf{Interpretable Hybrid Quantum Circuits with Circular Data Re-Uploading for EEG-Based ADHD Classification}}
+\author{%
+\begin{minipage}[t]{\dimexpr\textwidth-2\tabcolsep\relax}
+\centering
+[author-2]$^{1}$, [author-3]$^{1,2}$, and [author-4]$^{3,*}$\\[1ex]
+\small
+$^{1}$Departamento de Sistemas e Inform\'{a}tica, Universidad de Caldas, Manizales 170004, Colombia\\
+$^{2}$Departamento de Electr\'{o}nica y Automatizaci\'{o}n, Universidad Aut\'{o}noma de Manizales, Manizales 170001, Colombia\\
+$^{3}$AI-Lab, Signal Processing and Recognition Group, Universidad Nacional de Colombia, Sede Manizales, Manizales 170003, Colombia\\[1ex]
+E-mails: \texttt{[email]}, \texttt{[email]}, \texttt{[email]}\\
+$^{*}$Corresponding author: \texttt{[email]}
+\end{minipage}}
+\date{\today}
+%% paper-writing block title-and-keywords.title end
+\begin{document}
+\maketitle
+
+\begin{abstract}
+%% paper-writing block abstract.slot-1 begin sha256=980fb04d45260abb0ad07768421c089441d6e5112ea0304a185348971eed14ff
+Attention Deficit Hyperactivity Disorder (ADHD) is a prevalent neurodevelopmental condition whose clinical evaluation remains predominantly reliant on subjective behavioral questionnaires, motivating objective biomarker extraction from electroencephalography (EEG).
+%% paper-writing block abstract.slot-1 end
+%% paper-writing block abstract.slot-2 begin sha256=be221fe943e4c0c97f66568db792a368d0e4251f3f3a5763bd5bafaef6464fb1
+However, existing deep learning approaches operate primarily as opaque black boxes and frequently suffer from catastrophic subject-level data leakage, inflating reported classification metrics while obscuring genuine neurophysiological features.
+%% paper-writing block abstract.slot-2 end
+%% paper-writing block abstract.slot-3 begin sha256=e143a1276c610ac1a0c900106d4bceb0beb4b238d49ddfd2aba2d872bb19e622
+To resolve these deficiencies, we propose a hybrid quantum-classical neural network architecture that couples a spatial-temporal convolutional front-end with an analytical variational quantum processor operating under circular data re-uploading and continuous multi-qubit entangling layers.
+%% paper-writing block abstract.slot-3 end
+%% paper-writing block abstract.slot-4 begin sha256=6bc6ba0ae9d5e578679bc6272ed34d84422939ada9df43690e711448a1cf05e8
+The proposed architecture contributes two components: (i) Circular Data Re-Uploading (CDRU), which re-uploads four convolutional features into a ring-entangled four-qubit circuit whose depth alone sets the accessible frequencies, verified on a synthetic frequency-two rule; and (ii) Analytical Saliency via Parameter-Shift Backpropagation, which chains exact circuit derivatives back to every electrode without surrogate models.
+%% paper-writing block abstract.slot-4 end
+%% paper-writing block abstract.slot-5 begin sha256=aead8191ed5d6b9115e5f17bc0f2529e6d2f53a7181aae54cd7c46ea6e437937
+It was evaluated on synthetic EEG with a known class rule and, under subject-wise cross-validation, on 120 children, 61 with ADHD and 59 controls. Balanced accuracy was compared with that of a one-upload circuit, a linear readout, EEGNet and ADHDeepNet, alongside depth, gradient-variance and regional saliency analyses. Gradient variance was lowest at three layers and about $10^{-3.67}$ at six, and its depth slope interval included zero.
+%% paper-writing block abstract.slot-5 end
+%% paper-writing block abstract.slot-6 begin sha256=d9663e7db0e29f8456e357ed09a7ff06ee16f23edc2b8a472fcd385899c7965d
+On the clinical cohort, it reached a balanced accuracy of 0.683 against 0.694 for EEGNet, with no significant difference and no established non-inferiority. Its saliency peaked at F3, and fronto-central exceeded temporal-occipital saliency energy in all 61 children with ADHD (Wilcoxon $W^{+} = 1891$, $p = 1.1 \times 10^{-11}$).
+%% paper-writing block abstract.slot-6 end
+%% paper-writing block abstract.slot-7 begin sha256=407d167e2838a666f6d66e78466e1e17d6815059249d6c7c7f2eca1ff95e09b3
+Overall, the hybrid model matched but did not surpass classical EEG classifiers, while adding exact channel attribution under subject-wise evaluation.
+%% paper-writing block abstract.slot-7 end
+
+%% paper-writing block title-and-keywords.keywords begin sha256=473853a327f049205bc8bae4b129d8f0e1c4c099f74dadf04168a4edf0d3416a
+\textbf{Keywords:} data re-uploading; variational quantum circuits; electroencephalography; interpretability; barren plateaus.
+%% paper-writing block title-and-keywords.keywords end
+\end{abstract}
+
+\section{Introduction}\label{sec:intro}
+%% paper-writing block introduction.block-1 begin sha256=ddfc39b8e08154ea8a8ce1e9503524d7deba3151696d3f46b935669d3fa601ee
+Attention Deficit Hyperactivity Disorder (ADHD) is one of the most prevalent neurodevelopmental disorders of childhood, characterized by persistent inattention, hyperactivity, and impulsivity that impair executive function and school performance and frequently persist into adulthood \cite{nasrabadi2020eeg}. Its diagnosis still relies on clinical interviews, behavioral rating scales, and observer checklists, which introduce subjective bias, inter-rater variability, and diagnostic delay. Electroencephalography (EEG) offers a non-invasive and low-cost window onto the cortical dynamics underlying the disorder, and quantitative EEG studies of ADHD have repeatedly reported increased theta power and decreased beta power, summarized by the theta-to-beta ratio \cite{snyder2006clinical}. Yet the diagnostic value of this ratio has proven inconsistent across cohorts, and that inconsistency limits its use as a stand-alone clinical marker \cite{arns2013evaluating}. Moving from population-level spectral findings to the individual child, the clinical question becomes whether multichannel scalp recordings carry reproducible and neurophysiologically grounded signatures that separate children with ADHD from typically developing peers. Objective and verifiable EEG biomarkers of ADHD therefore remain a pressing need in pediatric neuropsychiatry.
+
+%% paper-writing block introduction.block-1 end
+%% paper-writing block introduction.block-2 begin sha256=8b0d7fccbbcb71cd1c20a4f9fc0a9f298e340ac1e70d76cce57dc9f0d0e70011
+Machine learning has been widely applied to automate EEG-based diagnosis \cite{lotte2018review}, and deep learning now dominates the field through architectures that learn spatial and temporal filters directly from raw multichannel signals \cite{craik2019deep}. Hybrid quantum-classical models built on variational quantum circuits have recently emerged as compact alternatives able to represent rich non-linear functions with few trainable parameters \cite{schuld2021effect}. Nevertheless, automated EEG-based ADHD classification remains only partially resolved, and three specific problems stand out \cite{varoquaux2022machine}. The first is overfitting on small clinical cohorts, aggravated by high-capacity networks and by quantum models whose expressivity and entanglement benefits are claimed without controlled classical comparison \cite{bowles2024better}. The second is unfaithful attribution, since post-hoc gradient maps of deep networks are noisy and cannot certify which electrodes drive a decision \cite{sundararajan2017axiomatic}. The third is data leakage, as segment-level partitioning places epochs from the same participant in both training and test sets and inflates reported accuracy \cite{saeb2017need}. An adequate solution should therefore satisfy three requirements: a compact parameterization with verified expressivity, exact channel attribution, and leakage-free subject-level evaluation.
+
+%% paper-writing block introduction.block-2 end
+%% paper-writing block introduction.block-3 begin sha256=2dcad2287926943c0941d68720301d6d9bf1bf95c5f7dbe71ca1f75d95e883c0
+The first family comprises deep convolutional and recurrent networks for EEG, which address the classification task but only partially overcome overfitting on small clinical cohorts. Compact architectures such as EEGNet decouple temporal convolutions from depthwise spatial filters \cite{lawhern2018eegnet}, whereas DeepConvNet learns hierarchical oscillatory features through deeper receptive fields \cite{schirrmeister2017deepconvnet}. ChronoNet stacks one-dimensional convolutions with gated recurrent units \cite{roy2019chrononet}, and ADHDeepNet adds attention modules for pediatric ADHD recordings \cite{amini2024adhdeepnet}. Their main strength is end-to-end learning of spatial and temporal filters without handcrafted spectral features \cite{craik2019deep}. Their parameter counts, however, remain large relative to clinical cohorts of tens of participants; such capacity favors overfitting and yields latent features that resist neurophysiological reading. To control that capacity, a second family turns to variational quantum circuits as compact learners. Parameterized quantum circuits map classical features into multi-qubit Hilbert spaces \cite{havlicek2019supervised,mitarai2018quantum}, and data re-uploading interleaves encoding and trainable rotations so that few qubits approximate rich functions \cite{perez2020data}. Re-uploading circuits realize truncated Fourier series whose spectrum grows with the number of layers \cite{schuld2021effect,jerbi2023quantum}, and quantum neural networks can reach high effective dimension per parameter \cite{abbas2021power}. Deep random circuits, in contrast, suffer from barren plateaus that suppress gradients \cite{mcclean2018barren,cerezo2021cost}, and reported quantum advantages often vanish against well-tuned classical baselines \cite{bowles2024better}, leaving the benefit of entanglement on clinical data unverified.
+
+Since neither family reveals which electrodes support a prediction, a third family addresses unfaithful attribution. Gradient saliency \cite{simonyan2013deep}, Integrated Gradients \cite{sundararajan2017axiomatic}, and Gradient-weighted Class Activation Mapping (Grad-CAM) \cite{selvaraju2017gradcam} assign relevance to input dimensions, and layer-wise relevance propagation has been adapted to single-trial EEG \cite{sturm2016interpretable}. On the quantum side, the parameter-shift rule yields exact gradients of circuit expectation values \cite{crooks2019gradients,banchi2021measuring}, and established attribution methods such as Baseline SHAP and Integrated Gradients have been evaluated on parameterized quantum circuits \cite{steinmuller2022explainable}. Backpropagated maps of deep networks nonetheless remain noisy, while exact quantum gradients have remained largely unexploited for channel-level saliency in clinical EEG. Even a faithful map is uninformative when the evaluation is biased, so a fourth family targets data leakage through validation protocols. Subject-wise cross-validation keeps every participant in a single partition \cite{saeb2017need}, and corrected resampled tests and rank-based comparisons account for dependent folds \cite{demsar2006statistical}. Record-wise splits nevertheless remain common in clinical machine learning, and many published accuracies are inflated and hard to compare as a result \cite{saeb2017need}. Existing solutions thus address overfitting, unfaithful attribution, and data leakage one at a time, and none meets the three requirements together.
+
+%% paper-writing block introduction.block-3 end
+%% paper-writing block introduction.block-4a begin sha256=531d0686d3e3bbbf1a5f2a72206324bd80a9ee1e23e74df46c39c3c0fa56654f
+To address these limitations, we propose the hybrid quantum-classical data re-uploading network (Hybrid DRU), a neural architecture for EEG-based ADHD classification that pairs a compact readout of known expressivity with exact channel attribution and is scored only on children unseen in training. Its core idea is to re-upload a compact convolutional embedding of each epoch into a ring-entangled four-qubit circuit with unit-scale encoding, extending data re-uploading \cite{perez2020data}, so that the frequencies the classifier can represent are fixed by its depth and exact gradients flow back to every electrode. The convolutional front-end and the circuit readout are borrowed from EEGNet and from data re-uploading, and the third requirement is met by the evaluation protocol rather than by a model component. The proposed Hybrid DRU contributes two components:
+%% paper-writing block introduction.block-4a end
+%% paper-writing block introduction.block-4b begin sha256=a677951ce76c564229b1dabac511b4fae9663cd7748c71a911b0d279dfb2d4ec
+\begin{itemize}
+    \item Circular Data Re-Uploading (CDRU): re-uploads the four convolutional features into a ring-entangled circuit with unit-scale encoding and trainable biases, so that the accessible Fourier frequencies are set by the depth alone and are known before training.
+    \item Analytical Saliency via Parameter-Shift Backpropagation: chains the parameter-shift derivative of every qubit expectation through the convolutional front-end to each electrode and sample, delivering exact channel attribution without surrogate models or input perturbation.
+\end{itemize}
+
+%% paper-writing block introduction.block-4b end
+%% paper-writing block introduction.block-5 begin sha256=7db54c712973647d1ed1fc2273a43e4f4533a6e14267abe74af7d72527d9791f
+The proposed Hybrid DRU was evaluated on the retained children of the Nasrabadi pediatric ADHD EEG dataset under subject-wise stratified group cross-validation repeated over several seeds, so that no child contributes to both training and testing, and on seeded synthetic EEG whose class rule is known. It was compared against a single-upload circuit, a linear readout on the same features, EEGNet, ADHDeepNet and a recording-duration control, using subject-level balanced accuracy, sensitivity, specificity, F1-score and the area under the receiver operating characteristic curve, with Friedman, corrected resampled $t$, Wilcoxon signed-rank and Page trend tests. Complementary analyses examined the entanglement topology, the re-uploading depth and its gradient variance, and the regional distribution of the saliency. Re-uploading represented a frequency-two rule that a single upload could not. On the clinical cohort, by contrast, the Hybrid DRU showed no difference in balanced accuracy from its single-upload, linear and EEGNet comparators, entanglement and extra depth brought no gain, and the saliency concentrated on the frontal rather than the temporal-occipital scalp. These findings position compact and attributable variational models as a testable, though not yet superior, route toward EEG biomarkers of ADHD.
+
+%% paper-writing block introduction.block-5 end
+%% paper-writing block introduction.block-6 begin sha256=2448c94bbf030ac235ada1553d79f55997620058f94f05b4470d2a821453e76f
+The remainder of this paper is organized as follows: Section~\ref{sec:rw} reviews related work. Section~\ref{sec:methods} details the method. Section~\ref{sec:setup} describes the experimental setup. Section~\ref{sec:results} presents the results. Section~\ref{sec:limitations} discusses the limitations. Finally, Section~\ref{sec:conclusions} presents the concluding remarks.
+%% paper-writing block introduction.block-6 end
+
+\section{Related Work}\label{sec:rw}
+%% paper-writing block related-work.rw-preamble begin sha256=0741dd9908de71085d525665e65f4b96eeef98a662106c4e730c4a1750dc0211
+This section reviews four families of prior work in turn: deep learning for electrophysiology, parameterized quantum circuits with data re-uploading, attribution methods for interpretability, and the validation protocols of neuroimaging benchmarks.
+%% paper-writing block related-work.rw-preamble end
+%% paper-writing block related-work.rw-panorama begin sha256=1a4b16bef3c8851bd1611c1435468d3e6d170fa3e9be37a22025ba8dbf0492f3
+The extraction of diagnostic markers from multichannel electroencephalography has moved from hand-crafted spectral ratios toward end-to-end spatial-temporal representation learning. Early quantitative EEG studies compared spectral power in the theta and beta bands between individuals with and without ADHD \cite{snyder2006clinical,arns2013evaluating}. Automated classification then turned to deep convolutional networks, and parameterized quantum algorithms have joined them as candidate learners for classification and latent pattern discovery \cite{lotte2018review,craik2019deep}. These lines of work developed largely apart, each judged by its own criterion of success, and the four families below are examined against the properties a clinical classifier needs.
+%% paper-writing block related-work.rw-panorama end
+%% paper-writing block related-work.rw-problem-blocks begin sha256=c9df2a9f8d379d0483bf9361c0b78a4e8968591eeddff1e6aab3c4b57da655ad
+\subsection{Deep Learning Architectures for Electrophysiological Signal Processing}
+Deep learning approaches for electroencephalography are grounded in the continuous spatial-temporal modeling of multichannel voltage potentials recorded across scalp electrodes. Under the standard neuroimaging assumption, cortical dipoles project volume-conducted potentials that can be decomposed into spatial filters and temporal frequency components. In early formulations, convolutional architectures adapted from computer vision applied two-dimensional kernels directly over raw or spectrogram-transformed multichannel inputs \cite{cecotti2011convolutional}.
+
+Compact convolutional architectures were then designed around the physical characteristics of electrophysiological signals. EEGNet decouples temporal convolutions from depthwise spatial filters and obtains an ultra-compact representation for brain-computer interfaces \cite{lawhern2018eegnet}. DeepConvNet uses deeper hierarchical receptive fields to capture fine-grained oscillatory features \cite{schirrmeister2017deepconvnet}, and ChronoNet stacks one-dimensional convolutions with gated recurrent units to model long-range temporal dependencies \cite{roy2019chrononet}. For pediatric ADHD cohorts, ADHDeepNet adds temporal-spatial processing and adaptive attention modules to identify diagnostic signatures \cite{amini2024adhdeepnet}.
+
+Despite achieving high classification accuracies, deep convolutional models present acute methodological vulnerabilities. Their high parameter capacity makes them prone to overfitting on small clinical sample cohorts, often memorizing background noise artifacts. Their convolutional operations also act as opaque feature extractors whose latent embeddings resist straightforward biophysical interpretation, leaving clinicians unable to verify whether classifications reflect true cortical abnormalities or non-neural recording artifacts.
+
+\subsection{Parameterized Quantum Circuits and Variational Data Re-Uploading}
+Variational Quantum Circuits (VQCs) and Parameterized Quantum Circuits (PQCs) represent the leading computational paradigm for quantum machine learning on Noisy Intermediate-Scale Quantum (NISQ) devices. The foundational premise relies on mapping low-dimensional classical feature vectors into the exponentially vast Hilbert space of multi-qubit quantum states via parameterized unitary transformations $U(\mathbf{x}, \boldsymbol{\theta})$ \cite{havlicek2019supervised,mitarai2018quantum}. Interleaving data encoding with trainable variational rotations, a technique termed data re-uploading, lets a low-qubit quantum system act as a universal function approximator \cite{perez2020data}.
+
+Data re-uploading circuits correspond to truncated Fourier series, and their accessible frequency spectrum grows linearly with the number of re-uploading layers $L$ \cite{schuld2021effect,jerbi2023quantum}. Quantum neural networks can also reach a larger effective dimension and geometric capacity than classical feedforward networks \cite{abbas2021power}. In practical biomedical applications, hybrid quantum-classical frameworks typically deploy a classical convolutional front-end to compress high-dimensional raw time series into a compact latent vector suitable for few-qubit variational processing.
+
+Notwithstanding theoretical promise, variational quantum classifiers face fundamental trainability and benchmarking hurdles. Random parameterized circuits suffer from barren plateaus, in which gradient variances vanish exponentially in system size and circuit depth \cite{mcclean2018barren,cerezo2021cost}. Reported quantum advantages also frequently stem from weak classical baselines or arbitrary synthetic datasets \cite{bowles2024better}; in realistic, noisy biomedical applications, the actual utility of multi-qubit entangling gates remains largely unverified.
+
+\subsection{Interpretability and Analytical Attribution in Biomedical Machine Learning}
+Model interpretability in high-stakes clinical neuroimaging is essential for diagnostic verification and scientific discovery. Attribution methods seek to quantify the marginal relevance of each input dimension—such as electrode channels and temporal intervals—to the final diagnostic prediction. Classical interpretability frameworks broadly divide into perturbation-based surrogate models, such as LIME \cite{ribeiro2016why}, and gradient-based backpropagation techniques \cite{simonyan2013deep}.
+
+For deep networks, Integrated Gradients satisfies the axioms of completeness and implementation invariance \cite{sundararajan2017axiomatic}, and Grad-CAM localizes coarse spatial heatmaps from intermediate convolutional feature maps \cite{selvaraju2017gradcam}. Layer-wise relevance propagation has been adapted to single-trial EEG classification, where it maps task-related activations \cite{sturm2016interpretable}. On quantum circuits, the parameter-shift rule evaluates exact analytic gradients of expectation values directly on quantum processors, without numerical finite differences \cite{mitarai2018quantum,crooks2019gradients,banchi2021measuring}. Established attribution methods such as Baseline SHAP and Integrated Gradients have also been evaluated on parameterized quantum circuits, using the internal mechanics of the circuits to speed up their computation \cite{steinmuller2022explainable}.
+
+Existing explainability approaches suffer from critical practical shortcomings in clinical workflows. Classical backpropagation through deep, non-linear convolutional networks is susceptible to gradient shattering and noisy attribution maps, while heuristic perturbation methods lack mathematical fidelity. The quantum parameter-shift rule does provide exact gradients, yet its end-to-end integration with classical backpropagation to extract channel-resolved electrophysiological saliency maps has remained largely unexploited in the biomedical literature.
+
+\subsection{Validation Integrity, Data Leakage, and Benchmarking Protocols}
+The validity of machine learning findings in biomedical neuroimaging hinges on strict statistical independence between training and evaluation partitions. In electrophysiological datasets where continuous multichannel recordings are segmented into short overlapping epochs, individual participants exhibit distinct, idiosyncratic baseline characteristics such as skull thickness, anatomical impedance, and resting alpha frequencies \cite{yarkoni2017choosing,saeb2017need}. An evaluation protocol must then prevent identity memorization if it is to measure generalization to new patients.
+
+Methodological guidelines advocate subject-level grouped cross-validation and testing on independent external cohorts \cite{varoquaux2022machine}. In neuroimaging, predictive models defined and validated on independent datasets have been recommended to establish brain-behavior associations that generalize to novel individuals \cite{scheinost2019connectome}. Statistical comparison standards supply corrected resampled t-tests and non-parametric rank tests that account for the non-independence of cross-validation folds \cite{demsar2006statistical}.
+
+Despite wide recognition of these principles, data leakage remains common in the published EEG machine learning literature. Studies on the Nasrabadi ADHD cohort \cite{nasrabadi2020eeg} that apply random epoch-level train-test splits place epochs of the same subject in several folds and report classification accuracies exceeding 99\%. Under subject-independent partitioning such metrics are no longer supported, and the field still lacks a standardized, leakage-free benchmark.
+%% paper-writing block related-work.rw-problem-blocks end
+%% paper-writing block related-work.rw-closing begin sha256=6a5763ca2248a885f1963f34fc9ecaaadc037a4a72ac3d1f1531f0cd08ba3118
+Across the four families, each property a clinical EEG classifier needs has been achieved only in isolation. Four fronts therefore remain open: a convolutional model compact enough for a cohort of tens of children, a re-uploading circuit whose frequency spectrum and entangler are tested on clinical data against matched classical readouts, attribution that is exact rather than approximated through a deep non-linear network, and an evaluation that keeps every participant in a single partition. The proposed Hybrid DRU attacks all four at once: its Circular Data Re-Uploading readout fixes the spectrum by depth with few parameters, its analytical saliency carries exact gradients to every electrode, and both are assessed with every child confined to one partition.
+%% paper-writing block related-work.rw-closing end
+%% paper-writing block related-work.rw-synthesis-artefact begin sha256=3cbb785888eaf51c277942689a5de316d7be12f8216c21398b373ef59ab2f1f8
+Table~\ref{tab:rw_comparison} sets eight representative works of the four families against the proposal on six properties: data re-uploading, a characterized Fourier spectrum, an ablation of the entangler, exact gradients, attribution on EEG, and subject-wise evaluation.
+
+\begin{table}[t]
+\centering
+\caption{Representative works of the four families against the properties the proposed Hybrid DRU declares. Family: DL, deep learning for EEG; PQC, parameterized quantum circuits; Attr., attribution; Val., validation protocols. Re-upload: data re-uploading; Spectrum: Fourier spectrum characterized by the encoding; Entangler: ablation with and without entangling gates; Exact gradient: analytic gradient of a circuit expectation; EEG attribution: per-decision relevance on EEG channels; Subject-wise: each participant's data held in one partition, applied or prescribed. \checkmark, present; $\circ$, partial (layer-weight and embedding visualization only); --, absent or not reported.}
+\label{tab:rw_comparison}
+\footnotesize
+\setlength{\tabcolsep}{2pt}
+\begin{tabularx}{0.99\linewidth}{@{}ll*{6}{>{\centering\arraybackslash}X}@{}}
+\toprule
+\textbf{Family} & \textbf{Work} & \textbf{\mbox{Re-upload}} & \textbf{Spectrum} & \textbf{Entangler} & \textbf{Exact}\newline\textbf{gradient} & \textbf{EEG}\newline\textbf{attribution} & \textbf{Subject-}\newline\textbf{wise} \\
+\midrule
+DL & EEGNet~\cite{lawhern2018eegnet} & -- & -- & -- & -- & \checkmark & \checkmark \\
+DL & ADHDeepNet~\cite{amini2024adhdeepnet} & -- & -- & -- & -- & $\circ$ & \checkmark \\
+PQC & Data re-uploading~\cite{perez2020data} & \checkmark & -- & \checkmark & -- & -- & -- \\
+PQC & Encoding analysis~\cite{schuld2021effect} & \checkmark & \checkmark & -- & -- & -- & -- \\
+PQC & Benchmark study~\cite{bowles2024better} & \checkmark & -- & \checkmark & -- & -- & -- \\
+Attr. & Single-trial LRP~\cite{sturm2016interpretable} & -- & -- & -- & -- & \checkmark & -- \\
+Attr. & Parameter shift~\cite{crooks2019gradients} & -- & -- & -- & \checkmark & -- & -- \\
+Val. & Guidelines~\cite{varoquaux2022machine} & -- & -- & -- & -- & -- & \checkmark \\
+\midrule
+\multicolumn{2}{@{}l}{\textbf{Hybrid DRU (proposed)}} & \checkmark & \checkmark & \checkmark & \checkmark & \checkmark & \checkmark \\
+\bottomrule
+\end{tabularx}
+\end{table}
+%% paper-writing block related-work.rw-synthesis-artefact end
+
+\section{Materials and Methods}\label{sec:methods}
+%% paper-writing block materials-and-methods.mm-preamble begin sha256=80507a1efc0b9337c89f1013a5bbb11f62272444ecad74bdf58157e6bcadf9cb
+This section describes the dataset, states the problem setup, presents the bodies of existing theory the proposed hybrid quantum-classical data re-uploading network (Hybrid DRU) builds on, namely the convolutional front-end, data re-uploading circuits, and gradient attribution with the parameter-shift rule, and closes on the contributions of the proposal and their combination.
+%% paper-writing block materials-and-methods.mm-preamble end
+%% paper-writing block materials-and-methods.mm-dataset begin sha256=f2b63d16b6791f6ceae2cf9dcae86454362b4e04c199ecc1a06cefab4f524cde
+\subsection{Dataset}\label{sec:dataset}
+The recordings come from the public EEG Data for ADHD / Control Children set published on IEEE DataPort by Motie Nasrabadi et al.~\cite{nasrabadi2020eeg}. These data answer the question because they hold multichannel scalp EEG of children with and without ADHD acquired under one protocol and one montage, and because the same set was used to evaluate ADHDeepNet~\cite{amini2024adhdeepnet}, one of the compared methods. The present study read the set from a public long-format mirror that stores one row per sample, one column per electrode, the child identifier and the diagnostic class.
+
+The cohort comprises 121 children aged 7 to 12 years: children with ADHD diagnosed by experienced psychiatrists under DSM-IV criteria, and typically developing controls with no reported psychiatric or neurological history~\cite{nasrabadi2020eeg}. During the recording each child performed a visual attention task in which cartoon characters presented on a screen had to be counted. The EEG was acquired at 128~Hz from $C = 19$ scalp electrodes placed according to the international 10--20 system (Fp1, Fp2, F3, F4, C3, C4, P3, P4, O1, O2, F7, F8, T3, T4, T5, T6, Fz, Cz, Pz) with an earlobe reference; Figure~\ref{fig:acquisition} follows this protocol from the children to the samples. The mirror names four temporal electrodes T7, T8, P7 and P8; they were read as T3, T4, T5 and T6 by name, a correspondence that has not been verified against the original files.
+
+One child, identifier v56p, was discarded because of persistent fronto-polar contamination on Fp1 and Fp2; no further recording or window was rejected. The retained cohort holds 120 children, 61 with ADHD and 59 controls. Each recording then passed through early-stage preprocessing, in which filtering interacts with noisy-channel identification and referencing~\cite{bigdely2015prep}: a 50~Hz notch filter with quality factor 30, applied forward and backward, and a fourth-order Butterworth band-pass filter between 0.5 and 60~Hz, also applied forward and backward so that both filters have zero phase. Finally, the common average reference~\cite{yao2019which} was applied at every sample $t$:
+\begin{equation}
+    \tilde{e}_{c}(t) = e_{c}(t) - \frac{1}{C}\sum_{c'=1}^{C} e_{c'}(t),
+    \label{eq:car}
+\end{equation}
+where $e_{c}(t)$ and $\tilde{e}_{c}(t)$ denote the filtered and the re-referenced potentials of electrode $c \in \{1, \dots, C\}$, respectively.
+
+A sample is a window of $T = 512$ samples (4~s) cut from one child's re-referenced recording $\tilde{\mathbf{E}}_{s} \in \mathbb{R}^{C \times T_{s}}$ with a stride of $\Delta = 256$ samples, that is, with 50\% overlap:
+\begin{equation}
+    \mathbf{X}_{i} = \tilde{\mathbf{E}}_{s}[\,:\,, (m-1)\Delta + 1 : (m-1)\Delta + T\,] \in \mathbb{R}^{C \times T}, \qquad m \in \{1, \dots, n_{s}\},
+    \label{eq:window}
+\end{equation}
+where $s \in \{1, \dots, S\}$ indexes the child, $T_{s}$ its number of samples, $m$ the window position, and $n_{s} = \lfloor (T_{s} - T)/\Delta \rfloor + 1$ its number of windows; a trailing remainder shorter than $T$ is dropped. Recording length differs between children, so $n_{s}$ varies, and each child's recording duration $d_{s} = T_{s}/128$~s is kept beside its windows.
+
+Every window inherits the diagnosis $y_{s} \in \{0, 1\}$ of its child, with $y_{s} = 1$ for ADHD, and the set $\mathcal{I}_{s}$ of the windows of child $s$ is never separated: all windows of one child, which overlap and share the same recording, are assigned together to whatever partition receives that child. The partition itself is part of the evaluation protocol of Section~\ref{sec:setup}.
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=\linewidth]{Figures/fig-acquisition-protocol.pdf}
+\caption{Acquisition protocol of the EEG dataset, in the order of capture. Framed pictograms show each stage: the participants (121 children aged 7 to 12 years), the stimulus task (a visual attention task in which cartoon characters on a screen are counted), the acquisition chain (19 scalp electrodes of the international 10--20 system sampled at 128~Hz with an earlobe reference), the stored records of the public IEEE DataPort set (120 children retained after one exclusion: 61 with ADHD and 59 controls), filtering and re-referencing (a 50~Hz notch and a 0.5--60~Hz band-pass filter, both zero phase, then the common average reference), and sample construction (windows of 4~s, or 512 samples, with 50\% overlap, all windows of a child kept together). Arrows follow a recording from the child to its samples.}
+\label{fig:acquisition}
+\end{figure}
+%% paper-writing block materials-and-methods.mm-dataset end
+%% paper-writing block materials-and-methods.mm-borrowed-machinery begin sha256=1e0fe3ab302299bef5c73cea1d73344d9fc4bcbbda75b08b2f7498f407169aef
+\subsection{Problem Setup}\label{sec:problem}
+Let $\mathcal{S} = \{1, \dots, S\}$ index the children, let $\mathcal{I}_{s}$ be the set of windows $\mathbf{X}_{i} \in \mathbb{R}^{C \times T}$ of child $s$ obtained by Equation~(\ref{eq:window}), with $n_{s} = |\mathcal{I}_{s}|$, and let $y_{s} \in \{0, 1\}$ be its diagnosis. A classifier $g_{\boldsymbol{\Theta}} : \mathbb{R}^{C \times T} \to (0, 1)$ with parameters $\boldsymbol{\Theta}$ returns the posterior probability $\hat{y}_{i} = g_{\boldsymbol{\Theta}}(\mathbf{X}_{i})$ that window $i$ belongs to a child with ADHD. Because the diagnosis belongs to the child and not to the window, the decision is taken per child from the mean posterior of its windows:
+\begin{equation}
+    \bar{p}_{s} = \frac{1}{n_{s}} \sum_{i \in \mathcal{I}_{s}} g_{\boldsymbol{\Theta}}(\mathbf{X}_{i}), \qquad \hat{y}_{s} = \mathbb{1}\!\left[\bar{p}_{s} \geq \tfrac{1}{2}\right],
+    \label{eq:subject_decision}
+\end{equation}
+where $\bar{p}_{s} \in (0, 1)$ is the subject posterior and $\hat{y}_{s}$ the subject decision. The goal is a parameter vector $\boldsymbol{\Theta}$ whose subject decisions are correct for children none of whose windows were used to fit it. Three properties are required of $g_{\boldsymbol{\Theta}}$ and of its estimate: a compact parameterization with verified expressivity, so that a cohort of 120 children can fit it and the functions it can represent are known; exact channel attribution, so that every decision can be traced to electrodes through the derivative of the trained model itself; and leakage-free subject-level evaluation, so that the decision rule of Equation~(\ref{eq:subject_decision}) is scored only on children unseen in training.
+
+\subsection{Spatial-Temporal Convolutional Front-End}\label{sec:frontend}
+Let $\boldsymbol{\phi}$ denote the trainable weights of a convolutional map and $N_{q} \in \mathbb{N}$ the number of features it returns. The front-end follows the compact filter bank of EEGNet~\cite{lawhern2018eegnet}: a temporal convolution with $F_{1}$ filters of length $K_{1}$ and batch normalization; a depthwise spatial convolution across the $C$ electrodes with depth multiplier $D$, batch normalization, an exponential linear unit, average pooling by 4 and dropout with rate $p$; and a separable convolution with $F_{2}$ filters of length $K_{2}$, batch normalization, an exponential linear unit, average pooling by 8 and dropout with rate $p$. A linear projection $h_{\boldsymbol{\phi}} : \mathbb{R}^{C \times T} \to \mathbb{R}^{N_{q}}$ follows, and a scaled hyperbolic tangent bounds its output to the rotation domain:
+\begin{equation}
+    \mathbf{x} = f_{\boldsymbol{\phi}}(\mathbf{X}) = \pi \tanh\!\big(h_{\boldsymbol{\phi}}(\mathbf{X})\big) \in [-\pi, \pi]^{N_{q}},
+    \label{eq:frontend}
+\end{equation}
+where $\mathbf{x}$ is the feature vector of window $\mathbf{X}$ and the hyperbolic tangent acts elementwise. The architecture fixes $F_{1} = 8$, $D = 2$, $F_{2} = 16$, $K_{1} = 64$, $K_{2} = 16$ and $N_{q} = 4$; the dropout rate $p$ and a decoupled weight decay $\lambda_{\boldsymbol{\phi}} \geq 0$ on $\boldsymbol{\phi}$ are its two regularization knobs. The features are learned by backpropagation only, and nothing in the architecture or the loss ties a feature to a frequency band, an electrode or a clinical biomarker.
+
+\subsection{Variational Quantum Circuits with Data Re-Uploading}\label{sec:dru}
+Consider a register of $N_{q}$ qubits prepared in $|0\rangle^{\otimes N_{q}}$, let $Y$ and $Z$ denote the Pauli operators, let $R_{y}(a) = \exp(-\tfrac{i}{2} a Y)$ and $R_{z}(a) = \exp(-\tfrac{i}{2} a Z)$ denote single-qubit rotations by angle $a \in \mathbb{R}$, and let $Z_{j}$ be $Z$ acting on qubit $j \in \{1, \dots, N_{q}\}$. Data re-uploading~\cite{perez2020data} interleaves $L \in \mathbb{N}$ encoding blocks with trainable blocks:
+\begin{equation}
+    U(\mathbf{x}, \boldsymbol{\theta}, \boldsymbol{\beta}) = \prod_{l=1}^{L} W_{l}(\boldsymbol{\theta}_{l})\, S_{l}(\mathbf{x}, \boldsymbol{\beta}_{l}),
+    \label{eq:dru}
+\end{equation}
+where $S_{l}$ encodes the features at layer $l$, $W_{l}$ is a trainable variational block with angles $\boldsymbol{\theta}_{l}$, and $L$ is the re-uploading depth. In its general form each feature is encoded by a rotation whose scale and offset are both trainable:
+\begin{equation}
+    S_{l}(\mathbf{x}, \boldsymbol{\beta}_{l}) = \bigotimes_{j=1}^{N_{q}} R_{y}\big(\alpha_{l,j}\, x_{j} + \beta_{l,j}\big),
+    \label{eq:encoding_general}
+\end{equation}
+where $\alpha_{l,j} \in \mathbb{R}$ is the encoding scale and $\beta_{l,j} \in \mathbb{R}$ the encoding bias of feature $j$ at layer $l$. The circuit is read out by the expectation of $Z_{j}$ on every qubit:
+\begin{equation}
+    \langle Z_{j} \rangle(\mathbf{x}, \boldsymbol{\theta}, \boldsymbol{\beta}) = \langle 0|^{\otimes N_{q}}\, U^{\dagger}(\mathbf{x}, \boldsymbol{\theta}, \boldsymbol{\beta})\, Z_{j}\, U(\mathbf{x}, \boldsymbol{\theta}, \boldsymbol{\beta})\, |0\rangle^{\otimes N_{q}} \in [-1, 1],
+    \label{eq:expectation}
+\end{equation}
+where $U^{\dagger}$ is the adjoint of $U$. Schuld et al.~\cite{schuld2021effect} showed that such an expectation is a truncated Fourier series in the features:
+\begin{equation}
+    \langle Z_{j} \rangle(\mathbf{x}, \boldsymbol{\theta}, \boldsymbol{\beta}) = \sum_{\boldsymbol{\omega} \in \Omega} c_{j, \boldsymbol{\omega}}(\boldsymbol{\theta}, \boldsymbol{\beta})\, e^{\,i\, \boldsymbol{\omega}^{\top} \mathbf{x}},
+    \label{eq:fourier}
+\end{equation}
+where the frequency set $\Omega$ is fixed by the eigenvalues of the encoding generators, that is, by the scales $\alpha_{l,j}$ and the number of uploads $L$, and the coefficients $c_{j, \boldsymbol{\omega}}$ are set by the trainable blocks.
+
+Two consequences of this expansion limit the machinery for the present problem. When the scales $\alpha_{l,j}$ are trained, $\Omega$ moves with them, so the frequencies the classifier can represent are not fixed by its structure and its expressivity cannot be verified in advance; and with a single upload, $L = 1$ and unit scale, each feature enters with frequency at most one, so a class rule that needs frequency two in one feature cannot be represented at all.
+
+\subsection{Gradient Attribution and the Parameter-Shift Rule}\label{sec:attribution}
+Let $\hat{y} = g_{\boldsymbol{\Theta}}(\mathbf{X})$ be the posterior of a differentiable classifier for window $\mathbf{X}$, and let $X_{c,t}$ denote its entry at electrode $c$ and sample $t \in \{1, \dots, T\}$. Gradient saliency~\cite{simonyan2013deep} attributes the decision to each input entry by the magnitude of the derivative of the output:
+\begin{equation}
+    \mathcal{G}(c, t) = \left| \frac{\partial \hat{y}}{\partial X_{c,t}} \right|,
+    \label{eq:saliency_general}
+\end{equation}
+where $\mathcal{G}(c, t)$ is the saliency of electrode $c$ at sample $t$. For a circuit expectation, the parameter-shift rule~\cite{crooks2019gradients} gives the derivative with respect to the angle $a$ of any gate $\exp(-\tfrac{i}{2} a P)$ generated by a Pauli operator $P$ exactly, from two evaluations of the same circuit:
+\begin{equation}
+    \frac{\partial}{\partial a} \langle Z_{j} \rangle = \frac{1}{2}\left[ \langle Z_{j} \rangle\Big(a + \frac{\pi}{2}\Big) - \langle Z_{j} \rangle\Big(a - \frac{\pi}{2}\Big) \right],
+    \label{eq:param_shift}
+\end{equation}
+where $\langle Z_{j} \rangle(a \pm \pi/2)$ denotes Equation~(\ref{eq:expectation}) with only that angle shifted. The rule is the Pauli case of a general one. For a gate generated by an operator with two distinct eigenvalues $\pm r$, the derivative of an expectation $\langle M \rangle$ with respect to its angle $a$ is
+\begin{equation}
+    \frac{\partial}{\partial a} \langle M \rangle = r \left[ \langle M \rangle\Big(a + \frac{\pi}{4r}\Big) - \langle M \rangle\Big(a - \frac{\pi}{4r}\Big) \right],
+    \label{eq:param_shift_general}
+\end{equation}
+and a Pauli rotation, whose generator $P/2$ has eigenvalues $\pm 1/2$, gives $r = 1/2$ and the $\pm \pi/2$ shift of Equation~(\ref{eq:param_shift}).
+
+The rule differentiates an expectation with respect to one gate angle, whereas a feature $x_{k}$ enters the circuit of Equation~(\ref{eq:dru}) once in every layer, and the rule stops at the circuit input. By itself it therefore attributes no decision to an electrode, which is what exact channel attribution requires.
+%% paper-writing block materials-and-methods.mm-borrowed-machinery end
+%% paper-writing block materials-and-methods.mm-proposal begin sha256=fc423f8384cf8c4899a653cc21e8ea77f4d13196528436f3d273547c9ab3170d
+\subsection{Circular Data Re-Uploading (CDRU)}\label{sec:cdru}
+The proposed Hybrid DRU feeds the features of Equation~(\ref{eq:frontend}) to the re-uploading circuit of Equation~(\ref{eq:dru}) and changes the encoding of Equation~(\ref{eq:encoding_general}) in one place, closing the gap stated in Section~\ref{sec:dru}. Circular Data Re-Uploading (CDRU) fixes every encoding scale to one and keeps only the bias trainable:
+\begin{equation}
+    S_{l}(\mathbf{x}, \boldsymbol{\beta}_{l}) = \bigotimes_{j=1}^{N_{q}} R_{y}\big(x_{j} + \beta_{l,j}\big),
+    \label{eq:encoding}
+\end{equation}
+where $\boldsymbol{\beta}_{l} \in \mathbb{R}^{N_{q}}$ is the vector of encoding biases of layer $l$. With this encoding, the frequency set of Equation~(\ref{eq:fourier}) is exactly $\Omega = \{-L, \dots, L\}^{N_{q}}$, since each feature enters $L$ rotations of unit scale and a bias only shifts the phase of each frequency. The depth $L$ is therefore the single knob that sets which functions the classifier can represent, and that set is known before training, which is what a compact parameterization with verified expressivity requires.
+
+Each variational layer applies two trainable rotations per qubit followed by an entangling operator:
+\begin{equation}
+    W_{l}(\boldsymbol{\theta}_{l}) = V_{\mathrm{ent}} \bigotimes_{j=1}^{N_{q}} R_{z}\big(\theta^{(2)}_{l,j}\big)\, R_{y}\big(\theta^{(1)}_{l,j}\big),
+    \label{eq:variational}
+\end{equation}
+where $\boldsymbol{\theta}_{l} = \{\theta^{(1)}_{l,j}, \theta^{(2)}_{l,j}\}_{j=1}^{N_{q}}$ are the angles of layer $l$ and $V_{\mathrm{ent}}$ is the entangler. CDRU takes $V_{\mathrm{ent}}$ as a closed ring of controlled-NOT gates, so that no qubit sits at an open boundary:
+\begin{equation}
+    V_{\mathrm{ent}} = \left( \prod_{j=1}^{N_{q}-1} \mathrm{CNOT}_{j, j+1} \right) \mathrm{CNOT}_{N_{q}, 1},
+    \label{eq:ring}
+\end{equation}
+where $\mathrm{CNOT}_{j,k}$ has control qubit $j$ and target qubit $k$. The ring entangles every bipartition of the register, while the parameters $\boldsymbol{\theta}$ and $\boldsymbol{\beta}$ and the choice of $V_{\mathrm{ent}}$ change only the coefficients $c_{j, \boldsymbol{\omega}}$ of Equation~(\ref{eq:fourier}), never $\Omega$. The expectations of Equation~(\ref{eq:expectation}), collected in $\langle \mathbf{Z} \rangle = [\langle Z_{1} \rangle, \dots, \langle Z_{N_{q}} \rangle]^{\top}$, are mapped to the posterior by a linear readout and the logistic function $\sigma$:
+\begin{equation}
+    z = \mathbf{w}^{\top} \langle \mathbf{Z} \rangle(\mathbf{x}, \boldsymbol{\theta}, \boldsymbol{\beta}) + b, \qquad \hat{y} = \sigma(z),
+    \label{eq:readout}
+\end{equation}
+where $\mathbf{w} \in \mathbb{R}^{N_{q}}$ and $b \in \mathbb{R}$ are the readout weights and bias and $z$ is the logit. The trainable part of CDRU and its readout therefore holds
+\begin{equation}
+    |\boldsymbol{\theta}| + |\boldsymbol{\beta}| + |\mathbf{w}| + 1 = 2 L N_{q} + L N_{q} + N_{q} + 1
+    \label{eq:qcount}
+\end{equation}
+parameters, which grows linearly in $L$ and $N_{q}$, so the circuit adds few parameters to the front-end.
+
+\newpage
+\subsection{Analytical Saliency via Parameter-Shift Backpropagation}\label{sec:saliency}
+The second contribution carries the derivative of Equation~(\ref{eq:param_shift}) from the gate angles to the electrodes, closing the gap stated in Section~\ref{sec:attribution}. Because a feature $x_{k}$ and the bias $\beta_{l,k}$ enter the same rotation of Equation~(\ref{eq:encoding}), the derivative of an expectation with respect to $x_{k}$ is the sum, over the $L$ layers, of its derivatives with respect to the biases, each given exactly by Equation~(\ref{eq:param_shift}). The per-qubit attribution of window $\mathbf{X}$ is then
+\begin{equation}
+    a_{k}(\mathbf{X}) = \frac{\partial \hat{y}}{\partial x_{k}} = \hat{y}\,(1 - \hat{y}) \sum_{j=1}^{N_{q}} w_{j} \sum_{l=1}^{L} \frac{\partial \langle Z_{j} \rangle}{\partial \beta_{l,k}},
+    \label{eq:qubit_attribution}
+\end{equation}
+where $a_{k}(\mathbf{X})$ is the sensitivity of the posterior of Equation~(\ref{eq:readout}) to feature $k \in \{1, \dots, N_{q}\}$, evaluated at $\mathbf{x} = f_{\boldsymbol{\phi}}(\mathbf{X})$. The chain rule through the front-end of Equation~(\ref{eq:frontend}) carries this attribution to every electrode and sample:
+\begin{equation}
+    \mathcal{I}(c, t) = \left| \sum_{k=1}^{N_{q}} a_{k}(\mathbf{X})\, \frac{\partial f_{\boldsymbol{\phi}}(\mathbf{X})_{k}}{\partial X_{c,t}} \right|,
+    \label{eq:saliency}
+\end{equation}
+where $\mathcal{I}(c, t) \in \mathbb{R}_{\geq 0}$ is the saliency map, the instance of Equation~(\ref{eq:saliency_general}) for the Hybrid DRU. Every factor of Equation~(\ref{eq:saliency}) is an exact derivative of the trained model, so the map involves no surrogate model, no input perturbation and no finite-difference approximation. In state-vector simulation the same derivative is obtained by backpropagation through the simulated circuit, and the parameter-shift form of Equation~(\ref{eq:qubit_attribution}) is the one that applies when the circuit runs on quantum hardware.
+
+\subsection{General Combination and Subject-Level Inference}\label{sec:combination}
+The two contributions meet in one model, $\hat{y}_{i} = \sigma\big(\mathbf{w}^{\top} \langle \mathbf{Z} \rangle(f_{\boldsymbol{\phi}}(\mathbf{X}_{i}), \boldsymbol{\theta}, \boldsymbol{\beta}) + b\big)$, whose parameters $\boldsymbol{\Theta} = \{\boldsymbol{\phi}, \boldsymbol{\theta}, \boldsymbol{\beta}, \mathbf{w}, b\}$ are trained end to end by a binary cross-entropy in which every child weighs the same, whatever its number of windows:
+\begin{equation}
+    \mathcal{L}(\boldsymbol{\Theta}) = \frac{1}{S} \sum_{s=1}^{S} \frac{1}{n_{s}} \sum_{i \in \mathcal{I}_{s}} \Big[ \log\big(1 + e^{z_{i}}\big) - y_{s}\, z_{i} \Big] + \lambda_{w} \lVert \mathbf{w} \rVert_{2}^{2},
+    \label{eq:loss}
+\end{equation}
+where $z_{i}$ is the logit of Equation~(\ref{eq:readout}) for window $i$, $S$ is the number of training children, and $\lambda_{w} \geq 0$ is the readout penalty. The bracket is the cross-entropy of $\sigma(z_{i})$ written on the logit, and the weight $1/n_{s}$ aligns the objective with the subject decision of Equation~(\ref{eq:subject_decision}), so that a child with a longer recording does not dominate the fit. No penalty is placed on $\boldsymbol{\theta}$, because a rotation is periodic in its angle, whereas $\lambda_{w}$ bounds the logit through $|z| \leq \lVert \mathbf{w} \rVert_{1} + |b|$; the front-end weights are regularized by the decoupled weight decay $\lambda_{\boldsymbol{\phi}}$ applied by the optimizer rather than by a term of $\mathcal{L}$. At inference, the window posteriors of a child are averaged and thresholded by Equation~(\ref{eq:subject_decision}). Figure~\ref{fig:contribution_summary} summarizes the Hybrid DRU and its two contributions.
+\begin{figure}[t]
+\centering
+\includegraphics[width=\linewidth]{Figures/fig-contribution-summary.pdf}
+\caption{Overview of the proposed Hybrid DRU, from the windows of one child to its objective and its saliency map. The convolutional front-end maps each window to the features that enter the circuit, and two numbered panels hold the contributions in the order of this section: (1) Circular Data Re-Uploading (CDRU), the unit-scale, ring-entangled circuit that re-uploads the features in $L$ layers and returns one expectation per qubit; and (2) Analytical Saliency via Parameter-Shift Backpropagation, which chains the exact derivative of each qubit expectation to every electrode and sample. Solid arrows carry data, the dashed arrow carries the label into the subject-weighted objective, and red arrows carry exact gradients.}
+\label{fig:contribution_summary}
+\end{figure}
+%% paper-writing block materials-and-methods.mm-proposal end
+
+\section{Experimental Setup}\label{sec:setup}
+%% paper-writing block experimental-setup.es-preamble begin sha256=f071aaff14a4f831dde33faf8a3cfdd6ba9be0193104604e5771a09881e08532
+This section specifies the evaluation of the proposed Hybrid DRU: the two scenarios and the partition, the compared arms and the axes they sweep, the metrics, the statistical tests, the ablation and sensitivity design, and the training details under which every reported number was produced. Figure~\ref{fig:design} summarizes the resulting crossing.
+%% paper-writing block experimental-setup.es-preamble end
+%% paper-writing block experimental-setup.es-assessment begin sha256=38538d7e630c4a1b05089b985e86c435523c3bc16dc8662ade752835e363e049
+\subsection{Assessment and Method Comparison}\label{sec:assessment}
+The assessment was run on two scenarios, a controlled one and the real recordings. The first, a controlled scenario that stresses Fourier expressivity under a known ground truth, uses seeded synthetic EEG in which the rule that assigns the class is chosen, so the frequency a classifier must represent is known before any run. Each replicate holds 170 freshly generated children, 60 for training, 10 for validation and 100 for testing, with 12 windows of $C = 19$ channels and 256 samples at 128~Hz per child. Every window carries narrowband Theta (4--8~Hz), Alpha (8--12~Hz) and Beta (13--30~Hz) activity over an aperiodic background, mixed across neighbouring channels, with frontal eye-blink artefacts in a fraction of the windows; the class acts only through child-level latent variables that scale the Theta and Beta amplitudes of the fronto-central channels. Three rules define the class. Under the monotone rule, a child's log Theta/Beta offset $u_{s}$ is drawn around a class-dependent centre,
+\begin{equation}
+    u_{s} \sim \mathcal{N}\big((2 y_{s} - 1)\, d'/2,\; 1\big), \qquad \mathrm{BA}^{*} = \Phi(d'/2),
+    \label{eq:rule_monotone}
+\end{equation}
+where $d' \in \{3.0, 1.5, 1.0\}$ is the between-child separation, $\Phi$ the standard normal distribution function and $\mathrm{BA}^{*}$ the Bayes ceiling of the subject-level balanced accuracy defined in Equation~(\ref{eq:ba}). The interaction rule instead lets independent Gaussian Theta and Beta deviations $u^{\theta}_{s}$ and $u^{\beta}_{s}$ define the class by their agreement in sign,
+\begin{equation}
+    y_{s} = \mathbb{1}\big[\operatorname{sign}(u^{\theta}_{s}) = \operatorname{sign}(u^{\beta}_{s})\big],
+    \label{eq:rule_interaction}
+\end{equation}
+so that the log Theta/Beta ratio carries no class information; on noiseless latents the best linear rule reaches a balanced accuracy of 0.625 and a trigonometric readout of degree one reaches 1.0. The third, frequency-two rule draws a Theta deviation $u_{s}$ uniformly over $[-\pi, \pi)$ and defines the class through its second harmonic,
+\begin{equation}
+    y_{s} = \mathbb{1}\big[\cos(2 u_{s}) > 0\big],
+    \label{eq:rule_freq2}
+\end{equation}
+for which the best linear rule reaches 0.625, a degree-one readout 0.75 and a degree-two readout 1.0 on noiseless latents; by Equation~(\ref{eq:fourier}), only the Hybrid DRU with $L \geq 2$ reaches degree two. Label noise was applied to training children only: a seeded draw flipped the labels of a fraction $\rho \in \{0, 0.1, 0.2\}$ of them,
+\begin{equation}
+    \tilde{y}_{s} = \begin{cases} 1 - y_{s}, & s \in \mathcal{N}_{\rho}, \\ y_{s}, & \text{otherwise}, \end{cases}
+    \label{eq:label_noise}
+\end{equation}
+where $\mathcal{N}_{\rho}$ is the flipped subset of the training children, of size $\rho$ times their number; validation and test labels stayed clean. Two feature regimes were run. The end-to-end regime trained the front-end of Equation~(\ref{eq:frontend}) jointly with each readout, whereas the fixed regime replaced it by four fixed features per window, the log Theta and log Beta power of the frontal and of the central channels, mapped onto $[-\pi, \pi]$ by a min-max transform fitted on the training children, so that only the readout differs between arms. The fixed regime ran the monotone rule at each $d'$ without label noise and at $d' = 1.5$ with $\rho = 0.1$ and $0.2$, and the interaction and frequency-two rules with $\rho = 0$ and $0.2$, each condition on 8 replicates; the end-to-end regime ran the monotone rule at $d' = 3.0$ and $1.5$ without label noise and at $d' = 1.5$ with $\rho = 0.2$, each on 5 replicates. The second scenario stresses subject-level generalization on real data: the 120 children of Section~\ref{sec:dataset}, windowed by Equation~(\ref{eq:window}).
+
+Within the real scenario, the children were split by stratified 5-fold group cross-validation on the child identifier, so that all windows of one child fell in a single fold~\cite{saeb2017need,brookshire2024leakage}, and the whole cross-validation was repeated with five seeds (42, 123, 456, 789 and 1024), since a single seed understates the variance of a benchmark~\cite{bouthillier2021variance}. The repetition unit is the fold-by-seed block: each arm produced 25 scores, each from a model fitted without the 23 or 24 test children of its fold. Inside each fold, 20\% of the training children were drawn as validation children for early stopping, disjoint from the children the loss was fitted on. In the controlled scenario, cross-validation was replaced by fresh children: each replicate trained on its own 60 children, stopped on its 10 validation children and was scored once on its 100 test children, and no child was shared between replicates.
+
+On those folds, three axes were swept, each holding the front-end of Equation~(\ref{eq:frontend}) fixed. The readout axis compares the Hybrid DRU at $L = 3$; the Single-shot Angle arm, the same model at $L = 1$; and the Classical Linear probe, a model that replaces the circuit by $\hat{y} = \sigma(\mathbf{v}^{\top} \mathbf{x} + c)$ on the same four features, with $\mathbf{v} \in \mathbb{R}^{N_{q}}$ and $c \in \mathbb{R}$. The topology axis replaces the ring of Equation~(\ref{eq:ring}) at $L = 3$ by an open linear chain that drops $\mathrm{CNOT}_{N_{q},1}$ and keeps 3 gates per layer, and by a separable circuit, $V_{\mathrm{ent}} = \mathbb{I}$, with no entangling gate. The depth axis varies $L \in \{1, 2, 3, 4, 6\}$ with the ring. Table~\ref{tab:arms} lists the structure and the trainable parameters of every network arm.
+
+\begin{table}[t]
+\centering
+\caption{Structure of the compared network arms on 19-channel, 512-sample windows. Trainable parameters were counted from the implementation; the front-end of Equation~(\ref{eq:frontend}) holds 2,436 of them in every Hybrid DRU arm and in the Classical Linear probe.}
+\label{tab:arms}
+\footnotesize
+\begin{tabularx}{0.99\linewidth}{lYr}
+\toprule
+\textbf{Arm} & \textbf{Readout or architecture} & \textbf{Trainable parameters} \\
+\midrule
+Hybrid DRU ($L = 3$) & Front-end, CDRU with ring entangler, Equations~(\ref{eq:encoding})--(\ref{eq:readout}) & 2,477 \\
+Single-shot Angle ($L = 1$) & Front-end, one upload with ring entangler & 2,453 \\
+Classical Linear probe & Front-end, logistic readout on the four features & 2,441 \\
+EEGNet-8,2~\cite{lawhern2018eegnet} & Temporal, depthwise and separable convolutions, dense softmax layer & 1,922 \\
+ADHDeepNet~\cite{amini2024adhdeepnet} & 64 temporal filters of length 64, depth multiplier 8, squeeze-and-excitation ratio 16 & 226,466 \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+Beyond its own variants, the Hybrid DRU was compared with two published networks and one control under the same partition. EEGNet-8,2~\cite{lawhern2018eegnet}, ported to PyTorch from its authors' repository at commit 4a512e5, uses 8 temporal filters of length 64, depth multiplier 2, 16 separable filters of length 16 and max-norm limits of 1 and 0.25, and maps the flattened separable feature map $\mathbf{H}$ to class probabilities by $\operatorname{softmax}(\mathbf{W} \operatorname{vec}(\mathbf{H}) + \mathbf{b})$. ADHDeepNet~\cite{amini2024adhdeepnet}, reimplemented from its paper because its repository declares no license, uses 64 temporal filters of length 64, depth multiplier 8 and a squeeze-and-excitation ratio of 16. A duration-only control, a logistic regression $\bar{p}_{s} = \sigma(\gamma\, \tilde{d}_{s} + \delta)$ on each child's standardized recording duration $\tilde{d}_{s}$, with an $\ell_{2}$ penalty of inverse strength 1, measures how much of the label is predictable from recording length alone; it is reported beside the arms and enters no test.
+
+Every arm is scored on the general task through the subject decisions of Equation~(\ref{eq:subject_decision}), counting true positives $\mathrm{TP}$, false negatives $\mathrm{FN}$, true negatives $\mathrm{TN}$ and false positives $\mathrm{FP}$ over the test children, with ADHD as the positive class:
+\begin{equation}
+    \mathrm{Se} = \frac{\mathrm{TP}}{\mathrm{TP} + \mathrm{FN}}, \qquad \mathrm{Sp} = \frac{\mathrm{TN}}{\mathrm{TN} + \mathrm{FP}}, \qquad \mathrm{BA} = \frac{\mathrm{Se} + \mathrm{Sp}}{2},
+    \label{eq:ba}
+\end{equation}
+where $\mathrm{Se}$, $\mathrm{Sp}$ and $\mathrm{BA}$ are the sensitivity, the specificity and the balanced accuracy, respectively; the subject-level balanced accuracy, which is not inflated by unequal class sizes~\cite{brodersen2010balanced}, is the primary metric. The F1-score and the area under the receiver operating characteristic curve~\cite{hanley1982meaning} complete them:
+\begin{equation}
+    \mathrm{F1} = \frac{2\,\mathrm{TP}}{2\,\mathrm{TP} + \mathrm{FP} + \mathrm{FN}}, \qquad \mathrm{AUC} = \frac{1}{|\mathcal{P}|\,|\mathcal{Q}|} \sum_{s \in \mathcal{P}} \sum_{s' \in \mathcal{Q}} \Big( \mathbb{1}[\bar{p}_{s} > \bar{p}_{s'}] + \tfrac{1}{2}\, \mathbb{1}[\bar{p}_{s} = \bar{p}_{s'}] \Big),
+    \label{eq:f1auc}
+\end{equation}
+where $\mathcal{P}$ and $\mathcal{Q}$ are the test children with and without ADHD. The first requirement, a compact readout of verified expressivity, is measured in two ways. Expressivity is the subject-level balanced accuracy of Equation~(\ref{eq:ba}) on the frequency-two rule of Equation~(\ref{eq:rule_freq2}), set against the single-upload arm. Trainability across depth is the gradient variance over random initializations~\cite{mcclean2018barren,cerezo2021cost},
+\begin{equation}
+    \nu(L) = \frac{1}{2 L N_{q}} \sum_{r=1}^{2 L N_{q}} \operatorname{Var}_{\boldsymbol{\theta}, \boldsymbol{\beta}}\!\left[ \frac{\partial C}{\partial \vartheta_{r}} \right], \qquad C = \frac{1}{B N_{q}} \sum_{b=1}^{B} \sum_{j=1}^{N_{q}} \langle Z_{j} \rangle(\mathbf{x}_{b}, \boldsymbol{\theta}, \boldsymbol{\beta}),
+    \label{eq:gradvar}
+\end{equation}
+where $\vartheta_{r}$ runs over the $2 L N_{q}$ angles of Equation~(\ref{eq:variational}), $C$ is the mean expectation over a batch of $B$ inputs, and the variance is taken over random initializations of $\boldsymbol{\theta}$ and $\boldsymbol{\beta}$. Exact channel attribution is measured on the saliency map of Equation~(\ref{eq:saliency}), normalized per window to unit total mass. For electrode $c$, the saliency mass and the energy in a frequency band $\mathcal{B}$ are
+\begin{equation}
+    m_{c} = \frac{\sum_{t=1}^{T} \mathcal{I}(c, t)}{\sum_{c'=1}^{C} \sum_{t=1}^{T} \mathcal{I}(c', t)}, \qquad E_{c}^{\mathcal{B}} = \int_{\mathcal{B}} P_{c}(f)\, \mathrm{d}f,
+    \label{eq:saliency_measures}
+\end{equation}
+where $P_{c}(f)$ is the Hann-windowed periodogram of the normalized map of electrode $c$, with Theta $= [4, 8)$~Hz and Beta $= [13, 30)$~Hz. Both are computed per window on the test windows of children with ADHD that the model classified as ADHD, averaged per child within each repetition and then over that child's repetitions, so each child contributes one value; a region's value is the mean over its electrodes. The fronto-central region is $\{$Fp1, Fp2, F3, F4, Fz, Cz$\}$, the temporal-occipital region $\{$T3, T4, T5, T6, O1, O2$\}$, and the parietal region $\{$P3, P4, Pz$\}$ is reported descriptively.
+
+What the metrics leave unmeasured is read qualitatively: the per-electrode means of $m_{c}$, $E_{c}^{\mathrm{Theta}}$ and $E_{c}^{\mathrm{Beta}}$ are drawn as scalp maps. Each of the four learned features, averaged over a child's windows, was also contrasted with four biomarkers the ADHD literature reports, computed from the raw signal of the same children~\cite{snyder2006clinical,arns2013evaluating}: frontal Theta power, central Beta power, the Theta/Beta ratio and inter-hemispheric frontal coherence. This contrast is descriptive: nothing in the model imposes it. No faithfulness measure of the saliency map, such as a deletion or perturbation score against competing attribution methods, was computed; exact channel attribution is therefore evaluated by its regional test and its maps only.
+
+Whether a difference between those scores is significant was decided by tests fixed before the runs, with $\alpha = 0.05$ and Holm correction~\cite{holm1979simple} within each experiment unless stated. On the real data, the three readout arms were compared by the Friedman test over the 25 fold-by-seed blocks~\cite{demsar2006statistical}, and the Hybrid DRU against each of the other two by the corrected resampled $t$-test~\cite{nadeau2003inference}, a test that accounts for the training children the folds share, with Cohen's $d$; McNemar's test on per-child decisions~\cite{dietterich1998approximate} and DeLong's test on the AUC~\cite{delong1988comparing} complemented it, with each child's posterior averaged over its five out-of-fold repetitions. Non-inferiority to EEGNet was tested by the one-sided corrected resampled $t$-test with margin $\delta = 0.03$ of subject-level balanced accuracy~\cite{lakens2017equivalence}. The three topologies were compared by the Friedman test on the subject-level F1-score and balanced accuracy, followed by Holm-corrected rank $z$-tests and a critical-difference diagram~\cite{demsar2006statistical}, with Cliff's $\delta$ and a paired bootstrap interval. For depth, the decrease of $\log_{10} \nu(L)$ was tested by Page's trend test over 100 initializations and by the ordinary least-squares slope of $\log_{10} \nu(L)$ on $L$, with its $t$ interval and a percentile bootstrap interval over initializations; the trend of test balanced accuracy over $L$ was tested by Page's test over the 25 blocks, and the best depth was compared with its neighbours by the corrected resampled $t$-test. The two regions were compared by the one-sided Wilcoxon signed-rank test over children, Holm-corrected across Theta and Beta at $\alpha = 0.01$, with the rank-biserial correlation and a bootstrap interval, and checked by a sign-flip permutation test with 10,000 permutations. The sixteen feature-by-biomarker Spearman correlations were tested by permutation and corrected by the Benjamini-Hochberg procedure. In the controlled scenario, arms were compared by the exact Wilcoxon signed-rank test over paired replicates; the confirmatory family is the Hybrid DRU against the Single-shot Angle arm on the frequency-two rule at $\rho = 0$ and $0.2$, and each quantum arm against the Classical Linear probe on the interaction rule forms an exploratory family. The success criteria, also fixed before the runs, were a subject-level balanced accuracy of at least 0.85 with superiority over both readout comparators and non-inferiority to EEGNet; a circular-over-separable F1-score gain of at least 0.03; a depth slope interval excluding zero; fronto-central saliency above temporal-occipital saliency in both bands; and, in the controlled scenario, the frequency-two contrast together with two checks, every arm within 0.05 of $\mathrm{BA}^{*}$ on the monotone rule and the Classical Linear probe at or below 0.675 on the interaction and frequency-two rules in the fixed regime.
+
+To isolate what each contribution adds, each one has variants that remove it or replace it with the borrowed piece it modifies. CDRU is ablated three ways: the Single-shot Angle arm replaces re-uploading by one upload, the Classical Linear probe removes the circuit, and the linear-chain and separable topologies replace the ring of Equation~(\ref{eq:ring}). Analytical saliency has no ablation variant: it is computed on the trained model and does not enter its decisions, and removing it changes no prediction. Two sensitivity sweeps were run: the depth $L \in \{1, 2, 3, 4, 6\}$ on the real data, and, in the controlled scenario, the separation $d'$ and the label-noise rate $\rho$, the latter summarized per arm and regime by the slope of balanced accuracy on $\rho$ with its 95\% interval.
+
+Figure~\ref{fig:design} shows the crossing on the real data: the 120 children enter, the Hybrid DRU alone goes through hyperparameter optimization (HPO) per outer fold and is compared with its readout, topology and depth variants and with the competing methods, and every arm is scored on the same 5 folds by 5 seeds, the repetition unit, before the test of each experiment is applied: E1 for the readout arms and competing methods, E2 for the entanglement topology, E3 for depth and gradient variance, and E4 for the saliency by region and band; above it, the controlled scenario feeds E5 on synthetic replicates.
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=0.8\linewidth]{Figures/fig-experimental-design.pdf}
+\caption{Experimental design over the two scenarios. On the real data, from left to right: the 120 children windowed into 4~s epochs enter; the Hybrid DRU alone is tuned per outer fold and its values are frozen; every arm is trained and scored on the same 5 folds by 5 seeds, the repetition unit over which each reported mean and dispersion are computed; and four branches apply E1 (readout arms and competing methods), E2 (entanglement topology), E3 (depth and gradient variance) and E4 (saliency by region and band). Above them, the controlled scenario (E5) enters with seeded synthetic EEG whose class rule is known and reaches the significance tables on synthetic replicates instead of folds.}
+\label{fig:design}
+\end{figure}
+%% paper-writing block experimental-setup.es-assessment end
+%% paper-writing block experimental-setup.es-training-details begin sha256=3bb74355dd6f75a8c0049dd565d39a722233cc5baa7ab56d6080913cd219aa79
+\subsection{Training Details}\label{sec:training}
+Training started from real data prepared once, as described in Section~\ref{sec:dataset}: child v56p was excluded, no window was rejected, and every arm received the same notch-filtered, band-passed, re-referenced 4~s windows with 50\% overlap. Each child's recording duration was recorded beside its windows for the duration-only control.
+
+From those windows, the fold assignments of the five repetitions were computed once by stratified group $k$-fold on the diagnostic class and stored with the prepared data, so every arm and every experiment read the same folds, and the inner validation children of each fold were drawn from its training children with a seed derived from the repetition seed and the fold index.
+
+Within each fold, every network was trained with AdamW~\cite{loshchilov2019decoupled}, with the decoupled weight decay $\lambda_{\boldsymbol{\phi}}$ applied to the front-end weights only and the readout penalty $\lambda_{w}$ applied inside Equation~(\ref{eq:loss}); the learning rate followed a cosine annealing schedule~\cite{loshchilov2017sgdr} over 100 epochs down to zero, training ran for at most 100 epochs, and it stopped early~\cite{caruana2000overfitting} when the subject-weighted cross-entropy of the validation children had not improved for 10 epochs, the best epoch being kept. The circuit was simulated as a state vector in complex128 precision. EEGNet and ADHDeepNet ran under the same optimizer, epoch budget and stopping rule but kept the settings their sources publish instead of a search: EEGNet with learning rate 0.001, mini-batch size 16, dropout 0.25 and no weight decay, the values of its authors' repository at the pinned commit; ADHDeepNet with learning rate 0.0005, mini-batch size 128, dropout 0.5 and max-norm 10, the best fold-1 configuration printed by its authors' notebook. In the controlled scenario no search was run, so every arm received the same settings: mini-batch size 64, $\lambda_{\boldsymbol{\phi}} = \lambda_{w} = 10^{-4}$ and dropout 0.25; the end-to-end regime used learning rate 0.001, at most 100 epochs and patience 10, and the fixed regime used learning rate 0.01, at most 200 epochs and patience 20. The fixed-regime budget is an amendment: a first run with the end-to-end budget failed the monotone check for the single-upload arm while most runs reached the epoch cap still improving, and the larger budget was then selected on separate generator seeds (101 to 108), never on the evaluated replicates (seeds 1 to 8 in the fixed regime and 1 to 5 in the end-to-end regime). The gradient variance of Equation~(\ref{eq:gradvar}) was estimated for each depth over 100 initializations with $\boldsymbol{\theta}$ and $\boldsymbol{\beta}$ drawn uniformly from $[0, 2\pi)$, on a batch of $B = 32$ inputs drawn uniformly from $[-\pi, \pi]^{4}$ with seed 42.
+
+The values that training depends on were searched for the Hybrid DRU only, with Optuna~\cite{akiba2019optuna} and its tree-structured Parzen estimator sampler~\cite{bergstra2011algorithms}. Inside each outer fold, so that the error estimate stays unbiased by the search as nested cross-validation requires~\cite{varma2006bias}, 30 trials were run as two sub-studies of 15 with sampler seeds 42 and 43 and a median pruner; each trial trained once on seed 42 over the fit children and was scored by the subject-weighted cross-entropy of Equation~(\ref{eq:loss}) on the fold's validation children at its best epoch, so the test children of the fold were never seen. The search space was a learning rate in $[10^{-4}, 10^{-2}]$, $\lambda_{\boldsymbol{\phi}} \in [10^{-5}, 10^{-3}]$ and $\lambda_{w} \in [10^{-5}, 10^{-3}]$, all on a logarithmic scale, a mini-batch size in $\{32, 64, 128\}$ and a dropout rate $p \in [0, 0.5]$. The depth $L$, the entangler $V_{\mathrm{ent}}$, the number of qubits $N_{q}$ and the unit encoding scale were never tuned. The values selected for each outer fold, listed in Table~\ref{tab:hpo}, were frozen for its five seeds and reused by the single-upload arm, the linear probe and the topology and depth variants, so that these arms differ only in their readout. With only the Hybrid DRU searched on these data, every comparison with another arm carries a tuning advantage in its favour.
+
+\begin{table}[t]
+\centering
+\caption{Hyperparameters selected by the nested search for each outer fold and reused by every Hybrid DRU variant and the Classical Linear probe.}
+\label{tab:hpo}
+\footnotesize
+\begin{tabular}{lccccc}
+\toprule
+\textbf{Outer fold} & \textbf{Learning rate} & $\boldsymbol{\lambda_{\phi}}$ & $\boldsymbol{\lambda_{w}}$ & \textbf{Mini-batch} & \textbf{Dropout $p$} \\
+\midrule
+1 & $3.2 \times 10^{-4}$ & $8.2 \times 10^{-5}$ & $1.3 \times 10^{-4}$ & 128 & 0.16 \\
+2 & $5.6 \times 10^{-4}$ & $8.0 \times 10^{-4}$ & $2.9 \times 10^{-4}$ & 32 & 0.03 \\
+3 & $2.3 \times 10^{-4}$ & $2.3 \times 10^{-5}$ & $4.1 \times 10^{-5}$ & 32 & 0.31 \\
+4 & $2.9 \times 10^{-3}$ & $1.7 \times 10^{-5}$ & $2.9 \times 10^{-4}$ & 64 & 0.11 \\
+5 & $2.7 \times 10^{-3}$ & $9.8 \times 10^{-5}$ & $6.2 \times 10^{-4}$ & 32 & 0.06 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+As with the search, everything that required a reference, namely the hyperparameters, the early-stopping epoch, the scaler of the duration-only control and the min-max map of the fixed-regime features, was fitted on the training children of each fold or replicate only, and no window of a test child entered any fit~\cite{brookshire2024leakage}.
+
+The models and the state-vector simulator behind these runs were written in PyTorch. The real-data runs of every arm and the hyperparameter search ran on Kaggle GPU notebooks with Python 3.13.15 and PyTorch 2.11.0 built for CUDA 12.8, one service per campaign; the run records store the CUDA device but not its model, and the timing probes that preceded the campaign ran on NVIDIA Tesla T4 accelerators. The gradient variance and the fixed regime of the controlled scenario ran on a local CPU with Python 3.12.15 and PyTorch 2.14.1, and the end-to-end regime on a Google Colab GPU. The implementation and the experiment runs were generated and executed by AI agents in the Antigravity harness; a separate reviewing agent checked the code against the approved protocol with its test suite, and the authors approved that protocol before the full runs.
+%% paper-writing block experimental-setup.es-training-details end
+
+\section{Results and Discussion}\label{sec:results}
+%% paper-writing block results-and-discussion.rd-general-task begin sha256=ef1d3c7aafc4d2673095428a49382e909023c7b590da54761d87e51d2db716f1
+\subsection{Controlled Scenario: Pipeline Check under a Known Ground Truth}\label{sec:res_controlled}
+Table~\ref{tab:e5} presents the subject-level balanced accuracy of the three readout arms in the controlled scenario, beside the Bayes ceiling $\Phi(d'/2)$ of Equation~(\ref{eq:rule_monotone}) wherever the rule has one. On the monotone rule every arm landed close to that ceiling: in the fixed regime at $d' = 3.0$, the Hybrid DRU, Single-shot Angle and Classical Linear arms reached 0.914, 0.903 and 0.925 against 0.933, and in the end-to-end regime at the same separation they reached 0.916, 0.914 and 0.914 (Table~\ref{tab:e5}, monotone rows). The agreement shows that the windowing, the subject-weighted training and the subject decision of Equation~(\ref{eq:subject_decision}) recover the information the generator places in the data, so the arms can be compared on what they represent rather than on how they are trained. At $d' = 1.5$ in the end-to-end regime, the three arms slightly exceeded the ceiling of 0.773 (0.782, 0.780 and 0.800), as sampling variation over 5 replicates of 100 test children allows around a ceiling that holds only in expectation.
+
+The pipeline check did not hold in every cell. In the fixed regime at the weakest separation, $d' = 1.0$, the single-upload arm reached 0.629 against a ceiling of 0.691, outside the declared tolerance of 0.05, whereas the Hybrid DRU (0.668) and the Classical Linear probe (0.678) stayed within it (Table~\ref{tab:e5}, row $d' = 1.0$). A single-upload readout that still under-fits when the class signal is weakest, even under the amended fixed-regime budget, would produce this shortfall; the controlled criterion was therefore met only in part, and this lowest monotone cell should not be read as a capacity limit. The construction check held: in the fixed regime the Classical Linear probe stayed at or below 0.675 on the interaction rule (0.538 and 0.491) and on the frequency-two rule (0.509 at both noise rates). The fixed front-end thus offers no linear shortcut to the non-monotone rules, and any arm above that level owes it to its readout. With the known ceiling reached in 14 of the 15 arm-by-cell checks, the comparisons of the next blocks can be read as differences between readouts.
+
+\begin{table}[t]
+\centering
+\caption{Subject-level balanced accuracy in the controlled scenario, mean over the replicates (8 in the fixed regime, 5 in the end-to-end regime). The ceiling is $\Phi(d'/2)$ for the monotone rule; on noiseless latents the interaction rule caps a linear readout at 0.625 and the frequency-two rule caps linear and degree-one readouts at 0.625 and 0.75. The slope rows give the change of balanced accuracy per unit of the label-noise rate $\rho$ and its 95\% interval. Confirmatory tests, Hybrid DRU against Single-shot on the frequency-two rule over 8 paired replicates: exact Wilcoxon $W = 36$, Holm-adjusted $p = 0.016$, rank-biserial 1.000, mean difference in $[0.134, 0.284]$ without and $[0.105, 0.199]$ with label noise; exploratory tests of each quantum arm against Linear on the interaction rule: Holm-adjusted $p = 0.016$. Bold marks the best arm in each accuracy row.}
+\label{tab:e5}
+\footnotesize
+\setlength{\tabcolsep}{4pt}
+\begin{tabular}{lcccc}
+\toprule
+\textbf{Condition} & \textbf{Ceiling} & \textbf{Hybrid DRU} & \textbf{Single-shot} & \textbf{Linear} \\
+\midrule
+\multicolumn{5}{l}{\textit{Fixed front-end regime}} \\
+Monotone, $d'{=}3.0$ & 0.933 & 0.914 & 0.903 & \textbf{0.925} \\
+Monotone, $d'{=}1.5$ & 0.773 & 0.771 & 0.771 & \textbf{0.790} \\
+Monotone, $d'{=}1.0$ & 0.691 & 0.668 & 0.629 & \textbf{0.678} \\
+Monotone, $d'{=}1.5$, $\rho{=}0.1$ & 0.773 & 0.771 & 0.761 & \textbf{0.788} \\
+Monotone, $d'{=}1.5$, $\rho{=}0.2$ & 0.773 & 0.765 & 0.760 & \textbf{0.785} \\
+Interaction & -- & 0.793 & \textbf{0.805} & 0.538 \\
+Interaction, $\rho{=}0.2$ & -- & 0.708 & \textbf{0.785} & 0.491 \\
+Frequency-two & -- & \textbf{0.731} & 0.524 & 0.509 \\
+Frequency-two, $\rho{=}0.2$ & -- & \textbf{0.688} & 0.538 & 0.509 \\
+Slope on $\rho$ & -- & $-0.031$ & $-0.056$ & $-0.025$ \\
+\quad 95\% interval & -- & $[-0.131, 0.069]$ & $[-0.188, 0.063]$ & $[-0.069, 0.012]$ \\
+\midrule
+\multicolumn{5}{l}{\textit{End-to-end regime}} \\
+Monotone, $d'{=}3.0$ & 0.933 & \textbf{0.916} & 0.914 & 0.914 \\
+Monotone, $d'{=}1.5$ & 0.773 & 0.782 & 0.780 & \textbf{0.800} \\
+Monotone, $d'{=}1.5$, $\rho{=}0.2$ & 0.773 & \textbf{0.762} & 0.756 & 0.748 \\
+Slope on $\rho$ & -- & $-0.100$ & $-0.120$ & $-0.260$ \\
+\quad 95\% interval & -- & $[-0.220, 0.020]$ & $[-0.230, -0.010]$ & $[-0.380, -0.180]$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Diagnostic Performance under Leakage-Free Subject-Level Evaluation}\label{sec:res_general}
+Table~\ref{tab:e1} presents the subject-level metrics of the five network arms and the duration-only control on the 120 children, each as a mean and standard deviation over the 25 cross-validation blocks. The Hybrid DRU scored a balanced accuracy of $0.683 \pm 0.108$, against $0.708 \pm 0.100$ for the Single-shot Angle arm, $0.689 \pm 0.090$ for the Classical Linear probe, $0.694 \pm 0.076$ for EEGNet and $0.631 \pm 0.119$ for ADHDeepNet (Table~\ref{tab:e1}, Balanced accuracy column). The five arms span less than 0.08 of balanced accuracy while each varies by about 0.1 across blocks: on 23 or 24 test children per fold, the choice of fold moves the score more than the choice of architecture does, as cross-validation on samples of this size is known to do~\cite{varoquaux2018cross}.
+
+The arms differ more in their operating point than in their discrimination. The Hybrid DRU had the highest sensitivity, $0.889 \pm 0.118$, and one of the lowest specificities, $0.477 \pm 0.266$, whereas EEGNet traded $0.800 \pm 0.127$ against $0.587 \pm 0.167$ (Table~\ref{tab:e1}, Sensitivity and Specificity columns). Its area under the curve, $0.750 \pm 0.096$, did not exceed those of EEGNet ($0.770 \pm 0.087$) or ADHDeepNet ($0.779 \pm 0.104$), and the higher sensitivity therefore reflects a subject posterior shifted towards the ADHD class at the threshold of Equation~(\ref{eq:subject_decision}) rather than a better ranking of the children, the property the threshold-free area under the curve measures~\cite{hanley1982meaning}. No test of sensitivity was declared; the difference is descriptive and is bought with the specificity of the same arm. The duration-only control reached $0.656 \pm 0.037$ and an area under the curve of $0.653 \pm 0.031$ from recording length alone (Table~\ref{tab:e1}, last row). Part of what separates the two groups in this cohort is thus available without any EEG content, a confound of the kind decoding analyses must control~\cite{snoek2019confounds}, and it bounds the margin an EEG classifier can claim over it, 0.027 for the Hybrid DRU.
+
+\begin{table}[t]
+\centering
+\caption{Subject-level performance on the 120 children under subject-wise cross-validation, mean $\pm$ standard deviation over the 25 fold-by-seed blocks. The duration-only control is a logistic regression on recording duration. Bold marks the best network arm for each metric.}
+\label{tab:e1}
+\footnotesize
+\setlength{\tabcolsep}{4pt}
+\begin{tabular}{lccccc}
+\toprule
+\textbf{Arm} & \textbf{\begin{tabular}[c]{@{}c@{}}Balanced\\accuracy\end{tabular}} & \textbf{Sensitivity} & \textbf{Specificity} & \textbf{F1-score} & \textbf{AUC} \\
+\midrule
+Hybrid DRU ($L{=}3$) & $0.683 \pm 0.108$ & $\mathbf{0.889} \pm 0.118$ & $0.477 \pm 0.266$ & $0.745 \pm 0.067$ & $0.750 \pm 0.096$ \\
+Single-shot ($L{=}1$) & $\mathbf{0.708} \pm 0.100$ & $0.858 \pm 0.145$ & $0.558 \pm 0.226$ & $\mathbf{0.751} \pm 0.085$ & $0.757 \pm 0.097$ \\
+Linear probe & $0.689 \pm 0.090$ & $0.803 \pm 0.154$ & $0.575 \pm 0.202$ & $0.722 \pm 0.086$ & $0.733 \pm 0.095$ \\
+EEGNet~\cite{lawhern2018eegnet} & $0.694 \pm 0.076$ & $0.800 \pm 0.127$ & $\mathbf{0.587} \pm 0.167$ & $0.725 \pm 0.067$ & $0.770 \pm 0.087$ \\
+ADHDeepNet~\cite{amini2024adhdeepnet} & $0.631 \pm 0.119$ & $0.842 \pm 0.267$ & $0.421 \pm 0.356$ & $0.679 \pm 0.171$ & $\mathbf{0.779} \pm 0.104$ \\
+\midrule
+Duration-only & $0.656 \pm 0.037$ & $0.601 \pm 0.056$ & $0.712 \pm 0.044$ & $0.638 \pm 0.043$ & $0.653 \pm 0.031$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Figure~\ref{fig:e1_convergence} shows how the arms reached these scores. The training loss of EEGNet and ADHDeepNet fell close to zero before their runs stopped, and the validation loss of ADHDeepNet rose sharply while its training loss was still falling (Figure~\ref{fig:e1_convergence}, right panel), the pattern of a network fitting its training children faster than it generalizes to the validation children~\cite{caruana2000overfitting}. The Hybrid DRU's training loss instead decreased slowly and stayed the highest of all arms, and its runs stopped later (Figure~\ref{fig:e1_convergence}, left panel), as expected from the bounded logit of Equation~(\ref{eq:readout}), $|z| \leq \lVert \mathbf{w} \rVert_{1} + |b|$, limiting how confidently the readout can fit any child. Only two of its 25 runs trained beyond 57 epochs, so the end of its curve, including the step near the 100-epoch cap, follows one or two runs rather than the mean of the 25.
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=\linewidth]{Figures/fig-e1-convergence.pdf}
+\caption{Training loss (left) and validation loss (right) per epoch for the Hybrid DRU ($L=3$), single-shot angle encoding ($L=1$), classical linear (4D), EEGNet and ADHDeepNet arms. Lines are means and shaded bands $\pm 1$ standard deviation over the 25 fold-by-seed blocks of the subject-wise cross-validation.}
+\label{fig:e1_convergence}
+\end{figure}
+
+Table~\ref{tab:e1_tests} gives the declared tests. The Friedman test found no difference among the three readout arms ($\chi^{2} = 4.085$, $p = 0.130$, Kendall's $W = 0.082$), and the corrected resampled $t$-test found none between the Hybrid DRU and the single-upload arm ($t = -0.448$, Holm-adjusted $p = 1.000$, Cohen's $d = -0.241$) or the Classical Linear probe ($t = -0.085$, Holm-adjusted $p = 1.000$); McNemar's and DeLong's tests on the pooled per-child posteriors agreed (Holm-adjusted $p = 1.000$ and $0.536$). Against EEGNet the mean difference was $-0.011$, but the one-sided 95\% lower bound of $-0.119$ lies below the margin of $-0.03$ ($p = 0.382$), so non-inferiority was not established (Table~\ref{tab:e1_tests}, last row). The corrected test widens the interval for the training children that folds share, and a difference of one or two hundredths cannot be resolved when the blocks vary by about 0.1; the comparison is underpowered on 120 children, and the result does not show that the arms are equivalent~\cite{altman1995absence}. The pre-specified criterion of a balanced accuracy of at least 0.85 with superiority over both readout comparators and non-inferiority to EEGNet was not met.
+
+\begin{table}[t]
+\centering
+\caption{Declared tests on subject-level balanced accuracy over the 25 fold-by-seed blocks; McNemar and DeLong use each child's posterior averaged over its five out-of-fold repetitions. The interval is that of the effect size, one-sided for non-inferiority; the Friedman and non-inferiority rows give unadjusted $p$, since neither belongs to a corrected family.}
+\label{tab:e1_tests}
+\footnotesize
+\begin{tabularx}{0.99\linewidth}{Ycccc}
+\toprule
+\textbf{Comparison and test} & \textbf{Statistic} & \textbf{Holm-adjusted $p$} & \textbf{Effect size} & \textbf{95\% interval} \\
+\midrule
+Three readout arms, Friedman & $\chi^{2} = 4.085$ & 0.130 & $W = 0.082$ & -- \\
+Hybrid DRU vs.\ Single-shot, corrected $t$ & $t = -0.448$ & 1.000 & $d = -0.241$ & $[-1.353, 0.870]$ \\
+Hybrid DRU vs.\ Linear, corrected $t$ & $t = -0.085$ & 1.000 & $d = -0.046$ & $[-1.157, 1.066]$ \\
+Hybrid DRU vs.\ Linear, McNemar & 6.000 & 1.000 & $\Delta\mathrm{acc} = -0.008$ & $[-0.067, 0.051]$ \\
+Hybrid DRU vs.\ Linear, DeLong & $z = 1.108$ & 0.536 & $\Delta\mathrm{AUC} = 0.026$ & $[-0.020, 0.072]$ \\
+Hybrid DRU vs.\ EEGNet, non-inferiority & $t = 0.304$ & 0.382 & $\Delta\mathrm{BA} = -0.011$ & $[-0.119, +\infty)$ \\
+\bottomrule
+\end{tabularx}
+\end{table}
+%% paper-writing block results-and-discussion.rd-general-task end
+%% paper-writing block results-and-discussion.rd-contribution-blocks begin sha256=bf4a20e18071b4e39ffd6c24119f7b9c21522fb147b5bb43758ffb9977c96994
+\subsection{Circular Data Re-Uploading: Compact Parameterization with Verified Expressivity}\label{sec:res_cdru}
+The general task left the Hybrid DRU indistinguishable from its single-upload and linear counterparts, and the question is whether the expressivity CDRU guarantees is present at all. The controlled scenario isolates it: only there is the frequency a rule needs known. On the frequency-two rule of Equation~(\ref{eq:rule_freq2}) in the fixed regime, the Hybrid DRU scored 0.731, against 0.524 for the single-upload arm and 0.509 for the linear probe, and 0.688 against 0.538 and 0.509 with 20\% label noise (Table~\ref{tab:e5}, frequency-two rows). The Hybrid DRU won in all 8 paired replicates at both noise rates (Wilcoxon $W = 36$, Holm-adjusted $p = 0.016$, rank-biserial correlation 1.000), with mean differences of 0.134 to 0.284 and 0.105 to 0.199 at 95\% confidence. The gap follows from the formulation. By Equation~(\ref{eq:fourier}) with unit-scale encoding, a single upload gives each feature frequency at most one~\cite{schuld2021effect} and stays near chance on a rule that needs frequency two, whereas three uploads reach it. The Hybrid DRU nevertheless stayed below the degree-one ceiling of 0.75, far from the degree-two ceiling of 1.0; with about 15 training children in each of the rule's four arcs, this is consistent with a readout that can represent the rule but has too few children to fit it.
+
+The interaction rule, already within reach of a degree-one readout, provides the matching control. There the single-upload arm reached 0.805 and the Hybrid DRU 0.793, both above the Classical Linear probe at 0.538 (Table~\ref{tab:e5}, interaction rows; exploratory Wilcoxon tests against the probe, Holm-adjusted $p = 0.016$ for each arm), and with 20\% label noise the Hybrid DRU fell to 0.708 while the single-upload arm kept 0.785. Extra uploads help only when the rule needs a higher frequency, and the drop under label noise suggests that the larger function class of three uploads also fits flipped labels more readily, as larger function classes are known to~\cite{zhang2017rethinking}. The parameterization stayed compact: the circuit and readout add 41 trainable parameters to the 2,436 of the front-end, for 2,477 in total, close to the 1,922 of EEGNet and about 1\% of the 226,466 of ADHDeepNet (Table~\ref{tab:arms}).
+
+The verified expressivity did not transfer to the clinical task. On the 120 children, the Hybrid DRU's balanced accuracy was statistically indistinguishable from that of the single-upload arm and of the linear probe (Table~\ref{tab:e1_tests}, corrected $t$ rows, Holm-adjusted $p = 1.000$ for both). The absence of a difference suggests either that the class information carried by four learned features of this cohort needs no frequency above one, or that the jointly trained front-end absorbs the nonlinearity the readout would otherwise supply, the case the fixed regime was built to exclude. CDRU thus delivers the frequency it promises where that frequency is known to matter, at a cost of tens of parameters, yet this capacity is not what limits accuracy on the present cohort.
+
+\subsection{Analytical Saliency: Exact Channel Attribution}\label{sec:res_saliency}
+Once CDRU's capacity is established, the next question is which electrodes the trained Hybrid DRU is sensitive to, read through the saliency map of Equation~(\ref{eq:saliency}) on the test windows of children with ADHD that it classified correctly. Figure~\ref{fig:e4_saliency} shows the per-electrode means over the 61 children with ADHD. The saliency mass peaked at F3, followed by Fz, and the Theta and Beta energy maps peaked over the same left-frontal and midline-frontal sites (Figure~\ref{fig:e4_saliency}, left, centre and right panels). Such a pattern fits a classifier whose decisions depend most on frontal activity, read through the two bands in which increased Theta power and decreased Beta power have been reported in ADHD~\cite{snyder2006clinical}. The maximum lies at a left-frontal electrode rather than at the midline sites Fz and Cz, so the map supports a regional reading rather than a claim about any single electrode.
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=\linewidth]{Figures/fig-e4-saliency-topomap.pdf}
+\caption{Scalp maps of per-channel subject means over correctly classified ADHD windows: saliency mass from analytical parameter-shift backpropagation (left), theta band energy, 4--8~Hz (centre), and beta band energy, 13--30~Hz (right), the last two in units of $10^{-9}$. Solid square frames mark the fronto-central electrodes and dashed rounded frames the temporal-occipital ones; T7/T8/P7/P8 stand for the protocol's T3/T4/T5/T6 (mapping unverified).}
+\label{fig:e4_saliency}
+\end{figure}
+
+Table~\ref{tab:e4_regions} quantifies the regional reading. The fronto-central region carried a mean saliency mass of 0.059 per electrode against 0.047 for the temporal-occipital region, and Theta and Beta saliency energies of $1.45$ and $2.04 \times 10^{-9}$ against $0.74$ and $1.24 \times 10^{-9}$ (Table~\ref{tab:e4_regions}, first two rows). In every one of the 61 children and in both bands, the fronto-central energy exceeded the temporal-occipital energy (one-sided Wilcoxon $W^{+} = 1891$, Holm-adjusted $p = 1.1 \times 10^{-11}$, rank-biserial correlation 1.000), so the declared criterion at $\alpha = 0.01$ was met. The parietal region, reported descriptively, carried 0.055 per electrode, closer to the fronto-central value than to the temporal-occipital one (Table~\ref{tab:e4_regions}, third row). The test therefore separates the frontal from the temporal-occipital scalp rather than isolating the fronto-central electrodes from the rest.
+
+\begin{table}[t]
+\centering
+\caption{Saliency of the Hybrid DRU by region, mean over the 61 children with ADHD: fronto-central (Fp1, Fp2, F3, F4, Fz, Cz), temporal-occipital (T3, T4, T5, T6, O1, O2) and parietal (P3, P4, Pz). Mass is per electrode; the share is the region's fraction of the total mass; band energies are in units of $10^{-9}$. Fronto-central versus temporal-occipital, one-sided Wilcoxon signed-rank over children, Theta and Beta: $W^{+} = 1891$, Holm-adjusted $p = 1.1 \times 10^{-11}$, rank-biserial 1.000; sign-flip permutation check $p = 1.0 \times 10^{-4}$ with 10,000 permutations. The parietal region enters no test. Bold marks the largest value in each column.}
+\label{tab:e4_regions}
+\footnotesize
+\begin{tabular}{lcccc}
+\toprule
+\textbf{Region} & \textbf{\begin{tabular}[c]{@{}c@{}}Mass per\\electrode\end{tabular}} & \textbf{\begin{tabular}[c]{@{}c@{}}Share of\\mass\end{tabular}} & \textbf{\begin{tabular}[c]{@{}c@{}}Theta\\energy\end{tabular}} & \textbf{\begin{tabular}[c]{@{}c@{}}Beta\\energy\end{tabular}} \\
+\midrule
+Fronto-central & \textbf{0.059} & \textbf{0.357} & \textbf{1.45} & \textbf{2.04} \\
+Temporal-occipital & 0.047 & 0.279 & 0.74 & 1.24 \\
+Parietal & 0.055 & 0.164 & 1.11 & 1.78 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+What the saliency locates is not what the features compute. Table~\ref{tab:e4_biomarkers} contrasts each of the four learned features with four biomarkers computed from the raw signal of the 120 children: no Spearman correlation exceeded 0.214 in magnitude, and none survived the Benjamini-Hochberg correction, with adjusted $p$-values from 0.291 to 0.927 (Table~\ref{tab:e4_biomarkers}). The features therefore do not track frontal Theta power, central Beta power, the Theta/Beta ratio or frontal coherence. The frontal saliency marks where the gradient of the trained model is large, not a known biomarker the model has learned.
+
+\begin{table}[b]
+\centering
+\caption{Spearman correlation over the 120 children between each learned feature, averaged over a child's windows, and four EEG biomarkers of ADHD. Benjamini-Hochberg-adjusted $p$-values over the sixteen contrasts range from 0.291 to 0.927; none is significant.}
+\label{tab:e4_biomarkers}
+\footnotesize
+\begin{tabular}{lcccc}
+\toprule
+\textbf{Feature} & \textbf{Frontal Theta} & \textbf{Central Beta} & \textbf{Theta/Beta ratio} & \textbf{Frontal coherence} \\
+\midrule
+$x_{1}$ & $-0.069$ & $-0.175$ & $-0.076$ & $0.009$ \\
+$x_{2}$ & $-0.048$ & $0.084$ & $-0.147$ & $-0.087$ \\
+$x_{3}$ & $0.085$ & $-0.078$ & $0.214$ & $0.072$ \\
+$x_{4}$ & $-0.027$ & $-0.083$ & $0.133$ & $-0.129$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Two further limits qualify this block. The map is exact by construction, since Equation~(\ref{eq:saliency}) is the derivative of the trained model, but exactness is not faithfulness~\cite{adebayo2018sanity}: no deletion or perturbation measure against competing attribution methods was computed, and the maps and the regional test illustrate where the model is sensitive without showing that the high-saliency electrodes drive its decisions more than others would. The temporal-occipital region also rests on reading the mirror's T7, T8, P7 and P8 as T3, T4, T5 and T6, a correspondence not yet verified. Exact channel attribution thus localizes the Hybrid DRU's sensitivity to the frontal scalp with a large and consistent effect, while its faithfulness and its link to known biomarkers remain unestablished.
+
+\subsection{Ablation and Sensitivity}\label{sec:res_ablation}
+The two previous blocks leave open what each element of CDRU costs when it is removed or varied. The readout ablations were already read in Table~\ref{tab:e1_tests}: removing re-uploading or removing the circuit cost no measurable balanced accuracy. Table~\ref{tab:ablation} presents the remaining two, the entangler and the depth. Replacing the circular ring by a linear chain or by a separable circuit did not lower performance: the ring reached a balanced accuracy of $0.670 \pm 0.110$ and an F1-score of $0.740 \pm 0.066$, the chain $0.696 \pm 0.099$ and $0.753 \pm 0.058$, and the separable circuit $0.708 \pm 0.070$ and $0.742 \pm 0.067$ (Table~\ref{tab:ablation}, topology rows). The entangler changes only the coefficients of Equation~(\ref{eq:fourier}) and never its frequencies~\cite{schuld2021effect}, so an equal performance across entanglers is what the formulation allows; it suggests that the four features carry their class information largely one feature at a time.
+
+Figure~\ref{fig:e2_topology} confirms this with the declared test. The mean ranks on the F1-score were 2.12 for the ring, 1.98 for the separable circuit and 1.90 for the chain, all within the critical difference of 0.66, and the Friedman test found no difference on the F1-score ($p = 0.70$) or on balanced accuracy ($p = 0.56$), with every Holm-adjusted pairwise $p$ at or above 0.967 (Table~\ref{tab:ablation} caption). The ring's F1-score was 0.002 below that of the separable circuit, against the gain of at least 0.03 the criterion required, so entanglement earned no measurable place in the classifier, in line with reports that quantum models rarely beat matched classical or separable baselines~\cite{bowles2024better}.
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=\linewidth]{Figures/fig-e2-critical-difference.pdf}
+\caption{Critical-difference diagram of the subject-level F1 mean ranks of the entanglement topologies measured in E2 (circular CNOT ring, linear CNOT chain, and separable with no entanglement) over 25 fold-by-seed blocks. The thick bar joins topologies whose mean ranks differ by less than the critical difference (CD $= 0.66$); the Friedman test finds no difference ($p = 0.70$).}
+\label{fig:e2_topology}
+\end{figure}
+
+\begin{table}[t]
+\centering
+\caption{Ablation of the entangler at $L = 3$ and sensitivity to the depth $L$ with the circular ring, mean $\pm$ standard deviation over the 25 fold-by-seed blocks; gradient variance is $\nu(L)$ of Equation~(\ref{eq:gradvar}) over 100 initializations, in units of $10^{-4}$. Topology: Friedman $p = 0.703$ on the F1-score and $0.561$ on balanced accuracy, Holm-adjusted pairwise $p \geq 0.967$. Depth: Page's test on $\log_{10}\nu$, $p = 9.0 \times 10^{-12}$; least-squares slope $-0.061$ per layer, 95\% interval $[-0.181, 0.059]$, bootstrap interval $[-0.069, -0.052]$; Page's test for increasing balanced accuracy, $p = 0.993$, mean Spearman correlation $-0.264$ $[-0.488, -0.031]$; $L = 2$ against $L = 1$ and $L = 3$, corrected $t$, Holm-adjusted $p = 1.000$. Bold marks the best balanced accuracy, F1-score and validation loss within each panel.}
+\label{tab:ablation}
+\footnotesize
+\setlength{\tabcolsep}{4pt}
+\begin{tabular}{lccccc}
+\toprule
+\textbf{Variant} & \textbf{\begin{tabular}[c]{@{}c@{}}Balanced\\accuracy\end{tabular}} & \textbf{F1-score} & \textbf{\begin{tabular}[c]{@{}c@{}}Validation\\loss\end{tabular}} & \textbf{\begin{tabular}[c]{@{}c@{}}Gradient\\variance\end{tabular}} & \textbf{\begin{tabular}[c]{@{}c@{}}Epochs to\\convergence\end{tabular}} \\
+\midrule
+\multicolumn{6}{l}{\textit{Entangler, $L = 3$}} \\
+Ring (12 CNOT) & $0.670 \pm 0.110$ & $0.740 \pm 0.066$ & $0.611 \pm 0.072$ & -- & -- \\
+Chain (9 CNOT) & $0.696 \pm 0.099$ & $\mathbf{0.753} \pm 0.058$ & $0.615 \pm 0.068$ & -- & -- \\
+Separable (0 CNOT) & $\mathbf{0.708} \pm 0.070$ & $0.742 \pm 0.067$ & $\mathbf{0.596} \pm 0.082$ & -- & -- \\
+\midrule
+\multicolumn{6}{l}{\textit{Depth, circular ring}} \\
+$L = 1$ & $0.705 \pm 0.082$ & -- & $\mathbf{0.595} \pm 0.076$ & 4.31 & $9.9 \pm 8.5$ \\
+$L = 2$ & $\mathbf{0.720} \pm 0.105$ & -- & $0.602 \pm 0.070$ & 3.46 & $14.9 \pm 15.2$ \\
+$L = 3$ & $0.672 \pm 0.116$ & -- & $0.616 \pm 0.073$ & 1.65 & $21.8 \pm 23.3$ \\
+$L = 4$ & $0.622 \pm 0.131$ & -- & $0.634 \pm 0.069$ & 2.08 & $17.7 \pm 16.8$ \\
+$L = 6$ & $0.649 \pm 0.119$ & -- & $0.619 \pm 0.072$ & 2.14 & $19.7 \pm 15.3$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Figure~\ref{fig:e3_gradient} shows the gradient variance across depth. The $\log_{10}$ of the mean variance fell from about $-3.37$ at $L = 1$ to its lowest value, about $-3.78$, at $L = 3$, and stayed near $-3.67$ at $L = 6$ (Figure~\ref{fig:e3_gradient}, black dots; Table~\ref{tab:ablation}, gradient-variance column). Page's test confirms a decreasing tendency over the 100 initializations ($p = 9.0 \times 10^{-12}$), but the least-squares slope across the five depths, $-0.061$ per layer, has a 95\% interval of $[-0.181, 0.059]$ that includes zero, and the variance changed by less than half an order of magnitude over the whole range. The decrease is therefore real in rank but small and not linear in $L$, as expected of a four-qubit register too small for the exponential concentration of gradients that defines a barren plateau in deep random circuits~\cite{mcclean2018barren,cerezo2021cost}; the declared criterion, a slope interval excluding zero, was not met.
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=\linewidth]{Figures/fig-e3-gradient-variance.pdf}
+\caption{Gradient variance versus re-uploading depth $L$ over 100 random initializations. Grey dots are per-initialization $\log_{10}$ values, black dots the $\log_{10}$ of their mean at each depth, and the blue line the least-squares trend (slope $-0.061$, 95\% CI $[-0.181, 0.059]$; Page trend test $p = 9 \times 10^{-12}$).}
+\label{fig:e3_gradient}
+\end{figure}
+
+Depth also did not improve accuracy. The test balanced accuracy was highest at $L = 2$, $0.720 \pm 0.105$, lowest at $L = 4$, $0.622 \pm 0.131$, and $0.672 \pm 0.116$ at the depth $L = 3$ used throughout, while the validation loss was lowest at $L = 1$ and the epochs to convergence roughly doubled from $L = 1$ to $L = 3$ (Table~\ref{tab:ablation}, depth rows). Page's test found no increase with depth ($p = 0.993$), and the mean within-block Spearman correlation between depth and accuracy, $-0.264$ with interval $[-0.488, -0.031]$, points to a decrease; the best depth did not differ from its neighbours ($L = 2$ against $L = 1$ and $L = 3$, corrected $t$, Holm-adjusted $p = 1.000$ for both). On 120 children, the frequencies added by deeper re-uploading appear to be spent on fitting the training children rather than on generalizing~\cite{caro2022generalization}, and the depth of three chosen before the runs is not the best on these data. Label noise, for its part, lowered accuracy less in the fixed regime than in the end-to-end regime, in which the slope reached $-0.260$ for the Classical Linear probe against $-0.100$ for the Hybrid DRU (Table~\ref{tab:e5}, slope rows). Only the end-to-end single-upload and linear intervals exclude zero, a sign that a trainable front-end is what makes a readout sensitive to flipped labels. Taken together, no element of CDRU, whether re-uploading, entanglement or extra depth, earned a measurable gain on the clinical data, and the only measured benefit of re-uploading is the frequency-two capacity of the controlled scenario.
+%% paper-writing block results-and-discussion.rd-contribution-blocks end
+%% paper-writing block results-and-discussion.rd-cost begin sha256=d18e9053b8a709d8f2bcf9b81c4ff7205cffe48504dec05cc67d564e0194b129
+\subsection{Computational Cost}\label{sec:res_cost}
+CDRU's accuracy proved to be that of its smaller comparators, and its cost now decides whether the compact readout is also cheap to train. Table~\ref{tab:cost} reports the training time of the five network arms in the full subject-wise runs on the real data, the most demanding configuration of the study, measured on the Kaggle GPU notebooks of Section~\ref{sec:training}. The Hybrid DRU needed a median of 7.88~s per epoch, against 2.18~s for EEGNet and 8.30~s for ADHDeepNet, and ran a mean of 33.4 epochs per model against about 15 for both baselines (Table~\ref{tab:cost}, Hybrid DRU row). Although it holds about 1\% of ADHDeepNet's parameters (Table~\ref{tab:arms}), the Hybrid DRU therefore cost more training time per model than either baseline: its per-epoch time is close to ADHDeepNet's because every window is simulated as a complex128 state vector through $L = 3$ layers, and it ran about twice as many epochs, which is consistent with the slower convergence of its bounded readout seen in Figure~\ref{fig:e1_convergence}. The times also reflect the mini-batch size, set differently for each arm (Table~\ref{tab:hpo} and Section~\ref{sec:training}); they give the cost of each arm as it was run rather than a per-sample comparison.
+
+\begin{table}[t]
+\centering
+\caption{Training cost of the network arms over the 25 fold-by-seed runs on the real data: median and range of the seconds per epoch recorded by each run, and the mean number of epochs run before early stopping. Bold marks the lowest median and the lowest mean.}
+\label{tab:cost}
+\footnotesize
+\begin{tabular}{lccc}
+\toprule
+\textbf{Arm} & \textbf{\begin{tabular}[c]{@{}c@{}}Median\\s per epoch\end{tabular}} & \textbf{\begin{tabular}[c]{@{}c@{}}Range\\s per epoch\end{tabular}} & \textbf{\begin{tabular}[c]{@{}c@{}}Mean\\epochs run\end{tabular}} \\
+\midrule
+Hybrid DRU ($L = 3$) & 7.88 & 2.63--8.39 & 33.4 \\
+Single-shot Angle ($L = 1$) & 4.00 & 1.66--4.37 & 20.4 \\
+Classical Linear probe & \textbf{1.52} & 1.27--1.73 & \textbf{14.5} \\
+EEGNet & 2.18 & 1.96--2.30 & 15.0 \\
+ADHDeepNet & 8.30 & 7.81--8.99 & 15.5 \\
+\bottomrule
+\end{tabular}
+\end{table}
+%% paper-writing block results-and-discussion.rd-cost end
+
+\section{Limitations}\label{sec:limitations}
+%% paper-writing block limitations.lim-opening-concession begin sha256=24f41c92661809f7306783a39ca43236eb0da6b2633a4e5cde59a66772ca506d
+Although the Hybrid DRU represented a frequency-two rule that a single upload could not, and its saliency separated the frontal from the temporal-occipital scalp in every child with ADHD, several limitations must be acknowledged.
+%% paper-writing block limitations.lim-opening-concession end
+%% paper-writing block limitations.lim-proposal-items begin sha256=190cb3b193e1be282dbf2b93eec9dbed54661a7f7bcba4272b3ab64f88d74c2f
+First, the front-end compresses 19 channels into $N_{q} = 4$ features, one per qubit. While this keeps the state-vector simulation small and the accessible Fourier spectrum known \cite{schuld2021effect}, it caps the readout at four inputs, so the comparison cannot show whether re-uploading helps when more features are available. Second, the depth was fixed at $L = 3$ before the runs, whereas $L = 2$ scored higher on these data, and only the Hybrid DRU was tuned; the reported comparisons therefore carry a tuning advantage in its favour and a depth chosen a priori, and a per-arm search would remove both at several times the search cost \cite{varoquaux2022machine}.
+%% paper-writing block limitations.lim-proposal-items end
+%% paper-writing block limitations.lim-validation-items begin sha256=aa469366c610a16db649d551186e612bf6111361b0244f200cee9870f7b422ca
+Third, the evidence rests on one cohort of 120 children, 61 with ADHD and 59 controls, scored on 23 or 24 children per fold. Although subject-wise partitioning prevents leakage \cite{saeb2017need}, a recording-duration control reached a balanced accuracy close to the networks', so the EEG-specific margin is small and its transfer to other montages and sites is untested. Fourth, the saliency was evaluated only by a regional test: no deletion or perturbation measure was computed against competing attribution methods, and the temporal electrodes were mapped by name without verification. Exactness of the gradient therefore does not establish faithfulness, which axiomatic attribution methods address at the cost of many extra model evaluations per window \cite{sundararajan2017axiomatic}.
+%% paper-writing block limitations.lim-validation-items end
+%% paper-writing block limitations.lim-failure-mode begin sha256=66a4022098ea54f39d976b6235fe81d4fa449043a0a9d14d6117f1bdde00f29d
+Last, every circuit was simulated as a noise-free state vector. On physical quantum hardware, the parameter-shift derivatives behind both the training and the saliency maps must be estimated from a finite number of measurement shots under gate and readout noise \cite{crooks2019gradients}, and that estimation may degrade the attributions reported here.
+%% paper-writing block limitations.lim-failure-mode end
+%% paper-writing block limitations.lim-closing begin sha256=1019f61f656963269100fa03b0420206150685941270ddceb2551fba67f27715
+Variational quantum circuits are therefore no general remedy for biomedical classification; they are specialized function approximators whose clinical value depends on careful architectural co-design and transparent validation.
+%% paper-writing block limitations.lim-closing end
+
+\section{Conclusions}\label{sec:conclusions}
+%% paper-writing block conclusions.concl-block-1 begin sha256=5a0fd3e6e99d6ece398587aa71a4792fc4bc228d4a857ddd5df7b6ae9cf2feeb
+This work introduced the hybrid quantum-classical data re-uploading network (Hybrid DRU), a classifier for electroencephalography (EEG) screening of Attention Deficit Hyperactivity Disorder (ADHD). It contributed two components: Circular Data Re-Uploading (CDRU), which re-uploads four convolutional features with unit-scale encoding into a ring-entangled circuit so that depth alone fixes its accessible frequencies, and Analytical Saliency via Parameter-Shift Backpropagation, which carries the exact derivative of every qubit expectation through the convolutional front-end to each electrode. Unlike post-hoc attribution methods, the proposed Hybrid DRU takes its channel attributions from the exact gradients of the trained model, without surrogate models or input perturbation, and its expressivity is known before training rather than measured after it.
+%% paper-writing block conclusions.concl-block-1 end
+%% paper-writing block conclusions.concl-block-2 begin sha256=3148b0672ef9545fffdfe9b8e4259ec0a392410a5204014e61ae5b28dcddf27d
+On the general task, the Hybrid DRU matched but did not surpass its comparators. Evaluated subject-wise on 120 children, its balanced accuracy was statistically indistinguishable from those of the single-upload and linear readouts and of EEGNet, and non-inferiority to EEGNet could not be established. A recording-duration control came close to every network, leaving an EEG classifier only a small margin to claim on this cohort. The model operated at a higher sensitivity than EEGNet at the cost of specificity, without a better ranking of the children.
+
+Circular Data Re-Uploading delivered the expressivity it promises where that expressivity is known to matter. On synthetic EEG whose class depends on the second harmonic of one feature, three uploads outperformed a single upload in every paired replicate, while the parameterization stayed close to that of EEGNet and far below that of ADHDeepNet. On the clinical cohort, neither re-uploading, nor the entangling ring, nor additional depth improved accuracy, and gradient variance decreased only slightly across depth, without the collapse of a barren plateau. The capacity CDRU adds is therefore verified but is not what limits accuracy on these data.
+
+The analytical saliency localized the decisions of the model on the frontal scalp. The saliency energy of the fronto-central electrodes exceeded that of the temporal-occipital ones in every child with ADHD, in both the Theta and the Beta band, with its maximum at a left-frontal electrode. The learned features did not correlate with the Theta/Beta biomarkers reported for ADHD, and no faithfulness measure was computed, so this localization describes where the trained model is sensitive rather than which electrodes cause its decisions.
+%% paper-writing block conclusions.concl-block-2 end
+%% paper-writing block conclusions.concl-block-3 begin sha256=6f61b97e9806d4d8a6d315e0d79fab2e8aa8b3d79160719edae71229d5107e19
+For clinicians and reviewers, the consequence is a screening model whose sensitivity can be traced to electrodes and whose reported performance is a property of unseen children rather than of recordings the model has already seen. Accuracies reported on this cohort from epoch-level rather than subject-level splits, or without a check of what recording duration alone predicts, should be read with caution.
+%% paper-writing block conclusions.concl-block-3 end
+%% paper-writing block conclusions.concl-block-4 begin sha256=1fe9ee0163a548a8436d8ee8eb03ebf3f12be5ab4e00a949d8f7438d6b1ac8f6
+
+Future work follows three directions motivated by the limitations of this study. First, deeper re-uploading circuits will be trained with local cost functions, which keep gradients measurable in parameterized circuits \cite{cerezo2021cost}, to relax the depth bound of the present model. Second, the circuit will be executed on physical quantum processors, estimating the parameter-shift gradients behind the saliency maps from finite measurement shots \cite{crooks2019gradients}, to test whether the attributions survive hardware noise. Third, the model will be validated on independent multi-center cohorts with different montages and acquisition protocols, following the external-validation practice recommended for clinical machine learning \cite{varoquaux2022machine}. Together, these directions would carry the method from a simulated single-cohort study towards clinical screening.
+%% paper-writing block conclusions.concl-block-4 end
+
+\section*{Declarations}
+%% paper-writing block back-matter.bm-author-contributions begin sha256=dd6bc3db13a16b72be5162dba71ea839b912084f1bcc28cd0a075d6fc140935a
+\textbf{Author Contributions:} The CRediT roles are omitted from this anonymized version and will accompany the author identities.
+%% paper-writing block back-matter.bm-author-contributions end
+%% paper-writing block back-matter.bm-funding begin sha256=82c0d7b1b84c970fc7c0fbb826b69f72ec1ef2ef65f18181bbaeed293027807c
+
+\textbf{Funding:} This research was funded by Universidad Nacional de Colombia sede Manizales and Universidad de Caldas through their 2024 joint call for research projects (Convocatoria Conjunta Universidad de Caldas, Universidad Nacional de Colombia sede Manizales, para Proyectos de Investigaci\'{o}n 2024), under the project ``Aprendizaje de m\'{a}quina cu\'{a}ntico utilizando espines electr\'{o}nicos'' (Hermes code 62836; QUIPU 202010045932).
+%% paper-writing block back-matter.bm-funding end
+%% paper-writing block back-matter.bm-data-availability begin sha256=820f4ecf0a5b66381ddba2a8e4ae10884b995866bd83dcd2baf6c1294bbc2aa6
+
+\textbf{Data Availability Statement:} The EEG recordings analysed in this study are public on IEEE DataPort \cite{nasrabadi2020eeg}; the derived results files are in \url{https://github.com/[member-1]/qmleeg-dru} (checked 1 November 2026).
+%% paper-writing block back-matter.bm-data-availability end
+%% paper-writing block back-matter.bm-code-availability begin sha256=15a96c564339feb308545679ef840e700f6b3c2a984360677c3efce72cda6fff
+
+\textbf{Code Availability:} The code that produced the reported numbers is available at \url{https://github.com/[member-1]/qmleeg-dru}, commit 976b8c7 (checked 1 November 2026).
+%% paper-writing block back-matter.bm-code-availability end
+%% paper-writing block back-matter.bm-conflicts-of-interest begin sha256=60016da7c6e4df95af151c9ad3903fe6745d43a5282692d5221ad2a4750825a5
+
+\textbf{Conflicts of Interest:} The authors declare no competing financial or non-financial interests.
+%% paper-writing block back-matter.bm-conflicts-of-interest end
+%% paper-writing block back-matter.bm-acknowledgments begin sha256=5040bcb3f877e9bb0fa4d6998ef554d71f63fea5559697b6ff82fdea8425b91a
+
+\textbf{Acknowledgments:} This work was supported by the research project ``Aprendizaje de m\'{a}quina cu\'{a}ntico utilizando espines electr\'{o}nicos'' (Hermes code 62836), funded by Universidad Nacional de Colombia sede Manizales and Universidad de Caldas.
+%% paper-writing block back-matter.bm-acknowledgments end
+
+%% paper-writing block back-matter.bm-ai-use-declaration begin sha256=6420ce6d2aeb554a7363697ad383f2519380dc27e34a881bfa661d74ba4b9fbb
+\section*{Declaration of AI Use}
+During the preparation of this work, the authors used AI agents orchestrated by the papersmith framework (version 0.60.0, \url{https://github.com/LIAUNAL/papersmith-ai}) and run in the Claude Code and Antigravity harnesses (model versions not recorded) to screen the literature for plausibility, to deliberate the proposal, to implement, run and review the proof of concept and the full experiments, and to draft and audit the manuscript, in every section from the title and abstract to the back matter. The authors reviewed and edited all generated content at the recorded approval gates and take full responsibility for the content of this publication.
+%% paper-writing block back-matter.bm-ai-use-declaration end
+
+\bibliographystyle{ieeetr}
+{\sloppy
+\bibliography{refs}}
+
+%% paper-writing block back-matter.bm-appendices begin sha256=e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
+%% paper-writing block back-matter.bm-appendices end
+
+
+%% paper-writing declarations begin sha256=5b0cc41fd422b85edf6fa2fe85b459d4640805439ef7322837b2b0b3e6ccdb01
+%% {
+%%   "generation": 3,
+%%   "records": [
+%%     {
+%%       "fixed": true,
+%%       "generation": 3,
+%%       "id": "repository-url",
+%%       "kind": "declaration",
+%%       "recorded": "2026-11-01T23:42:17.136024+00:00",
+%%       "value": "https://github.com/[member-1]/qmleeg-dru; checked 2026-11-01"
+%%     }
+%%   ]
+%% }
+%% paper-writing declarations end
+\end{document}
+%% paper-writing provenance begin sha256=5d8182e3a4046ba6ff88344bea6b8d4c67b5bff265db86d0faf3e9bf1be4a557
+%% {
+%%   "records": [
+%%     {
+%%       "block": "abstract.slot-5",
+%%       "contract": "sections/08-abstract.md",
+%%       "contract_sha256": "a53ea54093cccdf2d3ef73bf504a0ef42069400ceb2673e6aa2a8be1a6065552",
+%%       "generation": 3,
+%%       "written": "2026-11-02T03:04:05.157676+00:00"
+%%     },
+%%     {
+%%       "block": "limitations.lim-closing",
+%%       "contract": "sections/04-limitations.md",
+%%       "contract_sha256": "ab705f162e10bd366173be889fa9e233b747add8eae67e19cc551f8d4bad5b81",
+%%       "generation": 3,
+%%       "written": "2026-11-02T03:04:08.259099+00:00"
+%%     },
+%%     {
+%%       "block": "related-work.rw-panorama",
+%%       "contract": "sections/05-related-work.md",
+%%       "contract_sha256": "5582ad426d9e2d867de6cc112af7b053133f45bcd77bb44f9696de479565bb83",
+%%       "generation": 3,
+%%       "written": "2026-11-02T03:04:09.029541+00:00"
+%%     },
+%%     {
+%%       "block": "related-work.rw-problem-blocks",
+%%       "contract": "sections/05-related-work.md",
+%%       "contract_sha256": "5582ad426d9e2d867de6cc112af7b053133f45bcd77bb44f9696de479565bb83",
+%%       "generation": 3,
+%%       "written": "2026-11-02T03:04:09.384694+00:00"
+%%     },
+%%     {
+%%       "block": "limitations.lim-failure-mode",
+%%       "contract": "sections/04-limitations.md",
+%%       "contract_sha256": "ab705f162e10bd366173be889fa9e233b747add8eae67e19cc551f8d4bad5b81",
+%%       "generation": 3,
+%%       "written": "2026-11-02T03:05:47.082703+00:00"
+%%     },
+%%     {
+%%       "block": "limitations.lim-opening-concession",
+%%       "contract": "sections/04-limitations.md",
+%%       "contract_sha256": "ab705f162e10bd366173be889fa9e233b747add8eae67e19cc551f8d4bad5b81",
+%%       "generation": 3,
+%%       "written": "2026-11-02T03:05:47.179885+00:00"
+%%     },
+%%     {
+%%       "block": "limitations.lim-proposal-items",
+%%       "contract": "sections/04-limitations.md",
+%%       "contract_sha256": "ab705f162e10bd366173be889fa9e233b747add8eae67e19cc551f8d4bad5b81",
+%%       "generation": 3,
+%%       "written": "2026-11-02T03:05:47.277516+00:00"
+%%     },
+%%     {
+%%       "block": "limitations.lim-validation-items",
+%%       "contract": "sections/04-limitations.md",
+%%       "contract_sha256": "ab705f162e10bd366173be889fa9e233b747add8eae67e19cc551f8d4bad5b81",
+%%       "generation": 3,
+%%       "written": "2026-11-02T03:05:47.377479+00:00"
+%%     },
+%%     {
+%%       "block": "related-work.rw-closing",
+%%       "contract": "sections/05-related-work.md",
+%%       "contract_sha256": "5582ad426d9e2d867de6cc112af7b053133f45bcd77bb44f9696de479565bb83",
+%%       "generation": 3,
+%%       "written": "2026-11-02T03:06:14.037174+00:00"
+%%     },
+%%     {
+%%       "block": "related-work.rw-synthesis-artefact",
+%%       "contract": "sections/05-related-work.md",
+%%       "contract_sha256": "5582ad426d9e2d867de6cc112af7b053133f45bcd77bb44f9696de479565bb83",
+%%       "generation": 3,
+%%       "written": "2026-11-02T03:07:01.832842+00:00"
+%%     },
+%%     {
+%%       "block": "conclusions.concl-block-4",
+%%       "contract": "sections/07-conclusions.md",
+%%       "contract_sha256": "6d258f61e4c47f86e8b25456093e425e874f6fc5759dfd3c5c8b052013f245c7",
+%%       "generation": 3,
+%%       "written": "2026-11-03T03:04:52.118631+00:00"
+%%     },
+%%     {
+%%       "block": "conclusions.concl-block-1",
+%%       "contract": "sections/07-conclusions.md",
+%%       "contract_sha256": "6d258f61e4c47f86e8b25456093e425e874f6fc5759dfd3c5c8b052013f245c7",
+%%       "generation": 3,
+%%       "written": "2026-11-03T03:20:08.236750+00:00"
+%%     },
+%%     {
+%%       "block": "conclusions.concl-block-2",
+%%       "contract": "sections/07-conclusions.md",
+%%       "contract_sha256": "6d258f61e4c47f86e8b25456093e425e874f6fc5759dfd3c5c8b052013f245c7",
+%%       "generation": 3,
+%%       "written": "2026-11-03T03:20:08.985838+00:00"
+%%     },
+%%     {
+%%       "block": "conclusions.concl-block-3",
+%%       "contract": "sections/07-conclusions.md",
+%%       "contract_sha256": "6d258f61e4c47f86e8b25456093e425e874f6fc5759dfd3c5c8b052013f245c7",
+%%       "generation": 3,
+%%       "written": "2026-11-03T03:20:09.738478+00:00"
+%%     },
+%%     {
+%%       "block": "introduction.block-1",
+%%       "contract": "sections/06-introduction.md",
+%%       "contract_sha256": "648f053c537293cc09783851a68c5fa84e30ceba81cea37a76b4cac946c2e1ea",
+%%       "generation": 3,
+%%       "written": "2026-11-03T03:20:11.645047+00:00"
+%%     },
+%%     {
+%%       "block": "introduction.block-3",
+%%       "contract": "sections/06-introduction.md",
+%%       "contract_sha256": "648f053c537293cc09783851a68c5fa84e30ceba81cea37a76b4cac946c2e1ea",
+%%       "generation": 3,
+%%       "written": "2026-11-03T03:20:12.063197+00:00"
+%%     },
+%%     {
+%%       "block": "introduction.block-4a",
+%%       "contract": "sections/06-introduction.md",
+%%       "contract_sha256": "648f053c537293cc09783851a68c5fa84e30ceba81cea37a76b4cac946c2e1ea",
+%%       "generation": 3,
+%%       "written": "2026-11-03T03:20:12.545171+00:00"
+%%     },
+%%     {
+%%       "block": "introduction.block-4b",
+%%       "contract": "sections/06-introduction.md",
+%%       "contract_sha256": "648f053c537293cc09783851a68c5fa84e30ceba81cea37a76b4cac946c2e1ea",
+%%       "generation": 3,
+%%       "written": "2026-11-03T03:20:13.118010+00:00"
+%%     },
+%%     {
+%%       "block": "introduction.block-5",
+%%       "contract": "sections/06-introduction.md",
+%%       "contract_sha256": "648f053c537293cc09783851a68c5fa84e30ceba81cea37a76b4cac946c2e1ea",
+%%       "generation": 3,
+%%       "written": "2026-11-03T03:20:13.733956+00:00"
+%%     },
+%%     {
+%%       "block": "results-and-discussion.rd-cost",
+%%       "contract": "sections/03-results-and-discussion.md",
+%%       "contract_sha256": "861fe4a5f92f5815450f9741f52c4f210fe37fad96dc8115df81780ae375d4c1",
+%%       "generation": 3,
+%%       "written": "2026-11-03T19:46:44.591663+00:00"
+%%     },
+%%     {
+%%       "block": "results-and-discussion.rd-general-task",
+%%       "contract": "sections/03-results-and-discussion.md",
+%%       "contract_sha256": "861fe4a5f92f5815450f9741f52c4f210fe37fad96dc8115df81780ae375d4c1",
+%%       "generation": 3,
+%%       "written": "2026-11-03T19:46:44.692867+00:00"
+%%     },
+%%     {
+%%       "block": "results-and-discussion.rd-contribution-blocks",
+%%       "contract": "sections/03-results-and-discussion.md",
+%%       "contract_sha256": "861fe4a5f92f5815450f9741f52c4f210fe37fad96dc8115df81780ae375d4c1",
+%%       "generation": 3,
+%%       "written": "2026-11-03T19:46:44.796950+00:00"
+%%     },
+%%     {
+%%       "block": "title-and-keywords.title",
+%%       "contract": "sections/09-title-and-keywords.md",
+%%       "contract_sha256": "43a58afecb7c71dabeac38bfbb2a0299c56e85b05a02f030e6acf2b7adca9481",
+%%       "generation": 3,
+%%       "written": "2026-11-03T19:46:44.902559+00:00"
+%%     },
+%%     {
+%%       "block": "materials-and-methods.mm-borrowed-machinery",
+%%       "contract": "sections/01-materials-and-methods.md",
+%%       "contract_sha256": "f33fff45c753909c7c64171cf1c5f8dd0a4a6474d74087f5fdedc11b1cf3fdc2",
+%%       "generation": 3,
+%%       "written": "2026-11-03T19:46:45.004521+00:00"
+%%     },
+%%     {
+%%       "block": "back-matter.bm-appendices",
+%%       "contract": "sections/10-back-matter.md",
+%%       "contract_sha256": "74d1552f16d3905df798cce2048cd74e4aa35f71091ca3b00a117ce2ad582fc7",
+%%       "generation": 3,
+%%       "written": "2026-11-03T19:46:45.108731+00:00"
+%%     },
+%%     {
+%%       "block": "back-matter.bm-funding",
+%%       "contract": "sections/10-back-matter.md",
+%%       "contract_sha256": "74d1552f16d3905df798cce2048cd74e4aa35f71091ca3b00a117ce2ad582fc7",
+%%       "generation": 3,
+%%       "written": "2026-11-03T19:46:45.213516+00:00"
+%%     },
+%%     {
+%%       "block": "back-matter.bm-data-availability",
+%%       "contract": "sections/10-back-matter.md",
+%%       "contract_sha256": "74d1552f16d3905df798cce2048cd74e4aa35f71091ca3b00a117ce2ad582fc7",
+%%       "generation": 3,
+%%       "written": "2026-11-03T19:46:45.317001+00:00"
+%%     },
+%%     {
+%%       "block": "back-matter.bm-code-availability",
+%%       "contract": "sections/10-back-matter.md",
+%%       "contract_sha256": "74d1552f16d3905df798cce2048cd74e4aa35f71091ca3b00a117ce2ad582fc7",
+%%       "generation": 3,
+%%       "written": "2026-11-03T19:46:45.417918+00:00"
+%%     },
+%%     {
+%%       "block": "back-matter.bm-conflicts-of-interest",
+%%       "contract": "sections/10-back-matter.md",
+%%       "contract_sha256": "74d1552f16d3905df798cce2048cd74e4aa35f71091ca3b00a117ce2ad582fc7",
+%%       "generation": 3,
+%%       "written": "2026-11-03T19:46:45.522087+00:00"
+%%     },
+%%     {
+%%       "block": "back-matter.bm-acknowledgments",
+%%       "contract": "sections/10-back-matter.md",
+%%       "contract_sha256": "74d1552f16d3905df798cce2048cd74e4aa35f71091ca3b00a117ce2ad582fc7",
+%%       "generation": 3,
+%%       "written": "2026-11-03T19:46:45.626784+00:00"
+%%     },
+%%     {
+%%       "block": "materials-and-methods.mm-proposal",
+%%       "contract": "sections/01-materials-and-methods.md",
+%%       "contract_sha256": "f33fff45c753909c7c64171cf1c5f8dd0a4a6474d74087f5fdedc11b1cf3fdc2",
+%%       "generation": 3,
+%%       "written": "2026-11-03T19:46:45.729204+00:00"
+%%     },
+%%     {
+%%       "block": "back-matter.bm-author-contributions",
+%%       "contract": "sections/10-back-matter.md",
+%%       "contract_sha256": "74d1552f16d3905df798cce2048cd74e4aa35f71091ca3b00a117ce2ad582fc7",
+%%       "generation": 3,
+%%       "written": "2026-11-03T19:46:45.833469+00:00"
+%%     },
+%%     {
+%%       "block": "experimental-setup.es-preamble",
+%%       "contract": "sections/02-experimental-setup.md",
+%%       "contract_sha256": "cb219759c20fddd3d2e7b89beca47f3f394fe119a8aa86d880262a302a390f29",
+%%       "generation": 3,
+%%       "written": "2026-11-03T19:46:46.040174+00:00"
+%%     },
+%%     {
+%%       "block": "experimental-setup.es-training-details",
+%%       "contract": "sections/02-experimental-setup.md",
+%%       "contract_sha256": "cb219759c20fddd3d2e7b89beca47f3f394fe119a8aa86d880262a302a390f29",
+%%       "generation": 3,
+%%       "written": "2026-11-03T19:46:46.142908+00:00"
+%%     },
+%%     {
+%%       "block": "materials-and-methods.mm-dataset",
+%%       "contract": "sections/01-materials-and-methods.md",
+%%       "contract_sha256": "f33fff45c753909c7c64171cf1c5f8dd0a4a6474d74087f5fdedc11b1cf3fdc2",
+%%       "generation": 3,
+%%       "written": "2026-11-03T19:46:46.247409+00:00"
+%%     },
+%%     {
+%%       "block": "materials-and-methods.mm-preamble",
+%%       "contract": "sections/01-materials-and-methods.md",
+%%       "contract_sha256": "f33fff45c753909c7c64171cf1c5f8dd0a4a6474d74087f5fdedc11b1cf3fdc2",
+%%       "generation": 3,
+%%       "written": "2026-11-03T19:46:46.351229+00:00"
+%%     },
+%%     {
+%%       "block": "experimental-setup.es-assessment",
+%%       "contract": "sections/02-experimental-setup.md",
+%%       "contract_sha256": "cb219759c20fddd3d2e7b89beca47f3f394fe119a8aa86d880262a302a390f29",
+%%       "generation": 3,
+%%       "written": "2026-11-04T18:28:48.278172+00:00"
+%%     }
+%%   ]
+%% }
+%% paper-writing provenance end
